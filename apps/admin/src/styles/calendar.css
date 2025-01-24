@@ -1,0 +1,28 @@
+.calendar-widget .react-calendar {
+  width: 100%;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+}
+
+.calendar-widget .react-calendar__tile--active {
+  background: var(--color-primary);
+  border-radius: 0.5rem;
+}
+
+.calendar-widget .react-calendar__tile--now {
+  background: var(--color-primary-light);
+  border-radius: 0.5rem;
+}
+
+.dark .calendar-widget .react-calendar {
+  color: white;
+}
+
+.dark .calendar-widget .react-calendar__month-view__days__day {
+  color: white;
+}
+
+.dark .calendar-widget .react-calendar__navigation button {
+  color: white;
+} 

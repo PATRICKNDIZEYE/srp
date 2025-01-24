@@ -1,0 +1,16 @@
+{
+  "name": "minubumwe-platform",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:admin": "yarn workspace @minubumwe/admin dev",
+    "dev:ngo": "yarn workspace @minubumwe/ngo dev",
+    "dev:backend": "yarn workspace @minubumwe/backend dev",
+    "build:admin": "yarn workspace @minubumwe/admin build",
+    "build:ngo": "yarn workspace @minubumwe/ngo build",
+    "build:backend": "yarn workspace @minubumwe/backend build",
+    "start:backend": "yarn workspace @minubumwe/backend start"
+  }
+} 

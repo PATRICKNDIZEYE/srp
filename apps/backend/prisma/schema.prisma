@@ -1,0 +1,102 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                Int       @id @default(autoincrement())
+  username          String
+  email             String    @unique
+  password          String
+  role              String // e.g., "Admin" or "User"
+  name              String?
+  resetToken        String?
+  resetTokenExpires DateTime?
+  otp               Int?
+  otpExpiry         DateTime?
+}
+
+model AnnualTarget {
+  id                         Int                  @id @default(autoincrement())
+  organizationName           Int
+  activityName               String
+  activityDescription        String
+  areaOfInterventions        AreaOfIntervention[]
+  targetForSelectedIndicator String
+  targetedBeneficiaries      String
+  targetNumbers              Int
+  genderDisaggregation       String[]
+  district                   String
+  sector                     String
+  cell                       String
+  plannedBudget              Float
+  startDate                  DateTime
+  endDate                    DateTime
+
+  NGO                      NGO               @relation(fields: [organizationName], references: [id])
+  biannualReports          BiannualReport[]
+  InterventionArea         InterventionArea? @relation(fields: [interventionAreaDistrict, interventionAreaSector, interventionAreaCell], references: [district, sector, cell])
+  interventionAreaDistrict String?
+  interventionAreaSector   String?
+  interventionAreaCell     String?
+}
+
+model AreaOfIntervention {
+  id                 Int          @id @default(autoincrement())
+  areaOfIntervention String
+  relevantIndicators String[]
+  annualTarget       AnnualTarget @relation(fields: [annualTargetId], references: [id])
+  annualTargetId     Int
+}
+
+model BiannualReport {
+  id                    Int          @id @default(autoincrement())
+  relevantIndicators    String[]
+  progressAgainstTarget Float
+  targetNumbersReached  Int
+  genderDisaggregation  String[]
+  interventionArea      String
+  budgetUsed            Float
+  progressUpdate        String
+  challengesFaced       String
+  successStories        String
+  attachments           String[]
+  biannualType          BiannualType
+  annualTargetId        Int
+  annualTarget          AnnualTarget @relation(fields: [annualTargetId], references: [id])
+  status                String
+  image                 String[]
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+}
+
+model InterventionArea {
+  district      String
+  sector        String
+  cell          String
+  annualTargets AnnualTarget[]
+
+  @@id([district, sector, cell])
+}
+
+enum BiannualType {
+  LAST_HALF
+}
+
+model Message {
+  id         Int      @id @default(autoincrement())
+  content    String
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  senderType String // "NGO" or "USER"
+
+  // Relations for NGO
+  ngo   NGO @relation("NGOMessages", fields: [ngoId], references: [id])
+  ngoId Int
+
+  @@index([ngoId])
+}
