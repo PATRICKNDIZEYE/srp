@@ -1,6 +1,6 @@
 <div align="center">
   <img src="https://upload.wikimedia.org/wikipedia/commons/1/17/Coat_of_arms_of_Rwanda.svg" alt="Minubumwe Logo" width="100" height="100"/>
-  <h1>NGO management system for MINUBUMWE</h1>
+  <h1>SJRP</h1>
   <p> 🇷🇼 </p>
 </div>
 
@@ -9,7 +9,6 @@
 ## 📦 Packages
 
 - [`@minubumwe/admin`](./apps/admin) - Admin dashboard
-- [`@minubumwe/ngo`](./apps/ngo) - NGO portal
 - [`@minubumwe/backend`](./apps/backend) - Express.js API
 
 ## 🚀🚀 Getting Started
