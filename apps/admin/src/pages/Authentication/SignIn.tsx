@@ -50,6 +50,8 @@ const SignIn = () => {
     }
   };
 
+
+
   const handleOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -155,6 +157,13 @@ const SignIn = () => {
                 placeholder="Enter OTP sent to your email"
               />
             </div>
+            <button
+            onClick={()=> handleResendOtp()}
+            type="button"
+              disabled={loading}
+            >
+              Resend OTP
+            </button>
 
             <button
               type="submit"

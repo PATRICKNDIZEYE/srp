@@ -1,0 +1,12 @@
+/node_modules
+/dist
+
+.env
+
+
+/apps/backend/node_modules
+
+/apps/admin/node_modules
+
+
+

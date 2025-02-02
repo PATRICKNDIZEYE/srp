@@ -1,0 +1,204 @@
+import React, { useState } from 'react';
+import Breadcrumb from '../../components/Breadcrumb';
+import { FiDollarSign, FiClock, FiAlertCircle } from 'react-icons/fi';
+import { toast } from 'react-toastify';
+
+const LoanPortalPage = () => {
+  const [showLoanForm, setShowLoanForm] = useState(false);
+  const [loanAmount, setLoanAmount] = useState('');
+  const [purpose, setPurpose] = useState('');
+
+  const maxLoanAmount = 50000; // RF 50,000
+  const currentDebt = 0; // This would come from the backend
+  const monthlyIncome = 245000; // This would be calculated from milk submissions
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const amount = Number(loanAmount);
+    
+    if (amount > maxLoanAmount) {
+      toast.error(`Maximum loan amount is RF ${maxLoanAmount}`);
+      return;
+    }
+
+    if (amount > monthlyIncome * 0.5) {
+      toast.error('Loan amount cannot exceed 50% of your monthly income');
+      return;
+    }
+
+    // Handle loan request submission
+    toast.success('Loan request submitted successfully!');
+    setShowLoanForm(false);
+    setLoanAmount('');
+    setPurpose('');
+  };
+
+  return (
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+      <Breadcrumb pageName="Loan Portal" />
+
+      {/* Loan Status Cards */}
+      <div className="grid gap-4 md:grid-cols-3 mb-6">
+        <div className="bg-white rounded-lg p-6 shadow-lg">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-gray-700">Available Credit</h3>
+            <FiDollarSign className="text-blue-600" size={24} />
+          </div>
+          <div className="mt-2">
+            <div className="text-2xl font-bold text-blue-600">RF {maxLoanAmount}</div>
+            <div className="text-sm text-gray-500">Maximum amount</div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg p-6 shadow-lg">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-gray-700">Current Debt</h3>
+            <FiClock className="text-gray-600" size={24} />
+          </div>
+          <div className="mt-2">
+            <div className="text-2xl font-bold text-gray-800">RF {currentDebt}</div>
+            <div className="text-sm text-gray-500">Outstanding balance</div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg p-6 shadow-lg">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-gray-700">Monthly Income</h3>
+            <FiAlertCircle className="text-green-600" size={24} />
+          </div>
+          <div className="mt-2">
+            <div className="text-2xl font-bold text-green-600">RF {monthlyIncome}</div>
+            <div className="text-sm text-gray-500">Based on milk submissions</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Loan Request Section */}
+      <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-semibold text-gray-800">Loan Request</h2>
+          <button
+            onClick={() => setShowLoanForm(!showLoanForm)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            {showLoanForm ? 'Cancel Request' : 'Request Loan'}
+          </button>
+        </div>
+
+        {showLoanForm && (
+          <form onSubmit={handleSubmit} className="max-w-2xl mx-auto space-y-6">
+            <div>
+              <label className="block text-gray-700 font-medium mb-2">
+                Loan Amount (RF)
+              </label>
+              <input
+                type="number"
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={loanAmount}
+                onChange={(e) => setLoanAmount(e.target.value)}
+                required
+                min="1000"
+                max={maxLoanAmount}
+                placeholder="Enter amount in RF"
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                Maximum available: RF {maxLoanAmount}
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-gray-700 font-medium mb-2">
+                Purpose of Loan
+              </label>
+              <textarea
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={purpose}
+                onChange={(e) => setPurpose(e.target.value)}
+                rows={3}
+                required
+                placeholder="Briefly describe why you need this loan"
+              />
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+              >
+                Submit Request
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+
+      {/* Loan History */}
+      <div className="bg-white rounded-lg shadow-lg">
+        <div className="p-6 border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-800">Loan History</h2>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Request Date
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Amount
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Purpose
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Status
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {[
+                {
+                  date: '2024-01-15',
+                  amount: 'RF 30,000',
+                  purpose: 'Equipment purchase',
+                  status: 'Approved',
+                },
+                {
+                  date: '2023-12-01',
+                  amount: 'RF 25,000',
+                  purpose: 'Feed stock',
+                  status: 'Completed',
+                },
+              ].map((loan, idx) => (
+                <tr key={idx} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {loan.date}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {loan.amount}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {loan.purpose}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span
+                      className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                        loan.status === 'Completed'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-blue-100 text-blue-800'
+                      }`}
+                    >
+                      {loan.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default LoanPortalPage; 
