@@ -1,7 +1,6 @@
 <div align="center">
-  <img src="https://upload.wikimedia.org/wikipedia/commons/1/17/Coat_of_arms_of_Rwanda.svg" alt="Minubumwe Logo" width="100" height="100"/>
   <h1>SJRP</h1>
-  <p> 🇷🇼 </p>
+
 </div>
 
 # simple Documentations 
@@ -81,17 +80,11 @@ yarn build:backend
 
 
 
-📝 License
-This project is licensed under the ISC License.
 
-
-👥 Maintainers
-
-DTEC
 
 
 <div align="center">
 
-  <p><b>In Development 🚧
+  <p><b>Made with  ❤️  By   <p> 🇷🇼 </p>
 </b></p>
 </div>
