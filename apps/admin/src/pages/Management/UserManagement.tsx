@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { FiUserPlus, FiEdit2, FiTrash2, FiMapPin } from 'react-icons/fi';
 import Breadcrumb from '../../components/Breadcrumb';
-import AddUserModal from '../../components/Management/AddUserModal';
 import { toast } from 'react-toastify';
 import DeleteUserModal from '../../components/Management/DeleteUserModal';
 import EditUserModal from '../../components/Management/EditUserModal';
 import axiosInstance from '../../utils/axiosInstance';
 import AddPocForm from '../../components/Management/AddPocForm';
+import AddFarmerModal from '../../components/Management/AddFarmerModal';
+import AddTransportModal from '../../components/Management/AddTransportModal';
 
 interface User {
   id: number;
@@ -17,10 +18,19 @@ interface User {
     lat: number;
     lng: number;
   };
-  status: 'Active' | 'Inactive';
+  status: 'active' | 'inactive';
   lastActive: string;
   email: string;
   phone: string;
+  firstName?: string;
+  lastName?: string;
+  nationalId?: string;
+  phoneNumber?: string;
+  address?: {
+    street: string;
+    city: string;
+    postalCode: string;
+  };
 }
 
 const UserManagement = () => {
@@ -35,42 +45,49 @@ const UserManagement = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        if (activeTab === 'users') {
-          const response = await axiosInstance.get('/users');
-          setUsers(response.data);
-        } else if (activeTab === 'farmers') {
-          const response = await axiosInstance.get('/farmers');
-          setFarmers(response.data);
-        } else if (activeTab === 'pocs') {
-          const response = await axiosInstance.get('/pocs');
-          setPocs(response.data);
-        } else if (activeTab === 'transports') {
-          const response = await axiosInstance.get('/transports');
-          setTransports(response.data);
-        }
-      } catch (error) {
-        toast.error('Failed to fetch data');
+  const fetchData = async () => {
+    try {
+      if (activeTab === 'users') {
+        const response = await axiosInstance.get('/users');
+        setUsers(response.data);
+      } else if (activeTab === 'farmers') {
+        const response = await axiosInstance.get('/farmers');
+        setFarmers(response.data);
+      } else if (activeTab === 'pocs') {
+        const response = await axiosInstance.get('/pocs');
+        setPocs(response.data);
+      } else if (activeTab === 'transports') {
+        const response = await axiosInstance.get('/transports');
+        setTransports(response.data);
       }
-    };
+    } catch (error) {
+      toast.error('Failed to fetch data');
+    }
+  };
 
+  useEffect(() => {
     fetchData();
   }, [activeTab]);
 
   const handleAddUser = async (userData: Omit<User, 'id' | 'lastActive'>) => {
     try {
-      if (activeTab === 'pocs') {
-        await axiosInstance.post('/pocs', userData);
-        toast.success('POC added successfully');
-      } else {
-        // Handle other tabs if needed
-        toast.success('User added successfully');
+      let endpoint = '';
+      if (activeTab === 'users') {
+        endpoint = '/users';
+      } else if (activeTab === 'farmers') {
+        endpoint = '/farmers';
+      } else if (activeTab === 'transports') {
+        endpoint = '/transports';
+      }
+
+      if (endpoint) {
+        await axiosInstance.post(endpoint, userData);
+        toast.success(`${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} added successfully`);
       }
       setShowAddModal(false);
+      fetchData(); // Refresh data after adding
     } catch (error) {
-      toast.error('Failed to add user');
+      toast.error(`Failed to add ${activeTab}`);
     }
   };
 
@@ -94,8 +111,8 @@ const UserManagement = () => {
     birthday: string;
     nationalId: string;
     phoneNumber: string;
-    longitude: number;
-    latitude: number;
+    longitude: number | string;
+    latitude: number | string;
     username: string;
     password: string;
     address: {
@@ -106,20 +123,51 @@ const UserManagement = () => {
     status: string;
   }) => {
     try {
-      // Log the data being sent
-      console.log('Data being sent:', pocData);
+      const formattedBirthday = new Date(pocData.birthday).toISOString().split('T')[0] + 'T00:00:00Z';
+      const formattedPocData = {
+        ...pocData,
+        birthday: formattedBirthday,
+        longitude: Number(pocData.longitude),
+        latitude: Number(pocData.latitude),
+        status: pocData.status.toLowerCase(),
+      };
 
-      // Correct the endpoint URL
-      const response = await axiosInstance.post('/pocs', pocData);
+      await axiosInstance.post('/pocs', formattedPocData, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
-      // Handle success
-      console.log('POC added successfully:', response.data);
       toast.success('POC added successfully!');
+      fetchData();
     } catch (error) {
-      console.error('Error adding POC:', error);
       toast.error('Error adding POC');
     }
   };
+
+  const AddUserForm = ({ onClose, onSubmit }: { onClose: () => void; onSubmit: (data: any) => void }) => (
+    <div>
+      {/* Form fields for adding a user */}
+      <button onClick={onClose}>Close</button>
+      <button onClick={() => onSubmit({ /* user data */ })}>Submit</button>
+    </div>
+  );
+
+  const AddFarmerForm = ({ onClose, onSubmit }: { onClose: () => void; onSubmit: (data: any) => void }) => (
+    <div>
+      {/* Form fields for adding a farmer */}
+      <button onClick={onClose}>Close</button>
+      <button onClick={() => onSubmit({ /* farmer data */ })}>Submit</button>
+    </div>
+  );
+
+  const AddTransportForm = ({ onClose, onSubmit }: { onClose: () => void; onSubmit: (data: any) => void }) => (
+    <div>
+      {/* Form fields for adding a transport */}
+      <button onClick={onClose}>Close</button>
+      <button onClick={() => onSubmit({ /* transport data */ })}>Submit</button>
+    </div>
+  );
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
@@ -212,10 +260,31 @@ const UserManagement = () => {
         </div>
       </div>
 
+      {showAddModal && activeTab === 'users' && (
+        <AddUserForm
+          onClose={() => setShowAddModal(false)}
+          onSubmit={handleAddUser}
+        />
+      )}
+
+      {showAddModal && activeTab === 'farmers' && (
+        <AddFarmerForm
+          onClose={() => setShowAddModal(false)}
+          onSubmit={handleAddUser}
+        />
+      )}
+
       {showAddModal && activeTab === 'pocs' && (
         <AddPocForm
           onClose={() => setShowAddModal(false)}
           onSubmit={handleAddPoc}
+        />
+      )}
+
+      {showAddModal && activeTab === 'transports' && (
+        <AddTransportForm
+          onClose={() => setShowAddModal(false)}
+          onSubmit={handleAddUser}
         />
       )}
 

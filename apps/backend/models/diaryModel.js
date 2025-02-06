@@ -1,47 +1,40 @@
 import { prisma } from "../postgres/postgres.js";
 
 // Create a new diary entry
-export const createDiary = async ({ date, content, transportId, farmerId }) => {
+export const createDiary = async ({ entryDate, status, remarks, transportId, approveStatus }) => {
   return await prisma.diary.create({
     data: {
-      date,
-      content,
-      transport: { connect: { id: transportId } },  // Connect to the transport via transportId
-      farmer: { connect: { id: farmerId } },  // Connect to the farmer via farmerId
+      entryDate,
+      status,
+      remarks,
+      transportId,
+      approveStatus,
     },
   });
 };
 
 // Get all diary entries
 export const getDiaries = async () => {
-  return await prisma.diary.findMany({
-    include: {
-      transport: true,  // Include related transport data
-      farmer: true,  // Include related farmer data
-    },
-  });
+  return await prisma.diary.findMany();
 };
 
 // Get a diary entry by ID
 export const getDiaryById = async (id) => {
   return await prisma.diary.findUnique({
     where: { id: parseInt(id) },
-    include: {
-      transport: true,
-      farmer: true,
-    },
   });
 };
 
 // Update a diary entry by ID
-export const updateDiary = async (id, { date, content, transportId, farmerId }) => {
+export const updateDiary = async (id, { entryDate, status, remarks, transportId, approveStatus }) => {
   return await prisma.diary.update({
     where: { id: parseInt(id) },
     data: {
-      date,
-      content,
-      transport: { connect: { id: transportId } },
-      farmer: { connect: { id: farmerId } },
+      entryDate,
+      status,
+      remarks,
+      transportId,
+      approveStatus,
     },
   });
 };

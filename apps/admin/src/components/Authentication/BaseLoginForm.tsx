@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 
 import { toast } from 'react-toastify';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
@@ -20,7 +21,7 @@ const BaseLoginForm: React.FC<BaseLoginFormProps> = ({ role, onSuccess }) => {
     password: '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!isValidPhone(formData.phone)) {
@@ -31,30 +32,31 @@ const BaseLoginForm: React.FC<BaseLoginFormProps> = ({ role, onSuccess }) => {
       return;
     }
 
-    // Dummy credentials for each role
-    const dummyCredentials: Record<string, { phone: string; password: string }[]> = {
-      farmer: [
-        { phone: '0780000000', password: 'farmer123' },
-        { phone: '0780000001', password: 'farmer123' }, // Additional farmer accounts
-        { phone: '0780000002', password: 'farmer123' },
-      ],
-      poc: [{ phone: '0780000010', password: 'poc123' }],
-      transport: [{ phone: '0780000020', password: 'transport123' }],
-      production: [{ phone: '0780000030', password: 'production123' }],
-      management: [{ phone: '0780000040', password: 'admin123' }],
-      diary: [{ phone: '0780000050', password: 'diary123' }],
+    // Define endpoints for each role
+    const endpoints: Record<string, string> = {
+      farmer: '/api/auth/farmer/login',
+      poc: '/api/login-poc',
+      transport: '/api/auth/transport/login',
+      production: '/api/auth/production/login',
+      management: '/api/auth/management/login',
+      diary: '/api/auth/diary/login',
     };
 
-    // Check credentials
-    const validCredentials = dummyCredentials[role].find(
-      cred => cred.phone === formData.phone && cred.password === formData.password
-    );
+    try {
+      // Make a POST request to the appropriate endpoint
+      const response = await axios.post(endpoints[role], {
+        phone: formData.phone,
+        password: formData.password,
+      });
 
-    if (validCredentials) {
-      toast.success('Login successful!');
-      onSuccess(formData.phone);
-    } else {
-      toast.error('Invalid credentials');
+      if (response.status === 200) {
+        toast.success('Login successful!');
+        onSuccess(formData.phone);
+      } else {
+        toast.error('Invalid credentials');
+      }
+    } catch (error) {
+      toast.error('An error occurred during login');
     }
   };
 

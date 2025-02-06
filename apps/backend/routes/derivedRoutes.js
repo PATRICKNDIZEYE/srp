@@ -1,5 +1,5 @@
 import express from "express";
-import { createDerived, getDeriveds, getDerivedById, updateDerived, deleteDerived } from "../models/derivedModel.js";
+import { createDerived, getDerivedEntries, getDerivedById, updateDerived, deleteDerived } from "../models/derivedModel.js";
 
 const router = express.Router();
 
@@ -25,7 +25,7 @@ router.post("/", async (req, res) => {
 // Get all derived entries
 router.get("/", async (req, res) => {
   try {
-    const derivedEntries = await getDeriveds();
+    const derivedEntries = await getDerivedEntries();
     res.status(200).json(derivedEntries);
   } catch (error) {
     res.status(500).json({ error: error.message });

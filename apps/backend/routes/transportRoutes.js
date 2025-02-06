@@ -6,19 +6,7 @@ const router = express.Router();
 // Create a new transport
 router.post("/", async (req, res) => {
   try {
-    const { vehicleId, type, capacity, region, status, driverName, contact } = req.body;
-
-    // Create transport
-    const transport = await createTransport({
-      vehicleId,
-      type,
-      capacity,
-      region,
-      status,
-      driverName,
-      contact,
-    });
-
+    const transport = await createTransport(req.body);
     res.status(201).json(transport);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -52,19 +40,7 @@ router.get("/:id", async (req, res) => {
 // Update a transport by ID
 router.put("/:id", async (req, res) => {
   try {
-    const { vehicleId, type, capacity, region, status, driverName, contact } = req.body;
-
-    // Update transport
-    const transport = await updateTransport(req.params.id, {
-      vehicleId,
-      type,
-      capacity,
-      region,
-      status,
-      driverName,
-      contact,
-    });
-
+    const transport = await updateTransport(req.params.id, req.body);
     if (transport) {
       res.status(200).json(transport);
     } else {

@@ -11,14 +11,19 @@ import errorHandling from './middlewares/errorHandler.js';
 import stockRoutes from './routes/stockRoutes.js';
 import milkSubmissionRoutes from './routes/milkSubmissionRoutes.js';
 import loginFarmerAuth from './auth/loginFarmerAuth.js';
-// Import the reset password module
-import resetPasswordAuth from './auth/resetFarmerPassword.js'; // Adjust the path as necessary
-// Import the register farmer module
+import loginPOCAuth from './auth/loginPOCAuth.js';
+import resetPasswordAuth from './auth/resetFarmerPassword.js';
 import { registerFarmerAuth } from './auth/registerFarmerAuth.js'; // Adjust the path as necessary
 import loanRoutes from './routes/loanRoutes.js';
 // Import database connection (if necessary)
 import { connection } from './postgres/postgres.js';
 import pocRoutes from './routes/pocRoutes.js';
+
+// Import additional routes
+import userRoutes from './routes/userRoutes.js';
+import transportRoutes from './routes/transportRoutes.js';
+import derivedRoutes from './routes/derivedRoutes.js';
+import diaryRoutes from './routes/diaryRoutes.js';
 
 dotenv.config();
 const app = express();
@@ -38,6 +43,7 @@ app.get('/', (req, res) => {
 app.use('/api/stocks', stockRoutes);
 app.use('/api/milk-submissions', milkSubmissionRoutes);
 app.use('/api/login-farmer', loginFarmerAuth);
+app.use('/api/login-poc', loginPOCAuth);
 app.use('/api/reset-password', resetPasswordAuth);
 app.use('/api/pocs', pocRoutes);
 
@@ -52,6 +58,12 @@ app.post('/api/register-farmer', async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 });
+
+// Use the routes
+app.use('/api/users', userRoutes);
+app.use('/api/transports', transportRoutes);
+app.use('/api/derived', derivedRoutes);
+app.use('/api/diaries', diaryRoutes);
 
 // Start Server
 const PORT = process.env.PORT || 2025;

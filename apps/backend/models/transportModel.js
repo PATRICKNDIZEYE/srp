@@ -1,16 +1,20 @@
 import { prisma } from "../postgres/postgres.js";
 
 // Create a new transport
-export const createTransport = async ({ vehicleId, type, capacity, region, status, driverName, contact }) => {
+export const createTransport = async ({ firstName, lastName, birthday, nationalId, phoneNumber, longitude, latitude, username, password, status, delivered }) => {
   return await prisma.transport.create({
     data: {
-      vehicleId,
-      type,
-      capacity,
-      region,
+      firstName,
+      lastName,
+      birthday,
+      nationalId,
+      phoneNumber,
+      longitude,
+      latitude,
+      username,
+      password,
       status,
-      driverName,
-      contact,
+      delivered,
     },
   });
 };
@@ -28,17 +32,21 @@ export const getTransportById = async (id) => {
 };
 
 // Update a transport by ID
-export const updateTransport = async (id, { vehicleId, type, capacity, region, status, driverName, contact }) => {
+export const updateTransport = async (id, { firstName, lastName, birthday, nationalId, phoneNumber, longitude, latitude, username, password, status, delivered }) => {
   return await prisma.transport.update({
     where: { id: parseInt(id) },
     data: {
-      vehicleId,
-      type,
-      capacity,
-      region,
+      firstName,
+      lastName,
+      birthday,
+      nationalId,
+      phoneNumber,
+      longitude,
+      latitude,
+      username,
+      password,
       status,
-      driverName,
-      contact,
+      delivered,
     },
   });
 };

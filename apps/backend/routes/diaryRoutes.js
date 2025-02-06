@@ -6,16 +6,7 @@ const router = express.Router();
 // Create a new diary entry
 router.post("/", async (req, res) => {
   try {
-    const { date, content, transportId, farmerId } = req.body;
-
-    // Create diary entry
-    const diary = await createDiary({
-      date,
-      content,
-      transportId,
-      farmerId,
-    });
-
+    const diary = await createDiary(req.body);
     res.status(201).json(diary);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -49,16 +40,7 @@ router.get("/:id", async (req, res) => {
 // Update a diary entry by ID
 router.put("/:id", async (req, res) => {
   try {
-    const { date, content, transportId, farmerId } = req.body;
-
-    // Update diary entry
-    const diary = await updateDiary(req.params.id, {
-      date,
-      content,
-      transportId,
-      farmerId,
-    });
-
+    const diary = await updateDiary(req.params.id, req.body);
     if (diary) {
       res.status(200).json(diary);
     } else {
