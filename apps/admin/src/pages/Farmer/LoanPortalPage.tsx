@@ -1,18 +1,63 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Breadcrumb from '../../components/Breadcrumb';
 import { FiDollarSign, FiClock, FiAlertCircle } from 'react-icons/fi';
 import { toast } from 'react-toastify';
+import axiosInstance from '../../utils/axiosInstance';
+
+// Define a type for the loan objects
+type Loan = {
+  id: number;
+  loanAmount: number;
+  purpose: string;
+  status: string;
+  requestDate: string;
+  farmerId: number;
+  farmer: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    birthday: string;
+    nationalId: string;
+    phoneNumber: string;
+    longitude: number;
+    latitude: number;
+    username: string;
+    password: string;
+    farmDetails: {
+      size: string;
+      type: string;
+    };
+    status: string;
+    pocId: number | null;
+  };
+};
 
 const LoanPortalPage = () => {
   const [showLoanForm, setShowLoanForm] = useState(false);
   const [loanAmount, setLoanAmount] = useState('');
   const [purpose, setPurpose] = useState('');
+  const [loans, setLoans] = useState<Loan[]>([]);
 
   const maxLoanAmount = 50000; // RF 50,000
   const currentDebt = 0; // This would come from the backend
   const monthlyIncome = 245000; // This would be calculated from milk submissions
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const userId = 1; // Replace with actual logged-in user ID
+
+  const fetchLoans = async () => {
+    try {
+      const response = await axiosInstance.get(`/loans/farmer/${userId}`);
+      setLoans(response.data);
+    } catch (error) {
+      toast.error('Failed to fetch loans');
+    }
+  };
+
+  useEffect(() => {
+    fetchLoans();
+  }, [userId]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const amount = Number(loanAmount);
     
@@ -26,11 +71,37 @@ const LoanPortalPage = () => {
       return;
     }
 
-    // Handle loan request submission
-    toast.success('Loan request submitted successfully!');
-    setShowLoanForm(false);
-    setLoanAmount('');
-    setPurpose('');
+    try {
+      const loanData = {
+        loanAmount: amount,
+        purpose,
+        status: 'Pending',
+        farmerId: userId,
+      };
+
+      // Log the data being sent
+      console.log('Sending loan request:', loanData);
+
+      // Send loan request to the backend
+      const response = await axiosInstance.post('/loans', loanData);
+
+      // Log the response for debugging
+      console.log('Response:', response);
+
+      // Check if the response status indicates success
+      if (response.status >= 200 && response.status < 300) {
+        toast.success('Loan request submitted successfully!');
+        setShowLoanForm(false);
+        setLoanAmount('');
+        setPurpose('');
+        fetchLoans(); // Refresh loan list
+      } else {
+        toast.error('Failed to submit loan request');
+      }
+    } catch (error) {
+      console.error('Error submitting loan request:', error);
+      toast.error('An error occurred while submitting the loan request');
+    }
   };
 
   return (
@@ -156,26 +227,13 @@ const LoanPortalPage = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {[
-                {
-                  date: '2024-01-15',
-                  amount: 'RF 30,000',
-                  purpose: 'Equipment purchase',
-                  status: 'Approved',
-                },
-                {
-                  date: '2023-12-01',
-                  amount: 'RF 25,000',
-                  purpose: 'Feed stock',
-                  status: 'Completed',
-                },
-              ].map((loan, idx) => (
-                <tr key={idx} className="hover:bg-gray-50">
+              {loans.map((loan) => (
+                <tr key={loan.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {loan.date}
+                    {new Date(loan.requestDate).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {loan.amount}
+                    RF {loan.loanAmount}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {loan.purpose}

@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FiUserPlus, FiEdit2, FiTrash2, FiMapPin } from 'react-icons/fi';
 import Breadcrumb from '../../components/Breadcrumb';
 import AddUserModal from '../../components/Management/AddUserModal';
 import { toast } from 'react-toastify';
 import DeleteUserModal from '../../components/Management/DeleteUserModal';
 import EditUserModal from '../../components/Management/EditUserModal';
+import axiosInstance from '../../utils/axiosInstance';
+import AddPocForm from '../../components/Management/AddPocForm';
 
 interface User {
   id: number;
@@ -23,61 +25,53 @@ interface User {
 
 const UserManagement = () => {
   const [showAddModal, setShowAddModal] = useState(false);
-  const [users] = useState<User[]>([
-    {
-      id: 1,
-      name: 'John Doe',
-      role: 'Production Manager',
-      site: 'Kigali Dairy',
-      coordinates: { lat: -1.9441, lng: 30.0619 },
-      status: 'Active',
-      lastActive: '2 hours ago',
-      email: 'john.doe@example.com',
-      phone: '+250 781234567'
-    },
-    {
-      id: 2,
-      name: 'Jane Smith',
-      role: 'Transport Coordinator',
-      site: 'Gasabo POC',
-      coordinates: { lat: -1.9441, lng: 30.0619 },
-      status: 'Active',
-      lastActive: '1 day ago',
-      email: 'jane.smith@example.com',
-      phone: '+250 787654321'
-    },
-    {
-      id: 3,
-      name: 'Mike Wilson',
-      role: 'Diary Manager',
-      site: 'Nyarugenge Diary',
-      coordinates: { lat: -1.9508, lng: 30.0575 },
-      status: 'Inactive',
-      lastActive: '5 days ago',
-      email: 'mike.wilson@example.com',
-      phone: '+250 789012345'
-    },
-    {
-      id: 4,
-      name: 'Sarah Johnson',
-      role: 'POC Manager',
-      site: 'Kicukiro POC',
-      coordinates: { lat: -1.9706, lng: 30.0903 },
-      status: 'Active',
-      lastActive: '3 hours ago',
-      email: 'sarah.j@example.com',
-      phone: '+250 783456789'
-    }
-  ]);
+  const [activeTab, setActiveTab] = useState('users');
+  const [users, setUsers] = useState<User[]>([]);
+  const [farmers, setFarmers] = useState<User[]>([]);
+  const [pocs, setPocs] = useState<User[]>([]);
+  const [transports, setTransports] = useState<User[]>([]);
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
-  const handleAddUser = (userData: Omit<User, 'id' | 'lastActive'>) => {
-    // Add user logic here
-    toast.success('User added successfully');
-    setShowAddModal(false);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        if (activeTab === 'users') {
+          const response = await axiosInstance.get('/users');
+          setUsers(response.data);
+        } else if (activeTab === 'farmers') {
+          const response = await axiosInstance.get('/farmers');
+          setFarmers(response.data);
+        } else if (activeTab === 'pocs') {
+          const response = await axiosInstance.get('/pocs');
+          setPocs(response.data);
+        } else if (activeTab === 'transports') {
+          const response = await axiosInstance.get('/transports');
+          setTransports(response.data);
+        }
+      } catch (error) {
+        toast.error('Failed to fetch data');
+      }
+    };
+
+    fetchData();
+  }, [activeTab]);
+
+  const handleAddUser = async (userData: Omit<User, 'id' | 'lastActive'>) => {
+    try {
+      if (activeTab === 'pocs') {
+        await axiosInstance.post('/pocs', userData);
+        toast.success('POC added successfully');
+      } else {
+        // Handle other tabs if needed
+        toast.success('User added successfully');
+      }
+      setShowAddModal(false);
+    } catch (error) {
+      toast.error('Failed to add user');
+    }
   };
 
   const handleEditUser = (userId: number, userData: Omit<User, 'id' | 'lastActive'>) => {
@@ -94,19 +88,59 @@ const UserManagement = () => {
     setSelectedUser(null);
   };
 
+  const handleAddPoc = async (pocData: {
+    firstName: string;
+    lastName: string;
+    birthday: string;
+    nationalId: string;
+    phoneNumber: string;
+    longitude: number;
+    latitude: number;
+    username: string;
+    password: string;
+    address: {
+      street: string;
+      city: string;
+      postalCode: string;
+    };
+    status: string;
+  }) => {
+    try {
+      // Log the data being sent
+      console.log('Data being sent:', pocData);
+
+      // Correct the endpoint URL
+      const response = await axiosInstance.post('/pocs', pocData);
+
+      // Handle success
+      console.log('POC added successfully:', response.data);
+      toast.success('POC added successfully!');
+    } catch (error) {
+      console.error('Error adding POC:', error);
+      toast.error('Error adding POC');
+    }
+  };
+
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
       <Breadcrumb pageName="User Management" />
       
+      <div className="tabs">
+        <button onClick={() => setActiveTab('users')}>Users</button>
+        <button onClick={() => setActiveTab('farmers')}>Farmers</button>
+        <button onClick={() => setActiveTab('pocs')}>POCs</button>
+        <button onClick={() => setActiveTab('transports')}>Transports</button>
+      </div>
+
       <div className="bg-white rounded-lg shadow-lg overflow-hidden">
         <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-          <h2 className="text-xl font-semibold">Users</h2>
+          <h2 className="text-xl font-semibold">{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}</h2>
           <button 
             onClick={() => setShowAddModal(true)}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700"
           >
             <FiUserPlus />
-            Add User
+            Add {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
           </button>
         </div>
 
@@ -115,46 +149,40 @@ const UserManagement = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Site</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">National ID</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Address</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contact</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Last Active</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {users.map((user) => (
+              {(activeTab === 'users' ? users : activeTab === 'farmers' ? farmers : activeTab === 'pocs' ? pocs : transports).map((user) => (
                 <tr key={user.id}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="h-10 w-10 flex-shrink-0">
                         <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                          {user.name.charAt(0)}
+                          {user.firstName ? user.firstName.charAt(0) : '?'}
                         </div>
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                        <div className="text-sm text-gray-500">{user.email}</div>
+                        <div className="text-sm font-medium text-gray-900">{user.firstName || 'Unknown'} {user.lastName || ''}</div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">{user.role}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center text-sm">
-                      <FiMapPin className="mr-1 text-gray-500" />
-                      {user.site}
-                    </div>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">{user.nationalId || 'No ID'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">{user.phoneNumber || 'No phone'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    {user.address ? `${user.address.street}, ${user.address.city}, ${user.address.postalCode}` : 'No address'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-2 py-1 text-xs rounded-full ${
-                      user.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      user.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                     }`}>
-                      {user.status}
+                      {user.status || 'Unknown'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">{user.phone}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.lastActive}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex gap-2">
                       <button 
@@ -184,10 +212,10 @@ const UserManagement = () => {
         </div>
       </div>
 
-      {showAddModal && (
-        <AddUserModal
+      {showAddModal && activeTab === 'pocs' && (
+        <AddPocForm
           onClose={() => setShowAddModal(false)}
-          onSubmit={handleAddUser}
+          onSubmit={handleAddPoc}
         />
       )}
 

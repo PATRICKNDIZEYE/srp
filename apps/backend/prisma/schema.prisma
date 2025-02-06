@@ -2,6 +2,7 @@ datasource db {
   provider = "postgresql"
   url      = "postgresql://postgres:lionson@localhost:2005/slp"
 }
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,10 +12,10 @@ model MilkSubmission {
   milkType  String  
   amount    Float   
   notes     String? 
-  status    String   // Status of the submission (e.g., Pending, Accepted)
-  createdAt DateTime @default(now())  // Timestamp of when the submission was made
-  updatedAt DateTime @updatedAt      // Timestamp of the last update
-  farmerId  Int      // ID of the farmer who submitted the milk
+  status    String  
+  createdAt DateTime @default(now()) 
+  updatedAt DateTime @updatedAt     
+  farmerId  Int      
 
   farmer    Farmer   @relation("FarmerToMilkSubmission", fields: [farmerId], references: [id])  // Relationship to the Farmer model
 }
@@ -75,25 +76,26 @@ model POC {
 }
 
 model Farmer {
-  id          Int       @id @default(autoincrement())
-  firstName   String
-  lastName    String
-  birthday    DateTime
-  nationalId  String    @unique
-  phoneNumber String
-  longitude   Float
-  latitude    Float
-  username    String    @unique
-  password    String
-  farmDetails Json
-  status      String
+  id                Int       @id @default(autoincrement())
+  firstName         String
+  lastName          String
+  birthday          DateTime
+  nationalId        String    @unique
+  phoneNumber       String    @unique
+  longitude         Float
+  latitude          Float
+  username          String    @unique
+  password          String
+  farmDetails       Json
+  status            String
   
-  poc         POC?      @relation("POCToFarmer", fields: [pocId], references: [id])
-  pocId       Int?      @unique
+  poc               POC?      @relation("POCToFarmer", fields: [pocId], references: [id])
+  pocId             Int?      @unique
   
-  stocks      Stock[]
+  stocks            Stock[]
+  milkSubmissions   MilkSubmission[] @relation("FarmerToMilkSubmission")
   
-  milkSubmissions MilkSubmission[] @relation("FarmerToMilkSubmission")
+  loans             Loan[]  
 }
 
 model Transport {
@@ -139,4 +141,23 @@ model Diary {
   transport      Transport @relation(fields: [transportId], references: [id])
   approveStatus  String    @default("pending")
   derivedData    Derived[]
+}
+
+model Loan {
+  id            Int      @id @default(autoincrement())
+  loanAmount    Float  
+  purpose       String  
+  status        LoanStatus 
+  requestDate   DateTime @default(now()) 
+  farmerId      Int     
+  farmer        Farmer   @relation(fields: [farmerId], references: [id])
+
+  @@index([farmerId])
+}
+
+enum LoanStatus {
+  Pending
+  Approved
+  Completed
+  Rejected
 }

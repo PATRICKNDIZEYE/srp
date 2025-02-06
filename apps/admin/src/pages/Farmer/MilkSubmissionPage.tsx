@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Breadcrumb from '../../components/Breadcrumb';
 import { toast } from 'react-toastify';
+import axiosInstance from '../../utils/axiosInstance';
 
 const MilkSubmissionPage = () => {
   const [formData, setFormData] = useState({
@@ -9,11 +10,51 @@ const MilkSubmissionPage = () => {
     notes: '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [submissions, setSubmissions] = useState([]); // State to store submissions
+
+  // Set farmerId to 2
+  const farmerId = 2;
+
+  useEffect(() => {
+    const fetchSubmissions = async () => {
+      try {
+        const response = await axiosInstance.get('/milk-submissions');
+        setSubmissions(response.data);
+      } catch (error) {
+        console.error('Error fetching submissions:', error);
+        toast.error('Failed to load recent submissions.');
+      }
+    };
+
+    fetchSubmissions();
+  }, []); // Fetch submissions on component mount
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle submission logic here
-    toast.success('Milk submission recorded! Waiting for POC confirmation.');
-    setFormData({ milkType: '', amount: '', notes: '' });
+    try {
+      // Log the formData to the console
+      console.log('Submitting data:', formData);
+
+      // Prepare the data with the specified format
+      const submissionData = {
+        milkType: formData.milkType,
+        amount: parseInt(formData.amount, 10), // Ensure amount is a number
+        notes: formData.notes,
+        status: 'Pending', // Assuming status is always 'Pending' on submission
+        farmerId: farmerId,
+      };
+
+      // Log the submissionData to the console
+      console.log('Data sent to server:', submissionData);
+
+      // Send POST request to the milk-submissions endpoint
+      await axiosInstance.post('/milk-submissions', submissionData);
+      toast.success('Milk submission recorded! Waiting for POC confirmation.');
+      setFormData({ milkType: '', amount: '', notes: '' });
+    } catch (error) {
+      console.error('Error submitting milk data:', error);
+      toast.error('Failed to submit milk data. Please try again.');
+    }
   };
 
   return (
@@ -109,29 +150,16 @@ const MilkSubmissionPage = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {[
-                  {
-                    date: '2024-02-20',
-                    type: 'Inshushyu',
-                    amount: '85L',
-                    status: 'Pending',
-                  },
-                  {
-                    date: '2024-02-19',
-                    type: 'Ikivuguto',
-                    amount: '75L',
-                    status: 'Accepted',
-                  },
-                ].map((submission, idx) => (
-                  <tr key={idx} className="hover:bg-gray-50">
+                {submissions.map((submission) => (
+                  <tr key={submission.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {submission.date}
+                      {new Date(submission.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {submission.type}
+                      {submission.milkType}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {submission.amount}
+                      {submission.amount}L
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span

@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
 import { isValidPhone } from '../../utils/validation';
+import axiosInstance from '../../utils/axiosInstance';
+import axios, { AxiosError } from 'axios';
 
 const FarmerRegistration = () => {
   const navigate = useNavigate();
@@ -21,10 +23,16 @@ const FarmerRegistration = () => {
     location: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    birthday: '',
+    nationalId: '',
+    longitude: '',
+    latitude: '',
+    farmType: '',
+    farmSize: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate phone number
@@ -36,13 +44,19 @@ const FarmerRegistration = () => {
       return;
     }
 
-    // Dummy authentication logic
     if (isLogin) {
-      // Simulating login with dummy credentials
-      if (formData.phone === '0780000000' && formData.password === 'password123') {
+      // Login logic
+      try {
+        const response = await axiosInstance.post('/login-farmer', {
+          phoneNumber: formData.phone,
+          password: formData.password
+        });
+        console.log('Login successful:', response.data);
         toast.success('Login successful!');
         navigate('/farmer/dashboard');
-      } else {
+      } catch (error) {
+        const axiosError = error as AxiosError;
+        console.error('Error during login:', axiosError.response ? axiosError.response.data : axiosError.message);
         toast.error('Invalid credentials');
       }
     } else {
@@ -51,9 +65,45 @@ const FarmerRegistration = () => {
         toast.error('Passwords do not match');
         return;
       }
-      // Simulate successful registration
-      toast.success('Registration successful! Please login.');
-      setIsLogin(true);
+
+      try {
+        const formattedBirthday = formData.birthday
+          ? new Date(formData.birthday).toISOString()
+          : '1990-01-01T00:00:00.000Z';
+
+        const registrationData = {
+          firstName: formData.fullName.split(' ')[0] || '',
+          lastName: formData.fullName.split(' ')[1] || '',
+          birthday: formattedBirthday,
+          nationalId: formData.nationalId || '123456789',
+          phoneNumber: formData.phone,
+          longitude: parseFloat(formData.longitude) || 40.7128,
+          latitude: parseFloat(formData.latitude) || 74.006,
+          username: formData.fullName.split(' ')[0].toLowerCase() || 'lionson',
+          password: formData.password,
+          farmDetails: {
+            type: formData.farmType || 'organic',
+            size: formData.farmSize || '5 acres'
+          },
+          status: 'active'
+        };
+
+        console.log('Registration Data:', registrationData);
+
+        // Make a POST request to register-farmer endpoint
+        const response = await axiosInstance.post('/register-farmer', registrationData);
+        if (response.status === 201) {
+          toast.success('Registration successful! Please login.');
+          setIsLogin(true);
+        }
+      } catch (error) {
+        const axiosError = error as AxiosError;
+        if (axiosError.response && axiosError.response.data) {
+          toast.error(`Registration failed: ${axiosError.response.data.message}`);
+        } else {
+          toast.error('Registration failed. Please try again.');
+        }
+      }
     }
   };
 
@@ -94,6 +144,78 @@ const FarmerRegistration = () => {
                   value={formData.location}
                   onChange={(e) =>
                     setFormData({ ...formData, location: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 mb-2">Birthday</label>
+                <input
+                  type="date"
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
+                  value={formData.birthday}
+                  onChange={(e) =>
+                    setFormData({ ...formData, birthday: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 mb-2">National ID</label>
+                <input
+                  type="text"
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
+                  value={formData.nationalId}
+                  onChange={(e) =>
+                    setFormData({ ...formData, nationalId: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 mb-2">Longitude</label>
+                <input
+                  type="text"
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
+                  value={formData.longitude}
+                  onChange={(e) =>
+                    setFormData({ ...formData, longitude: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 mb-2">Latitude</label>
+                <input
+                  type="text"
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
+                  value={formData.latitude}
+                  onChange={(e) =>
+                    setFormData({ ...formData, latitude: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 mb-2">Farm Type</label>
+                <input
+                  type="text"
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
+                  value={formData.farmType}
+                  onChange={(e) =>
+                    setFormData({ ...formData, farmType: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 mb-2">Farm Size</label>
+                <input
+                  type="text"
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
+                  value={formData.farmSize}
+                  onChange={(e) =>
+                    setFormData({ ...formData, farmSize: e.target.value })
                   }
                   required
                 />

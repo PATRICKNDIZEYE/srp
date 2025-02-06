@@ -4,7 +4,7 @@ const token = localStorage.getItem('adminToken');
 
 // Create axios instance with default config
 const axiosInstance = axios.create({
-    baseURL: 'http://localhost:5001/api',
+    baseURL: 'http://localhost:2004/api',
     headers: {
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {})
