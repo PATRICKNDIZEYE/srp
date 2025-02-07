@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axiosInstance from '../../utils/axiosInstance'; // Ensure this path is correct
 import Breadcrumb from '../../components/Breadcrumb';
 import DateRangeFilter from '../../components/Filters/DateRangeFilter';
 import { toast } from 'react-toastify';
@@ -7,20 +8,20 @@ const MilkSubmissions = () => {
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState('all');
+  const [submissions, setSubmissions] = useState([]); // Initialize with an empty array
 
-  // Dummy data
-  const submissions = [
-    {
-      id: '1',
-      date: '2024-02-20',
-      farmerName: 'John Doe',
-      type: 'Inshushyu',
-      quantity: '85L',
-      qualityTest: 'Pending',
-      status: 'Pending',
-    },
-    // Add more submissions...
-  ];
+  useEffect(() => {
+    const fetchSubmissions = async () => {
+      try {
+        const response = await axiosInstance.get('/milk-submissions');
+        setSubmissions(response.data);
+      } catch (error) {
+        toast.error('Failed to fetch milk submissions');
+      }
+    };
+
+    fetchSubmissions();
+  }, []);
 
   const handleQualityTest = (submissionId: string) => {
     // Open quality test modal/form

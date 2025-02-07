@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Breadcrumb from '../../components/Breadcrumb';
 import CardDataStats from '../../components/CardDataStats';
 import { FiUsers, FiDroplet, FiTruck, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
 import DateRangeFilter from '../../components/Filters/DateRangeFilter';
 import { toast } from 'react-toastify';
+import axiosInstance from '../../utils/axiosInstance';
 
 const POCDashboard = () => {
   // Filter states
@@ -12,55 +13,49 @@ const POCDashboard = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('all');
   const [selectedTab, setSelectedTab] = useState('milk-submissions');
 
-  // This would come from your backend
-  const stats = {
-    totalMilk: {
-      current: '500L',
-      pending: '150L',
-      assigned: '250L',
-      available: '100L',
-    },
-    farmers: {
-      total: 48,
-      active: 35,
-      pending: 4,
-    },
-    quality: {
-      passed: 95,
-      failed: 5,
-      pending: 8,
-    },
-    transport: {
-      assigned: 15,
-      pending: 3,
-      completed: 12,
-    }
-  };
+  // New state for API data
+  const [apiMilkSubmissions, setApiMilkSubmissions] = useState([]);
+  const [apiPendingFarmers, setApiPendingFarmers] = useState([]);
+  const [stats, setStats] = useState({
+    totalMilk: { current: '', pending: '', assigned: '', available: '' },
+    farmers: { total: 0, active: 0, pending: 0 },
+    quality: { passed: 0, failed: 0, pending: 0 },
+    transport: { assigned: 0, pending: 0, completed: 0 },
+  });
 
-  // Dummy data
-  const milkSubmissions = [
-    {
-      id: '1',
-      date: '2024-02-20',
-      farmerName: 'John Doe',
-      farmerPhone: '0780000000',
-      type: 'Inshushyu',
-      quantity: '85L',
-      status: 'Pending',
-    },
-    // Add more submissions...
-  ];
+  // Fetch data from API
+  useEffect(() => {
+    const fetchMilkSubmissions = async () => {
+      try {
+        const response = await axiosInstance.get('/api/milk-submissions');
+        setApiMilkSubmissions(response.data);
+      } catch (error) {
+        console.error('Error fetching milk submissions:', error);
+      }
+    };
 
-  const pendingFarmers = [
-    {
-      id: '1',
-      name: 'Alice Smith',
-      phone: '0780000001',
-      registrationDate: '2024-02-19',
-      location: 'Kigali',
-    },
-    // Add more farmers...
-  ];
+    const fetchPendingFarmers = async () => {
+      try {
+        const response = await axiosInstance.get('/api/farmer/pending');
+        setApiPendingFarmers(response.data);
+      } catch (error) {
+        console.error('Error fetching pending farmers:', error);
+      }
+    };
+
+    const fetchStats = async () => {
+      try {
+        const response = await axiosInstance.get('/api/stats');
+        setStats(response.data);
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+      }
+    };
+
+    fetchMilkSubmissions();
+    fetchPendingFarmers();
+    fetchStats();
+  }, []);
 
   const handleConfirmMilk = (submissionId: string) => {
     toast.success('Milk submission confirmed successfully');
@@ -259,7 +254,7 @@ const POCDashboard = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {milkSubmissions.map((submission) => (
+                  {apiMilkSubmissions.map((submission) => (
                     <tr key={submission.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         {submission.date}
@@ -329,7 +324,7 @@ const POCDashboard = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {pendingFarmers.map((farmer) => (
+                  {apiPendingFarmers.map((farmer) => (
                     <tr key={farmer.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         {farmer.registrationDate}

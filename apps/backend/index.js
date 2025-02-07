@@ -24,6 +24,7 @@ import userRoutes from './routes/userRoutes.js';
 import transportRoutes from './routes/transportRoutes.js';
 import derivedRoutes from './routes/derivedRoutes.js';
 import diaryRoutes from './routes/diaryRoutes.js';
+import farmerRoutes from './routes/farmerRoutes.js';
 
 dotenv.config();
 const app = express();
@@ -46,7 +47,6 @@ app.use('/api/login-farmer', loginFarmerAuth);
 app.use('/api/login-poc', loginPOCAuth);
 app.use('/api/reset-password', resetPasswordAuth);
 app.use('/api/pocs', pocRoutes);
-
 app.use('/api/loans', loanRoutes);
 // Use the registerFarmerAuth function as a route handler
 
@@ -64,6 +64,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/transports', transportRoutes);
 app.use('/api/derived', derivedRoutes);
 app.use('/api/diaries', diaryRoutes);
+app.use('/api/farmer', farmerRoutes);
 
 // Start Server
 const PORT = process.env.PORT || 2025;

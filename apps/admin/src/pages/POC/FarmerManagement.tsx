@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axiosInstance from '../../utils/axiosInstance'; // Ensure this path is correct
 import Breadcrumb from '../../components/Breadcrumb';
 import DateRangeFilter from '../../components/Filters/DateRangeFilter';
 import { toast } from 'react-toastify';
@@ -7,19 +8,21 @@ const FarmerManagement = () => {
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState('all');
+  const [pendingFarmers, setPendingFarmers] = useState([]); // Updated to use state
 
-  // Dummy data
-  const pendingFarmers = [
-    {
-      id: '1',
-      registrationDate: '2024-02-20',
-      name: 'John Doe',
-      phone: '0780000000',
-      location: 'Kigali',
-      status: 'Pending',
-    },
-    // Add more farmers...
-  ];
+  useEffect(() => {
+    const fetchFarmers = async () => {
+      try {
+        const response = await axiosInstance.get('/farmer'); // Use the correct endpoint
+        setPendingFarmers(response.data);
+      } catch (error) {
+        console.error('Error fetching farmers:', error);
+        toast.error('Failed to fetch farmers');
+      }
+    };
+
+    fetchFarmers();
+  }, []); // Fetch data on component mount
 
   const handleConfirmRegistration = (farmerId: string) => {
     toast.success('Farmer registration confirmed');

@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 
 import { toast } from 'react-toastify';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
 import { isValidPhone } from '../../utils/validation';
+import axiosInstance from '../../utils/axiosInstance';
 
 interface BaseLoginFormProps {
   role: 'farmer' | 'poc' | 'transport' | 'production' | 'management' | 'diary';
@@ -34,20 +34,22 @@ const BaseLoginForm: React.FC<BaseLoginFormProps> = ({ role, onSuccess }) => {
 
     // Define endpoints for each role
     const endpoints: Record<string, string> = {
-      farmer: '/api/auth/farmer/login',
-      poc: '/api/login-poc',
-      transport: '/api/auth/transport/login',
+      farmer: '/auth/farmer/login',
+      poc: '/login-poc',
+      transport: 'auth/transport/login',
       production: '/api/auth/production/login',
       management: '/api/auth/management/login',
       diary: '/api/auth/diary/login',
     };
 
     try {
-      // Make a POST request to the appropriate endpoint
-      const response = await axios.post(endpoints[role], {
-        phone: formData.phone,
-        password: formData.password,
-      });
+      // Prepare the data to be sent in the request
+      const requestData = role === 'poc' 
+        ? { phoneNumber: formData.phone, password: formData.password }
+        : { phone: formData.phone, password: formData.password };
+
+      // Make a POST request to the appropriate endpoint using axiosInstance
+      const response = await axiosInstance.post(endpoints[role], requestData);
 
       if (response.status === 200) {
         toast.success('Login successful!');

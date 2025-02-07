@@ -1,22 +1,29 @@
 import express from "express";
+import bcrypt from "bcrypt";
 import { createFarmer, getFarmers, getFarmerById, updateFarmer, deleteFarmer } from "../models/farmerModel.js";
 
 const router = express.Router();
 
-// Create a new farmer
+// Create a new Farmer
 router.post("/", async (req, res) => {
   try {
-    const { firstName, lastName, phoneNumber, email, farmSize, region, address, status } = req.body;
+    const { firstName, lastName, birthday, nationalId, phoneNumber, longitude, latitude, username, password, farmDetails, status } = req.body;
 
-    // Create farmer
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create Farmer
     const farmer = await createFarmer({
       firstName,
       lastName,
+      birthday,
+      nationalId,
       phoneNumber,
-      email,
-      farmSize,
-      region,
-      address,
+      longitude,
+      latitude,
+      username,
+      password: hashedPassword,
+      farmDetails,
       status,
     });
 
@@ -26,7 +33,7 @@ router.post("/", async (req, res) => {
   }
 });
 
-// Get all farmers
+// Get all Farmers
 router.get("/", async (req, res) => {
   try {
     const farmers = await getFarmers();
@@ -36,7 +43,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Get a farmer by ID
+// Get a Farmer by ID
 router.get("/:id", async (req, res) => {
   try {
     const farmer = await getFarmerById(req.params.id);
@@ -50,20 +57,27 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// Update a farmer by ID
+// Update a Farmer by ID
 router.put("/:id", async (req, res) => {
   try {
-    const { firstName, lastName, phoneNumber, email, farmSize, region, address, status } = req.body;
+    const { firstName, lastName, birthday, nationalId, phoneNumber, longitude, latitude, username, password, farmDetails, status } = req.body;
 
-    // Update farmer
+    let hashedPassword = password;
+    if (password) {
+      hashedPassword = await bcrypt.hash(password, 10);
+    }
+
     const farmer = await updateFarmer(req.params.id, {
       firstName,
       lastName,
+      birthday,
+      nationalId,
       phoneNumber,
-      email,
-      farmSize,
-      region,
-      address,
+      longitude,
+      latitude,
+      username,
+      password: hashedPassword,
+      farmDetails,
       status,
     });
 
@@ -77,7 +91,7 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// Delete a farmer by ID
+// Delete a Farmer by ID
 router.delete("/:id", async (req, res) => {
   try {
     const farmer = await deleteFarmer(req.params.id);

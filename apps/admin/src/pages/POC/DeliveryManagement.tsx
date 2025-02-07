@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Breadcrumb from '../../components/Breadcrumb';
 import DateRangeFilter from '../../components/Filters/DateRangeFilter';
 import { toast } from 'react-toastify';
+import axiosInstance from '../../utils/axiosInstance';
 
 interface TransportAssignmentModalProps {
   milk: {
@@ -18,13 +19,20 @@ const TransportAssignmentModal: React.FC<TransportAssignmentModalProps> = ({ mil
   const [selectedTransporter, setSelectedTransporter] = useState('');
   const [assignQuantity, setAssignQuantity] = useState('');
   const [notes, setNotes] = useState('');
+  const [availableTransporters, setAvailableTransporters] = useState([]);
 
-  // Dummy transporters data
-  const availableTransporters = [
-    { id: '1', name: 'John Driver', vehicle: 'Truck A - RAA 123A', capacity: '200L' },
-    { id: '2', name: 'Alice Trucker', vehicle: 'Truck B - RAB 456B', capacity: '300L' },
-    // Add more transporters...
-  ];
+  useEffect(() => {
+    const fetchTransporters = async () => {
+      try {
+        const response = await axiosInstance.get('/transporters');
+        setAvailableTransporters(response.data);
+      } catch (error) {
+        toast.error('Failed to load transporters');
+      }
+    };
+
+    fetchTransporters();
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -149,18 +157,20 @@ const DeliveryManagement = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('all');
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [selectedMilk, setSelectedMilk] = useState<any>(null);
+  const [confirmedMilk, setConfirmedMilk] = useState([]);
 
-  // Dummy data
-  const confirmedMilk = [
-    {
-      id: '1',
-      date: '2024-02-20',
-      totalQuantity: '250L',
-      type: 'Inshushyu',
-      status: 'Ready for Transport',
-    },
-    // Add more entries...
-  ];
+  useEffect(() => {
+    const fetchConfirmedMilk = async () => {
+      try {
+        const response = await axiosInstance.get('/confirmed-milk');
+        setConfirmedMilk(response.data);
+      } catch (error) {
+        toast.error('Failed to load confirmed milk data');
+      }
+    };
+
+    fetchConfirmedMilk();
+  }, []);
 
   const handleAssignTransport = (milkId: string) => {
     setSelectedMilk(confirmedMilk.find(m => m.id === milkId));
@@ -248,8 +258,17 @@ const DeliveryManagement = () => {
             setShowAssignModal(false);
             setSelectedMilk(null);
           }}
-          onAssign={(milkId, quantity, transporterId) => {
-            // Implementation of onAssign function
+          onAssign={async (milkId, quantity, transporterId) => {
+            try {
+              const response = await axiosInstance.post('/assign-transport', {
+                milkId,
+                quantity,
+                transporterId,
+              });
+              toast.success(`Transport assigned successfully: ${response.data.message}`);
+            } catch (error: any) {
+              toast.error(`Failed to assign transport: ${error.response?.data?.message || error.message}`);
+            }
           }}
         />
       )}
