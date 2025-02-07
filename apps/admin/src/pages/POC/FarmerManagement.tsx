@@ -4,11 +4,23 @@ import Breadcrumb from '../../components/Breadcrumb';
 import DateRangeFilter from '../../components/Filters/DateRangeFilter';
 import { toast } from 'react-toastify';
 
+// Define a type for the farmer objects
+interface Farmer {
+  id: string;
+  birthday: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  latitude: number;
+  longitude: number;
+  status: string; // Assuming there's a status field
+}
+
 const FarmerManagement = () => {
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState('all');
-  const [pendingFarmers, setPendingFarmers] = useState([]); // Updated to use state
+  const [pendingFarmers, setPendingFarmers] = useState<Farmer[]>([]); // Use the Farmer type
 
   useEffect(() => {
     const fetchFarmers = async () => {
@@ -74,24 +86,26 @@ const FarmerManagement = () => {
               {pendingFarmers.map((farmer) => (
                 <tr key={farmer.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {farmer.registrationDate}
+                    {farmer.birthday}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {farmer.name}
+                    {farmer.firstName} {farmer.lastName}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {farmer.phone}
+                    {farmer.phoneNumber}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {farmer.location}
+                    {farmer.latitude}, {farmer.longitude}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <button
-                      onClick={() => handleConfirmRegistration(farmer.id)}
-                      className="px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200"
-                    >
-                      Confirm Registration
-                    </button>
+                    {farmer.status === 'pending' && ( // Check if status is pending
+                      <button
+                        onClick={() => handleConfirmRegistration(farmer.id)}
+                        className="px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200"
+                      >
+                        Confirm Registration
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

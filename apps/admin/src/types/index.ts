@@ -57,4 +57,32 @@ export interface User {
   email: string;
   role: string;
   name?: string;
+}
+
+export interface MilkSubmission {
+  id: number;
+  milkType: string;
+  amount: number;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  farmerId: number;
+  farmer: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    birthday: string;
+    nationalId: string;
+    phoneNumber: string;
+    longitude: number;
+    latitude: number;
+    username: string;
+    password: string;
+    farmDetails: {
+      size: string;
+      type: string;
+    };
+    status: string;
+    pocId: number | null;
+  };
 } 

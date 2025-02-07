@@ -105,7 +105,7 @@ model Transport {
   lastName        String
   birthday        DateTime
   nationalId      String    @unique
-  phoneNumber     String
+  phoneNumber     String    @unique
   longitude       Float
   latitude        Float
   username        String    @unique

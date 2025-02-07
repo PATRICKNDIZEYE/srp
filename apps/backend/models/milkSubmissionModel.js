@@ -51,4 +51,14 @@ export const deleteMilkSubmission = async (id) => {
   return await prisma.milkSubmission.delete({
     where: { id: parseInt(id) },
   });
+};
+
+// Get milk submissions by farmer ID
+export const getMilkSubmissionsByFarmerId = async (farmerId) => {
+  return await prisma.milkSubmission.findMany({
+    where: { farmerId: parseInt(farmerId) },
+    include: {
+      farmer: true, // Include related farmer data
+    },
+  });
 }; 

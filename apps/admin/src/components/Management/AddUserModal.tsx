@@ -5,6 +5,9 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+import axiosInstance from '../../utils/axiosInstance';
+
+
 
 // Fix Leaflet default marker icon issue
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -30,25 +33,33 @@ const MapClickHandler = ({ onLocationSelect }: { onLocationSelect: (lat: number,
 
 const AddUserModal: React.FC<AddUserModalProps> = ({ onClose, onSubmit }) => {
   const [formData, setFormData] = useState({
-    name: '',
+    username: '',
     email: '',
-    phone: '',
+    password: '',
     role: '',
-    site: '',
-    coordinates: { lat: -1.9441, lng: 30.0619 }, // Default to Kigali
-    status: 'Active'
+    name: '',
+    phone: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
-  };
+    const userData = {
+      username: formData.username,
+      email: formData.email,
+      password: formData.password,
+      role: formData.role,
+      name: formData.name,
+      phone: formData.phone
+    };
+    console.log('Submitting user data:', userData);
 
-  const handleLocationSelect = (lat: number, lng: number) => {
-    setFormData(prev => ({
-      ...prev,
-      coordinates: { lat, lng }
-    }));
+    try {
+      const response = await axiosInstance.post('/users', userData);
+      console.log('User added successfully:', response.data);
+      onSubmit(userData);
+    } catch (error) {
+      console.error('Error adding user:', error);
+    }
   };
 
   return (
@@ -63,6 +74,32 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ onClose, onSubmit }) => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Username
+              </label>
+              <input
+                type="text"
+                className="w-full px-3 py-2 border rounded-lg"
+                value={formData.username}
+                onChange={e => setFormData(prev => ({ ...prev, username: e.target.value }))}
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Password
+              </label>
+              <input
+                type="password"
+                className="w-full px-3 py-2 border rounded-lg"
+                value={formData.password}
+                onChange={e => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                required
+              />
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Full Name
@@ -113,63 +150,13 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ onClose, onSubmit }) => {
                 required
               >
                 <option value="">Select Role</option>
+                <option value="ADMIN">ADMIN</option>
                 <option value="Production Manager">Production Manager</option>
                 <option value="Transport Coordinator">Transport Coordinator</option>
                 <option value="Diary Manager">Diary Manager</option>
                 <option value="POC Manager">POC Manager</option>
               </select>
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Site
-              </label>
-              <input
-                type="text"
-                className="w-full px-3 py-2 border rounded-lg"
-                value={formData.site}
-                onChange={e => setFormData(prev => ({ ...prev, site: e.target.value }))}
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Status
-              </label>
-              <select
-                className="w-full px-3 py-2 border rounded-lg"
-                value={formData.status}
-                onChange={e => setFormData(prev => ({ ...prev, status: e.target.value as 'Active' | 'Inactive' }))}
-                required
-              >
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Location <span className="text-gray-500">(Click to set location)</span>
-            </label>
-            <div className="h-[300px] w-full rounded-lg overflow-hidden border">
-              <MapContainer
-                center={[formData.coordinates.lat, formData.coordinates.lng]}
-                zoom={13}
-                style={{ height: '100%', width: '100%' }}
-              >
-                <TileLayer
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                />
-                <Marker position={[formData.coordinates.lat, formData.coordinates.lng]} />
-                <MapClickHandler onLocationSelect={handleLocationSelect} />
-              </MapContainer>
-            </div>
-            <p className="text-sm text-gray-500 mt-1">
-              Selected coordinates: {formData.coordinates.lat.toFixed(4)}, {formData.coordinates.lng.toFixed(4)}
-            </p>
           </div>
 
           <div className="flex justify-end space-x-3">

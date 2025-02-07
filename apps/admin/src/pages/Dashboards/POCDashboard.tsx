@@ -6,6 +6,41 @@ import DateRangeFilter from '../../components/Filters/DateRangeFilter';
 import { toast } from 'react-toastify';
 import axiosInstance from '../../utils/axiosInstance';
 
+// Define interfaces for the data structures
+interface Farmer {
+  id: number;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  status: string;
+  // Add other fields as necessary
+}
+
+interface MilkSubmission {
+  id: number;
+  milkType: string;
+  amount: number;
+  status: string;
+  createdAt: string;
+  farmer: Farmer;
+  // Add other fields as necessary
+}
+
+interface PendingFarmer {
+  id: number;
+  registrationDate: string;
+  name: string;
+  phone: string;
+  location: string;
+  // Add other fields as necessary
+}
+
+interface FarmerStats {
+  total: number;
+  active: number;
+  pending: number;
+}
+
 const POCDashboard = () => {
   // Filter states
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
@@ -14,8 +49,8 @@ const POCDashboard = () => {
   const [selectedTab, setSelectedTab] = useState('milk-submissions');
 
   // New state for API data
-  const [apiMilkSubmissions, setApiMilkSubmissions] = useState([]);
-  const [apiPendingFarmers, setApiPendingFarmers] = useState([]);
+  const [apiMilkSubmissions, setApiMilkSubmissions] = useState<MilkSubmission[]>([]);
+  const [apiPendingFarmers, setApiPendingFarmers] = useState<PendingFarmer[]>([]);
   const [stats, setStats] = useState({
     totalMilk: { current: '', pending: '', assigned: '', available: '' },
     farmers: { total: 0, active: 0, pending: 0 },
@@ -23,12 +58,39 @@ const POCDashboard = () => {
     transport: { assigned: 0, pending: 0, completed: 0 },
   });
 
+  // New state for farmer stats
+  const [farmerStats, setFarmerStats] = useState<FarmerStats>({
+    total: 0,
+    active: 0,
+    pending: 0,
+  });
+
+  // New state for total milk collection
+  const [totalMilkCollection, setTotalMilkCollection] = useState(0);
+
+  // New state for pending milk collection
+  const [pendingMilkCollection, setPendingMilkCollection] = useState(0);
+
+  // New state for farmer data
+  const [totalFarmers, setTotalFarmers] = useState(0);
+  const [pendingFarmersCount, setPendingFarmersCount] = useState(0);
+
   // Fetch data from API
   useEffect(() => {
     const fetchMilkSubmissions = async () => {
       try {
-        const response = await axiosInstance.get('/api/milk-submissions');
+        const response = await axiosInstance.get('/milk-submissions');
         setApiMilkSubmissions(response.data);
+
+        // Calculate the total amount of milk collected
+        const totalAmount = response.data.reduce((sum, submission) => sum + submission.amount, 0);
+        setTotalMilkCollection(totalAmount);
+
+        // Calculate the total amount of pending milk
+        const pendingAmount = response.data
+          .filter(submission => submission.status === 'Pending')
+          .reduce((sum, submission) => sum + submission.amount, 0);
+        setPendingMilkCollection(pendingAmount);
       } catch (error) {
         console.error('Error fetching milk submissions:', error);
       }
@@ -36,7 +98,7 @@ const POCDashboard = () => {
 
     const fetchPendingFarmers = async () => {
       try {
-        const response = await axiosInstance.get('/api/farmer/pending');
+        const response = await axiosInstance.get('/farmer');
         setApiPendingFarmers(response.data);
       } catch (error) {
         console.error('Error fetching pending farmers:', error);
@@ -45,16 +107,43 @@ const POCDashboard = () => {
 
     const fetchStats = async () => {
       try {
-        const response = await axiosInstance.get('/api/stats');
+        const response = await axiosInstance.get('/stats');
         setStats(response.data);
       } catch (error) {
         console.error('Error fetching stats:', error);
       }
     };
 
+    const fetchFarmerStats = async () => {
+      try {
+        const response = await axiosInstance.get('/farmer/stats');
+        setFarmerStats(response.data);
+      } catch (error) {
+        console.error('Error fetching farmer stats:', error);
+      }
+    };
+
+    const fetchFarmers = async () => {
+      try {
+        const response = await axiosInstance.get('/farmer');
+        const farmers: Farmer[] = response.data;
+
+        // Count total farmers
+        setTotalFarmers(farmers.length);
+
+        // Count farmers with "Pending" status
+        const pendingCount = farmers.filter(farmer => farmer.status.toLowerCase() === 'pending').length;
+        setPendingFarmersCount(pendingCount);
+      } catch (error) {
+        console.error('Error fetching farmers:', error);
+      }
+    };
+
     fetchMilkSubmissions();
     fetchPendingFarmers();
     fetchStats();
+    fetchFarmerStats();
+    fetchFarmers();
   }, []);
 
   const handleConfirmMilk = (submissionId: string) => {
@@ -83,7 +172,7 @@ const POCDashboard = () => {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
           <CardDataStats
             title="Total Collection"
-            total={stats.totalMilk.current}
+            total={totalMilkCollection}
             rate="Today's total"
             levelUp={true}
           >
@@ -92,7 +181,7 @@ const POCDashboard = () => {
 
           <CardDataStats
             title="Pending Quality Check"
-            total={stats.totalMilk.pending}
+            total={pendingMilkCollection}
             rate="Needs verification"
             levelUp={false}
           >
@@ -131,15 +220,11 @@ const POCDashboard = () => {
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span>Total</span>
-                <span className="font-semibold">{stats.farmers.total}</span>
-              </div>
-              <div className="flex justify-between text-green-600">
-                <span>Active Today</span>
-                <span className="font-semibold">{stats.farmers.active}</span>
+                <span className="font-semibold">{totalFarmers}</span>
               </div>
               <div className="flex justify-between text-yellow-600">
                 <span>Pending Approval</span>
-                <span className="font-semibold">{stats.farmers.pending}</span>
+                <span className="font-semibold">{pendingFarmersCount}</span>
               </div>
             </div>
           </div>
@@ -257,17 +342,17 @@ const POCDashboard = () => {
                   {apiMilkSubmissions.map((submission) => (
                     <tr key={submission.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {submission.date}
+                        {submission.createdAt}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <div>{submission.farmerName}</div>
-                        <div className="text-gray-500">{submission.farmerPhone}</div>
+                        <div>{submission.farmer.firstName} {submission.farmer.lastName}</div>
+                        <div className="text-gray-500">{submission.farmer.phoneNumber}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {submission.type}
+                        {submission.milkType}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {submission.quantity}
+                        {submission.amount}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <span className="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
@@ -327,24 +412,26 @@ const POCDashboard = () => {
                   {apiPendingFarmers.map((farmer) => (
                     <tr key={farmer.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {farmer.registrationDate}
+                        {farmer.birthday}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {farmer.name}
+                        {farmer.firstName} {farmer.lastName}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {farmer.phone}
+                        {farmer.phoneNumber}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {farmer.location}
+                        {farmer.longitude}, {farmer.latitude}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <button
-                          onClick={() => handleConfirmFarmer(farmer.id)}
-                          className="px-3 py-1 bg-green-100 text-green-700 rounded-lg hover:bg-green-200"
-                        >
-                          Confirm Registration
-                        </button>
+                        {farmer.status.toLowerCase() === 'pending' && (
+                          <button
+                            onClick={() => handleConfirmFarmer(farmer.id)}
+                            className="px-3 py-1 bg-green-100 text-green-700 rounded-lg hover:bg-green-200"
+                          >
+                            Confirm Registration
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}

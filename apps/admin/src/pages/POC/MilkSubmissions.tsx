@@ -4,11 +4,28 @@ import Breadcrumb from '../../components/Breadcrumb';
 import DateRangeFilter from '../../components/Filters/DateRangeFilter';
 import { toast } from 'react-toastify';
 
+// Define the type for a submission
+interface Farmer {
+  id: number;
+  firstName: string;
+  lastName: string;
+  // Add other farmer properties if needed
+}
+
+interface Submission {
+  id: number;
+  milkType: string;
+  amount: number;
+  createdAt: string;
+  farmer: Farmer;
+  // Add other submission properties if needed
+}
+
 const MilkSubmissions = () => {
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState('all');
-  const [submissions, setSubmissions] = useState([]); // Initialize with an empty array
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
 
   useEffect(() => {
     const fetchSubmissions = async () => {
@@ -84,20 +101,20 @@ const MilkSubmissions = () => {
               {submissions.map((submission) => (
                 <tr key={submission.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {submission.date}
+                    {new Date(submission.createdAt).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {submission.farmerName}
+                    {`${submission.farmer.firstName} ${submission.farmer.lastName}`}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {submission.type}
+                    {submission.milkType}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {submission.quantity}
+                    {submission.amount}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <button
-                      onClick={() => handleQualityTest(submission.id)}
+                      onClick={() => handleQualityTest(submission.id.toString())}
                       className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200"
                     >
                       Conduct Test
@@ -106,13 +123,13 @@ const MilkSubmissions = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <div className="flex space-x-2">
                       <button
-                        onClick={() => handleConfirmSubmission(submission.id)}
+                        onClick={() => handleConfirmSubmission(submission.id.toString())}
                         className="px-3 py-1 bg-green-100 text-green-700 rounded-lg hover:bg-green-200"
                       >
                         Confirm
                       </button>
                       <button
-                        onClick={() => handleRejectSubmission(submission.id)}
+                        onClick={() => handleRejectSubmission(submission.id.toString())}
                         className="px-3 py-1 bg-red-100 text-red-700 rounded-lg hover:bg-red-200"
                       >
                         Reject

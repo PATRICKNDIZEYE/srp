@@ -8,6 +8,7 @@ import axiosInstance from '../../utils/axiosInstance';
 import AddPocForm from '../../components/Management/AddPocForm';
 import AddFarmerModal from '../../components/Management/AddFarmerModal';
 import AddTransportModal from '../../components/Management/AddTransportModal';
+import AddUserModal from '../../components/Management/AddUserModal';
 
 interface User {
   id: number;
@@ -51,7 +52,7 @@ const UserManagement = () => {
         const response = await axiosInstance.get('/users');
         setUsers(response.data);
       } else if (activeTab === 'farmers') {
-        const response = await axiosInstance.get('/farmers');
+        const response = await axiosInstance.get('/farmer');
         setFarmers(response.data);
       } else if (activeTab === 'pocs') {
         const response = await axiosInstance.get('/pocs');
@@ -69,19 +70,24 @@ const UserManagement = () => {
     fetchData();
   }, [activeTab]);
 
-  const handleAddUser = async (userData: Omit<User, 'id' | 'lastActive'>) => {
+  const handleAddUser = async (userData: any) => {
     try {
       let endpoint = '';
       if (activeTab === 'users') {
         endpoint = '/users';
-      } else if (activeTab === 'farmers') {
-        endpoint = '/farmers';
+      } else if (activeTab === 'farmer') {
+        endpoint = '/farmer';
       } else if (activeTab === 'transports') {
         endpoint = '/transports';
       }
 
       if (endpoint) {
-        await axiosInstance.post(endpoint, userData);
+        const formattedUserData = {
+          ...userData,
+          birthday: new Date(userData.birthday).toISOString().split('T')[0] + 'T00:00:00Z',
+        };
+
+        await axiosInstance.post(endpoint, formattedUserData);
         toast.success(`${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} added successfully`);
       }
       setShowAddModal(false);
@@ -162,10 +168,77 @@ const UserManagement = () => {
   );
 
   const AddTransportForm = ({ onClose, onSubmit }: { onClose: () => void; onSubmit: (data: any) => void }) => (
-    <div>
-      {/* Form fields for adding a transport */}
-      <button onClick={onClose}>Close</button>
-      <button onClick={() => onSubmit({ /* transport data */ })}>Submit</button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+        <h2 className="text-xl font-semibold mb-4">Add Transport</h2>
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          // Collect form data and pass it to onSubmit
+          const formData = {
+            firstName: (e.target as any).firstName.value,
+            lastName: (e.target as any).lastName.value,
+            birthday: new Date((e.target as any).birthday.value).toISOString(),
+            nationalId: (e.target as any).nationalId.value,
+            phoneNumber: (e.target as any).phoneNumber.value,
+            longitude: parseFloat((e.target as any).longitude.value),
+            latitude: parseFloat((e.target as any).latitude.value),
+            username: (e.target as any).username.value,
+            password: (e.target as any).password.value,
+            status: (e.target as any).status.value,
+            delivered: (e.target as any).delivered.checked,
+          };
+          onSubmit(formData);
+        }}>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700">First Name</label>
+            <input type="text" name="firstName" className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm" required />
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700">Last Name</label>
+            <input type="text" name="lastName" className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm" required />
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700">Birthday</label>
+            <input type="date" name="birthday" className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm" required />
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700">National ID</label>
+            <input type="text" name="nationalId" className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm" required />
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700">Phone Number</label>
+            <input type="text" name="phoneNumber" className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm" required />
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700">Longitude</label>
+            <input type="number" step="any" name="longitude" className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm" required />
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700">Latitude</label>
+            <input type="number" step="any" name="latitude" className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm" required />
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700">Username</label>
+            <input type="text" name="username" className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm" required />
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700">Password</label>
+            <input type="password" name="password" className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm" required />
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700">Status</label>
+            <input type="text" name="status" className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm" required />
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700">Delivered</label>
+            <input type="checkbox" name="delivered" className="mt-1" />
+          </div>
+          <div className="flex justify-end gap-2">
+            <button type="button" onClick={onClose} className="bg-gray-500 text-white px-4 py-2 rounded-lg">Close</button>
+            <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-lg">Submit</button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 
@@ -222,7 +295,7 @@ const UserManagement = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm">{user.nationalId || 'No ID'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">{user.phoneNumber || 'No phone'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {user.address ? `${user.address.street}, ${user.address.city}, ${user.address.postalCode}` : 'No address'}
+                     {user.longitude}, {user.latitude}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-2 py-1 text-xs rounded-full ${
@@ -261,7 +334,7 @@ const UserManagement = () => {
       </div>
 
       {showAddModal && activeTab === 'users' && (
-        <AddUserForm
+        <AddUserModal
           onClose={() => setShowAddModal(false)}
           onSubmit={handleAddUser}
         />

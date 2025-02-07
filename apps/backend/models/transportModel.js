@@ -1,7 +1,9 @@
 import { prisma } from "../postgres/postgres.js";
+import bcrypt from 'bcrypt';
 
 // Create a new transport
 export const createTransport = async ({ firstName, lastName, birthday, nationalId, phoneNumber, longitude, latitude, username, password, status, delivered }) => {
+  const hashedPassword = await bcrypt.hash(password, 10);
   return await prisma.transport.create({
     data: {
       firstName,
@@ -12,7 +14,7 @@ export const createTransport = async ({ firstName, lastName, birthday, nationalI
       longitude,
       latitude,
       username,
-      password,
+      password: hashedPassword,
       status,
       delivered,
     },
@@ -33,6 +35,7 @@ export const getTransportById = async (id) => {
 
 // Update a transport by ID
 export const updateTransport = async (id, { firstName, lastName, birthday, nationalId, phoneNumber, longitude, latitude, username, password, status, delivered }) => {
+  const hashedPassword = password ? await bcrypt.hash(password, 10) : undefined;
   return await prisma.transport.update({
     where: { id: parseInt(id) },
     data: {
@@ -44,7 +47,7 @@ export const updateTransport = async (id, { firstName, lastName, birthday, natio
       longitude,
       latitude,
       username,
-      password,
+      password: hashedPassword || undefined,
       status,
       delivered,
     },

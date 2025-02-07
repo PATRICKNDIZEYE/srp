@@ -13,7 +13,7 @@ const MilkSubmissionPage = () => {
   const [submissions, setSubmissions] = useState([]); // State to store submissions
 
   // Set farmerId to 2
-  const farmerId = 2;
+  const farmerId = 1;
 
   useEffect(() => {
     const fetchSubmissions = async () => {

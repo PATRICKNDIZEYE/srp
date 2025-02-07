@@ -1,7 +1,7 @@
 import { prisma } from "../postgres/postgres.js";
 
 // Create a new user
-export const createUser = async ({ username, email, password, role, name, resetToken, resetTokenExpires, otp, otpExpiry }) => {
+export const createUser = async ({ username, email, password, role, name, phone, resetToken, resetTokenExpires, otp, otpExpiry }) => {
   return await prisma.user.create({
     data: {
       username,
@@ -9,6 +9,7 @@ export const createUser = async ({ username, email, password, role, name, resetT
       password,
       role,
       name,
+      phone,
       resetToken,
       resetTokenExpires,
       otp,
@@ -30,7 +31,7 @@ export const getUserById = async (id) => {
 };
 
 // Update a user by ID
-export const updateUser = async (id, { username, email, password, role, name, resetToken, resetTokenExpires, otp, otpExpiry }) => {
+export const updateUser = async (id, { username, email, password, role, name, phone, resetToken, resetTokenExpires, otp, otpExpiry }) => {
   return await prisma.user.update({
     where: { id: parseInt(id) },
     data: {
@@ -39,6 +40,7 @@ export const updateUser = async (id, { username, email, password, role, name, re
       password,
       role,
       name,
+      phone,
       resetToken,
       resetTokenExpires,
       otp,

@@ -1,13 +1,61 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Breadcrumb from '../../components/Breadcrumb';
 import CardDataStats from '../../components/CardDataStats';
 import { FiDroplet, FiDollarSign, FiClock, FiCreditCard } from 'react-icons/fi';
 import ChartOne from '../../components/Charts/ChartOne';
 import { toast } from 'react-toastify';
+import axiosInstance from '../../utils/axiosInstance';
+import { MilkSubmission } from '../../types'; // Ensure this import is correct
 
 const FarmerDashboard = () => {
   const [showMilkSubmissionModal, setShowMilkSubmissionModal] = useState(false);
   const [showLoanModal, setShowLoanModal] = useState(false);
+  const [farmerData, setFarmerData] = useState(null);
+  const [milkSubmissions, setMilkSubmissions] = useState<MilkSubmission[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const farmerId = '1'; // Replace with dynamic ID as needed
+
+  useEffect(() => {
+    const fetchFarmerData = async () => {
+      try {
+        const response = await axiosInstance.get(`/farmer/${farmerId}`);
+        setFarmerData(response.data);
+      } catch (error) {
+        console.error('Error fetching farmer data:', error);
+        setError('Failed to load farmer data.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const fetchMilkSubmissions = async () => {
+      try {
+        const response = await axiosInstance.get(`/milk-submissions/farmer/${farmerId}`);
+        setMilkSubmissions(response.data);
+      } catch (error) {
+        console.error('Error fetching milk submissions:', error);
+        setError('Failed to load milk submissions.');
+      }
+    };
+
+    fetchFarmerData();
+    fetchMilkSubmissions();
+  }, [farmerId]);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>{error}</div>;
+  }
+
+  if (!farmerData) {
+    return <div>No data available for this farmer.</div>;
+  }
+
+  const totalMilk = milkSubmissions.reduce((sum, submission) => sum + submission.amount, 0);
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
@@ -17,7 +65,7 @@ const FarmerDashboard = () => {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 xl:grid-cols-4 2xl:gap-7.5">
         <CardDataStats
           title="Total Milk Submitted"
-          total="2,345 L"
+          total={`${totalMilk} L`}
           rate="15% increase"
           levelUp={true}
         >
@@ -26,8 +74,8 @@ const FarmerDashboard = () => {
 
         <CardDataStats
           title="Pending Payment"
-          total="RF 245,000"
-          rate="Due in 8 days"
+          total={`RF ${farmerData.pendingPayment || 0}`}
+          rate={`Due in ${farmerData.paymentDueDays || 0} days`}
           levelUp={true}
         >
           <FiDollarSign />
@@ -35,7 +83,7 @@ const FarmerDashboard = () => {
 
         <CardDataStats
           title="Next Payment"
-          total="15 Days"
+          total={`${farmerData.nextPaymentDays || 0} Days`}
           rate="On Schedule"
           levelUp={true}
         >
@@ -44,9 +92,9 @@ const FarmerDashboard = () => {
 
         <CardDataStats
           title="Loan Status"
-          total="RF 50,000"
-          rate="Available"
-          levelUp={true}
+          total={`RF ${farmerData.loanAmount || 0}`}
+          rate={farmerData.loanAvailable ? "Available" : "Not Available"}
+          levelUp={farmerData.loanAvailable}
         >
           <FiCreditCard />
         </CardDataStats>
@@ -83,17 +131,18 @@ const FarmerDashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                <tr className="border-b">
-                  <td className="py-2">2024-02-20</td>
-                  <td>Inshushyu</td>
-                  <td>85 L</td>
-                  <td>
-                    <span className="px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800">
-                      Pending POC
-                    </span>
-                  </td>
-                </tr>
-                {/* Add more rows */}
+                {milkSubmissions.map((submission) => (
+                  <tr key={submission.id} className="border-b">
+                    <td className="py-2">{new Date(submission.createdAt).toLocaleDateString()}</td>
+                    <td>{submission.milkType}</td>
+                    <td>{submission.amount} L</td>
+                    <td>
+                      <span className={`px-2 py-1 rounded-full text-xs ${submission.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
+                        {submission.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>

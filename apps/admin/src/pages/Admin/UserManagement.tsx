@@ -38,9 +38,27 @@ const UserManagement = () => {
     }
   ]);
 
-  const handleAddUser = (userData: Omit<User, 'id'>) => {
-    // Add user logic here
-    setShowAddModal(false);
+  const handleAddUser = async (userData: any) => {
+    try {
+      console.log('User data to be submitted:', userData);
+      const response = await fetch('/api/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to add user');
+      }
+
+      const result = await response.json();
+      console.log('User added successfully:', result);
+      setShowAddModal(false);
+    } catch (error) {
+      console.error('Error adding user:', error);
+    }
   };
 
   return (

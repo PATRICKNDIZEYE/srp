@@ -25,7 +25,7 @@ import transportRoutes from './routes/transportRoutes.js';
 import derivedRoutes from './routes/derivedRoutes.js';
 import diaryRoutes from './routes/diaryRoutes.js';
 import farmerRoutes from './routes/farmerRoutes.js';
-
+import loginTransportAuth from './auth/loginTransportAuth.js';
 dotenv.config();
 const app = express();
 const prisma = new PrismaClient();
@@ -44,6 +44,7 @@ app.get('/', (req, res) => {
 app.use('/api/stocks', stockRoutes);
 app.use('/api/milk-submissions', milkSubmissionRoutes);
 app.use('/api/login-farmer', loginFarmerAuth);
+app.use('/api/login-transport', loginTransportAuth);
 app.use('/api/login-poc', loginPOCAuth);
 app.use('/api/reset-password', resetPasswordAuth);
 app.use('/api/pocs', pocRoutes);

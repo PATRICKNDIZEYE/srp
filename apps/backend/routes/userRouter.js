@@ -7,7 +7,7 @@
   // Create a new user
   router.post("/", async (req, res) => {
     try {
-      const { username, email, password, role, name } = req.body;
+      const { username, email, password, role, name, phone } = req.body;
 
       // Validate role (optional step, you can define your own validation rules)
       const validRoles = ['ADMIN', 'USER', 'GUEST'];
@@ -25,6 +25,7 @@
         password: hashedPassword,
         role,
         name,
+        phone,
       });
 
       res.status(201).json(user);
@@ -60,7 +61,7 @@
   // Update a user by ID
   router.put("/:id", async (req, res) => {
     try {
-      const { username, email, password, role, name } = req.body;
+      const { username, email, password, role, name, phone } = req.body;
 
       // If password is provided, hash it before updating
       let hashedPassword = password;
@@ -81,6 +82,7 @@
         password: hashedPassword,
         role,
         name,
+        phone,
       });
 
       if (user) {
