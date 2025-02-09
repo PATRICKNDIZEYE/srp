@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 
-const prisma = new PrismaClient();
+export const prisma = new PrismaClient();
 
 const connection = async () => {
   try {
@@ -11,4 +11,4 @@ const connection = async () => {
   }
 };
 
-export { connection, prisma };
+export { connection };

@@ -1,19 +1,39 @@
 import express from "express";
-import { createDiary, getDiaries, getDiaryById, updateDiary, deleteDiary } from "../models/diaryModel.js";
+import {
+  createDiary,
+  getDiaries,
+  getDiaryById,
+  updateDiary,
+  deleteDiary,
+} from "../models/diaryModel.js";
 
 const router = express.Router();
 
-// Create a new diary entry
+// Créer une nouvelle entrée de journal
 router.post("/", async (req, res) => {
   try {
-    const diary = await createDiary(req.body);
+    const { status, approveStatus, phoneNumber, password, longitude, latitude } = req.body;
+
+    if (!status || !approveStatus || !phoneNumber || !password || !longitude || !latitude) {
+      return res.status(400).json({ error: "Tous les champs sont requis." });
+    }
+
+    const diary = await createDiary({
+      status,
+      approveStatus,
+      phoneNumber,
+      password,
+      longitude,
+      latitude,
+    });
+
     res.status(201).json(diary);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 });
 
-// Get all diary entries
+// Récupérer toutes les entrées de journal
 router.get("/", async (req, res) => {
   try {
     const diaries = await getDiaries();
@@ -23,42 +43,56 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Get a diary entry by ID
+// Récupérer une entrée par ID
 router.get("/:id", async (req, res) => {
   try {
     const diary = await getDiaryById(req.params.id);
     if (diary) {
       res.status(200).json(diary);
     } else {
-      res.status(404).json({ message: "Diary entry not found" });
+      res.status(404).json({ message: "Entrée non trouvée" });
     }
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// Update a diary entry by ID
+// Mettre à jour une entrée par ID
 router.put("/:id", async (req, res) => {
   try {
-    const diary = await updateDiary(req.params.id, req.body);
+    const { status, approveStatus, phoneNumber, password, longitude, latitude } = req.body;
+
+    if (!status || !approveStatus || !phoneNumber || !password || !longitude || !latitude) {
+      return res.status(400).json({ error: "Tous les champs sont requis." });
+    }
+
+    const diary = await updateDiary(req.params.id, {
+      status,
+      approveStatus,
+      phoneNumber,
+      password,
+      longitude,
+      latitude,
+    });
+
     if (diary) {
       res.status(200).json(diary);
     } else {
-      res.status(404).json({ message: "Diary entry not found" });
+      res.status(404).json({ message: "Entrée non trouvée" });
     }
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 });
 
-// Delete a diary entry by ID
+// Supprimer une entrée par ID
 router.delete("/:id", async (req, res) => {
   try {
     const diary = await deleteDiary(req.params.id);
     if (diary) {
-      res.status(200).json({ message: "Diary entry deleted successfully" });
+      res.status(200).json({ message: "Entrée supprimée avec succès" });
     } else {
-      res.status(404).json({ message: "Diary entry not found" });
+      res.status(404).json({ message: "Entrée non trouvée" });
     }
   } catch (error) {
     res.status(500).json({ error: error.message });

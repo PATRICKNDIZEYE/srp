@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Breadcrumb from '../../components/Breadcrumb';
 import DateRangeFilter from '../../components/Filters/DateRangeFilter';
 import { toast } from 'react-toastify';
 import { FiCheck, FiTruck, FiMapPin, FiDroplet } from 'react-icons/fi';
 import RecipientVerificationModal from '../../components/Transport/RecipientVerificationModal';
 import RecipientSelectionModal from '../../components/Transport/RecipientSelectionModal';
+import axiosInstance from '../../utils/axiosInstance';
 
 interface DeliveryConfirmationModalProps {
   delivery: any;
@@ -102,6 +104,7 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
 };
 
 const AssignedDeliveries = () => {
+  const navigate = useNavigate();
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState('all');
@@ -109,37 +112,26 @@ const AssignedDeliveries = () => {
   const [selectedDelivery, setSelectedDelivery] = useState<any>(null);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [showRecipientModal, setShowRecipientModal] = useState(false);
+  const [assignedDeliveries, setAssignedDeliveries] = useState<any[]>([]);
 
-  // Dummy data
-  const assignedDeliveries = [
-    {
-      id: '1',
-      date: '2024-02-20',
-      source: 'Farmer Collection',
-      destination: 'Kigali POC Center',
-      milkType: 'Inshushyu',
-      quantity: '100L',
-      status: 'Pending Collection',
-    },
-    {
-      id: '2',
-      date: '2024-02-20',
-      source: 'Kigali POC Center',
-      destination: 'Central Dairy Plant',
-      milkType: 'Ikivuguto',
-      quantity: '150L',
-      status: 'In Transit',
-    },
-    {
-      id: '3',
-      date: '2024-02-20',
-      source: 'Kigali POC Center',
-      destination: 'Eastern Production Unit',
-      milkType: 'Inshushyu',
-      quantity: '200L',
-      status: 'Ready for Delivery',
-    },
-  ];
+  useEffect(() => {
+    const fetchDeliveries = async () => {
+      try {
+        const response = await axiosInstance.get('/delivery/transport/1');
+        setAssignedDeliveries(response.data);
+      } catch (error) {
+        console.error('Error fetching deliveries:', error);
+        toast.error('Failed to fetch deliveries');
+      }
+    };
+
+    fetchDeliveries();
+  }, []);
+
+  // Calculate summary data
+  const totalDeliveries = assignedDeliveries.length;
+  const totalVolume = assignedDeliveries.reduce((sum, delivery) => sum + delivery.amount, 0);
+  const completedDeliveries = assignedDeliveries.filter(delivery => delivery.transportStatus === 'Completed').length;
 
   const handleConfirmDelivery = (deliveryId: string, quantity: string, notes: string) => {
     // Here you would update the delivery status and submit the confirmation
@@ -202,64 +194,60 @@ const AssignedDeliveries = () => {
     setSelectedDelivery(null);
   };
 
+  const handleApproveDelivery = async (deliveryId: string) => {
+    try {
+      const response = await axiosInstance.patch(`/delivery/${deliveryId}/status`, { newStatus: 'Completed' });
+      toast.success('Delivery approved successfully!');
+      
+      // Update the delivery status in the local state
+      setAssignedDeliveries((prev) =>
+        prev.map((delivery) =>
+          delivery.id === deliveryId ? { ...delivery, transportStatus: 'Completed' } : delivery
+        )
+      );
+    } catch (error) {
+      toast.error('Failed to approve delivery');
+    }
+  };
+
+  const handleViewDaily = (deliveryId: string) => {
+    navigate(`/transport/daily-management/${deliveryId}`);
+  };
+
   const getActionButton = (delivery: any) => {
-    let buttonText = '';
-    let buttonColor = '';
-
-    switch (delivery.status) {
-      case 'Pending Collection':
-        buttonText = 'Confirm Collection';
-        buttonColor = 'blue';
-        break;
-      case 'In Transit':
-        buttonText = 'Complete Delivery';
-        buttonColor = 'green';
-        break;
-      case 'Ready for Delivery':
-        buttonText = 'Start Delivery';
-        buttonColor = 'yellow';
-        break;
-      case 'Pending Confirmation':
-        buttonText = 'Arrived at Destination';
-        buttonColor = 'blue';
-        break;
-      default:
-        buttonText = 'View Details';
-        buttonColor = 'gray';
-    }
-
-    if (buttonColor === 'blue') {
-      return (
+    return (
+      <div className="flex space-x-2">
+        {delivery.transportStatus !== 'Completed' ? (
+          <button
+            onClick={() => handleApproveDelivery(delivery.id)}
+            className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200"
+          >
+            Approve
+          </button>
+        ) : (
+          <span className="text-gray-500">Completed</span>
+        )}
         <button
-          onClick={() => handleDeliveryArrival(delivery.id)}
-          className={`px-4 py-2 bg-${buttonColor}-100 text-${buttonColor}-700 rounded-lg hover:bg-${buttonColor}-200`}
+          onClick={() => handleViewDaily(delivery.id)}
+          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
         >
-          {buttonText}
+          Daily
         </button>
-      );
-    } else {
-      return (
-        <button
-          onClick={() => handleAction(delivery)}
-          className={`px-4 py-2 bg-${buttonColor}-100 text-${buttonColor}-700 rounded-lg hover:bg-${buttonColor}-200`}
-        >
-          {buttonText}
-        </button>
-      );
-    }
+      </div>
+    );
   };
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
       <Breadcrumb pageName="Assigned Deliveries" />
 
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      {/* Summary Section */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="bg-white rounded-lg p-6 shadow-lg">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500">Pending Collection</p>
-              <h3 className="text-2xl font-semibold">3</h3>
+              <p className="text-gray-500">Total Deliveries</p>
+              <h3 className="text-2xl font-semibold">{totalDeliveries}</h3>
             </div>
             <FiTruck className="text-blue-500 text-2xl" />
           </div>
@@ -268,18 +256,8 @@ const AssignedDeliveries = () => {
         <div className="bg-white rounded-lg p-6 shadow-lg">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500">In Transit</p>
-              <h3 className="text-2xl font-semibold">2</h3>
-            </div>
-            <FiMapPin className="text-yellow-500 text-2xl" />
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg p-6 shadow-lg">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500">Delivered Today</p>
-              <h3 className="text-2xl font-semibold">5</h3>
+              <p className="text-gray-500">Completed Deliveries</p>
+              <h3 className="text-2xl font-semibold">{completedDeliveries}</h3>
             </div>
             <FiCheck className="text-green-500 text-2xl" />
           </div>
@@ -289,13 +267,12 @@ const AssignedDeliveries = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500">Total Volume</p>
-              <h3 className="text-2xl font-semibold">850L</h3>
+              <h3 className="text-2xl font-semibold">{totalVolume}L</h3>
             </div>
             <FiDroplet className="text-blue-500 text-2xl" />
           </div>
         </div>
       </div>
-
       {/* Deliveries Table */}
       <div className="bg-white rounded-lg shadow-lg">
         <div className="p-6 border-b border-gray-200">
@@ -320,13 +297,10 @@ const AssignedDeliveries = () => {
                   Date
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Source
+                  POC Name
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Destination
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Type & Quantity
+                  Amount
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Status
@@ -340,29 +314,23 @@ const AssignedDeliveries = () => {
               {assignedDeliveries.map((delivery) => (
                 <tr key={delivery.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {delivery.date}
+                    {new Date(delivery.date).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {delivery.source}
+                    {delivery.poc.firstName} {delivery.poc.lastName}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {delivery.destination}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <div>{delivery.milkType}</div>
-                    <div className="text-gray-500">{delivery.quantity}</div>
+                    {delivery.amount}L
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <span
                       className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                        delivery.status === 'Pending Collection'
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : delivery.status === 'In Transit'
-                          ? 'bg-blue-100 text-blue-800'
-                          : 'bg-green-100 text-green-800'
+                        delivery.transportStatus === 'Completed'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-yellow-100 text-yellow-800'
                       }`}
                     >
-                      {delivery.status}
+                      {delivery.transportStatus}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">

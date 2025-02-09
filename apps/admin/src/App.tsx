@@ -52,6 +52,8 @@ import ManagementFinancialReports from './pages/Management/FinancialReports';
 import OperationsManagement from './pages/Management/OperationsManagement';
 import SystemSettings from './pages/Management/SystemSettings';
 import AnalyticsDashboard from './pages/Management/AnalyticsDashboard';
+import DailyManagement from './pages/POC/DailyManagement';
+import TransportDailyManagement from './pages/Transport/DailyManagement';
 // import Productionline from './pages/';
 
 function App() {
@@ -83,6 +85,7 @@ function App() {
           <Route path="/poc/farmers" element={<FarmerManagement />} />
           <Route path="/poc/submissions" element={<MilkSubmissions />} />
           <Route path="/poc/deliveries" element={<DeliveryManagement />} />
+          <Route path="/poc/daily-management/:deliveryId" element={<DailyManagement />} />
           <Route path="/poc/settings" element={<Settings />} />
         </Route>
 
@@ -90,6 +93,7 @@ function App() {
         <Route element={<DashboardLayout role="transport" />}>
           <Route path="/transport/dashboard" element={<TransportDashboard />} />
           <Route path="/transport/deliveries" element={<AssignedDeliveries />} />
+          <Route path="/transport/daily-management/:deliveryId" element={<TransportDailyManagement />} />
           <Route path="/transport/settings" element={<Settings />} />
         </Route>
 

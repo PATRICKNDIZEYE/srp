@@ -39,14 +39,19 @@ const BaseLoginForm: React.FC<BaseLoginFormProps> = ({ role, onSuccess }) => {
       transport: 'login-transport',
       production: '/api/auth/production/login',
       management: '/api/auth/management/login',
-      diary: '/api/auth/diary/login',
+      diary: '/login-diary',
     };
 
     try {
       // Prepare the data to be sent in the request
-      const requestData = role === 'poc' || role === 'transport'
-        ? { phoneNumber: formData.phone, password: formData.password }
-        : { phone: formData.phone, password: formData.password };
+      let requestData;
+      if (role === 'poc' || role === 'transport') {
+        requestData = { phoneNumber: formData.phone, password: formData.password };
+      } else if (role === 'diary') {
+        requestData = { phoneNumber: formData.phone, password: formData.password };
+      } else {
+        requestData = { phone: formData.phone, password: formData.password };
+      }
 
       // Make a POST request to the appropriate endpoint using axiosInstance
       const response = await axiosInstance.post(endpoints[role], requestData);

@@ -26,9 +26,12 @@ import derivedRoutes from './routes/derivedRoutes.js';
 import diaryRoutes from './routes/diaryRoutes.js';
 import farmerRoutes from './routes/farmerRoutes.js';
 import loginTransportAuth from './auth/loginTransportAuth.js';
+import loginDiaryAuth from './auth/loginDiaryAuth.js';
+import deliveryRoutes from './routes/deliveryRoutes.js';
 dotenv.config();
 const app = express();
 const prisma = new PrismaClient();
+
 
 // CORS and Middleware
 app.use(cors());
@@ -49,6 +52,11 @@ app.use('/api/login-poc', loginPOCAuth);
 app.use('/api/reset-password', resetPasswordAuth);
 app.use('/api/pocs', pocRoutes);
 app.use('/api/loans', loanRoutes);
+app.use('/api/diary', diaryRoutes);
+app.use('/api/login-diary', loginDiaryAuth);
+app.use('/api/derived', derivedRoutes);
+app.use('/api/delivery', deliveryRoutes);
+
 // Use the registerFarmerAuth function as a route handler
 
 app.post('/api/register-farmer', async (req, res) => {
@@ -63,10 +71,8 @@ app.post('/api/register-farmer', async (req, res) => {
 // Use the routes
 app.use('/api/users', userRoutes);
 app.use('/api/transports', transportRoutes);
-app.use('/api/derived', derivedRoutes);
 app.use('/api/diaries', diaryRoutes);
 app.use('/api/farmer', farmerRoutes);
-
 // Start Server
 const PORT = process.env.PORT || 2025;
 connection();  // You can remove this if you are using Prisma's automatic connection management

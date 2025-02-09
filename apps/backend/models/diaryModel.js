@@ -1,18 +1,21 @@
 import { prisma } from "../postgres/postgres.js";
+import bcrypt from 'bcrypt';
 
 // Create a new diary entry
-export const createDiary = async ({ entryDate, status, remarks, transportId, approveStatus }) => {
+export const createDiary = async ({ status, approveStatus, phoneNumber, password, longitude, latitude }) => {
+  const hashedPassword = await bcrypt.hash(password, 10);
   return await prisma.diary.create({
     data: {
-      entryDate,
       status,
-      remarks,
-      transportId,
       approveStatus,
+      phoneNumber,
+      password: hashedPassword,
+      longitude,
+      latitude,
     },
   });
 };
-
+ 
 // Get all diary entries
 export const getDiaries = async () => {
   return await prisma.diary.findMany();
@@ -26,15 +29,17 @@ export const getDiaryById = async (id) => {
 };
 
 // Update a diary entry by ID
-export const updateDiary = async (id, { entryDate, status, remarks, transportId, approveStatus }) => {
+export const updateDiary = async (id, { status, approveStatus, phoneNumber, password, longitude, latitude }) => {
+  const hashedPassword = await bcrypt.hash(password, 10);
   return await prisma.diary.update({
     where: { id: parseInt(id) },
     data: {
-      entryDate,
       status,
-      remarks,
-      transportId,
       approveStatus,
+      phoneNumber,
+      password: hashedPassword,
+      longitude,
+      latitude,
     },
   });
 };

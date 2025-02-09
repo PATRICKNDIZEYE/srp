@@ -74,6 +74,7 @@ model POC {
   transportId Int?       @unique
   
   stocks      Stock[]
+  deliveries  Derivery[]  @relation("POCToDerivery")
 }
 
 model Farmer {
@@ -116,32 +117,50 @@ model Transport {
   poc             POC?      @relation("POCToTransport", fields: [pocId], references: [id])
   pocId           Int?      @unique
   
-  diary           Diary?
   
   stocks          Stock[]
-  derivedData     Derived[]
+  derivedData     Derivery[]
+
+  derivedEntries  Derived[] @relation("TransportToDerived")
+}
+
+model Derivery {
+  id               Int        @id @default(autoincrement())
+  transportId      Int
+  pocId            Int
+  amount           Float
+  transportStatus  String
+  date             DateTime   @default(now())
+
+  transport        Transport  @relation(fields: [transportId], references: [id])
+  poc              POC        @relation("POCToDerivery", fields: [pocId], references: [id])
+  derivedEntries   Derived[]
 }
 
 model Derived {
-  id            Int       @id @default(autoincrement())
-  transportId   Int
-  diaryId       Int?
-  data          Json
-  createdAt     DateTime  @default(now())
-  
-  transport     Transport @relation(fields: [transportId], references: [id])
-  diary         Diary?    @relation(fields: [diaryId], references: [id])
+  id          Int      @id @default(autoincrement())
+  diaryId     Int
+  transportId Int
+  deriveryId  Int
+  amount      Float
+  status      String
+  date        DateTime @default(now())
+
+  diary       Diary     @relation("DiaryToDerived", fields: [diaryId], references: [id])
+  transport   Transport @relation("TransportToDerived", fields: [transportId], references: [id])
+  derivery    Derivery  @relation(fields: [deriveryId], references: [id])
 }
 
 model Diary {
   id             Int       @id @default(autoincrement())
-  entryDate      DateTime  @default(now())
   status         String
-  remarks        String?
-  transportId    Int       @unique
-  transport      Transport @relation(fields: [transportId], references: [id])
   approveStatus  String    @default("pending")
-  derivedData    Derived[]
+  phoneNumber    String    @unique
+  password       String
+  longitude      Float
+  latitude       Float
+
+  derivedEntries Derived[] @relation("DiaryToDerived")
 }
 
 model Loan {

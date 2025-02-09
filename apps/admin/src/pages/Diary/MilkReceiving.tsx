@@ -1,47 +1,54 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FiCheck, FiX, FiTruck, FiAlertTriangle } from 'react-icons/fi';
 import Breadcrumb from '../../components/Breadcrumb';
 import { toast } from 'react-toastify';
 import DeliveryConfirmationModal from '../../components/Diary/DeliveryConfirmationModal';
+import axiosInstance from '../../utils/axiosInstance';
 
-interface PendingDelivery {
-  id: string;
-  transporterId: string;
-  transporterName: string;
-  source: string;
-  milkType: string;
-  declaredQuantity: string;
-  timestamp: string;
-  status: 'pending' | 'verified' | 'rejected';
+interface DeliveryData {
+  id: number;
+  diaryId: number;
+  transportId: number;
+  amount: number;
+  status: string;
+  date: string;
+  diary: {
+    id: number;
+    status: string;
+    approveStatus: string;
+    phoneNumber: string;
+    longitude: number;
+    latitude: number;
+  };
+  transport: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    phoneNumber: string;
+    status: string;
+  };
 }
 
 const MilkReceiving = () => {
-  const [selectedDelivery, setSelectedDelivery] = useState<PendingDelivery | null>(null);
+  const [selectedDelivery, setSelectedDelivery] = useState<DeliveryData | null>(null);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [deliveries, setDeliveries] = useState<DeliveryData[]>([]);
+  const userId = 1; // Replace this with the actual logic to get the logged-in user's ID
 
-  // Dummy data - would come from API
-  const [pendingDeliveries, setPendingDeliveries] = useState<PendingDelivery[]>([
-    {
-      id: '1',
-      transporterId: 'T123',
-      transporterName: 'John Driver',
-      source: 'Kigali POC Center',
-      milkType: 'Fresh Milk',
-      declaredQuantity: '200L',
-      timestamp: '2024-02-20 10:30',
-      status: 'pending',
-    },
-    {
-      id: '2',
-      transporterId: 'T124',
-      transporterName: 'Alice Trucker',
-      source: 'Nyamirambo POC',
-      milkType: 'Fresh Milk',
-      declaredQuantity: '150L',
-      timestamp: '2024-02-20 11:15',
-      status: 'pending',
-    },
-  ]);
+  useEffect(() => {
+    // Fetch deliveries from the API
+    const fetchDeliveries = async () => {
+      try {
+        const response = await axiosInstance.get(`/derived/diary/${userId}`);
+        setDeliveries(response.data);
+      } catch (error) {
+        console.error('Error fetching deliveries:', error);
+        toast.error('Failed to fetch deliveries');
+      }
+    };
+
+    fetchDeliveries();
+  }, [userId]);
 
   const handleVerifyDelivery = (
     deliveryId: string,
@@ -49,10 +56,13 @@ const MilkReceiving = () => {
     quality: string,
     notes: string
   ) => {
+    // Convert deliveryId to a number for comparison
+    const deliveryIdNumber = Number(deliveryId);
+
     // Update the delivery status in the list
-    setPendingDeliveries(prevDeliveries =>
+    setDeliveries(prevDeliveries =>
       prevDeliveries.map(delivery =>
-        delivery.id === deliveryId
+        delivery.id === deliveryIdNumber
           ? { ...delivery, status: 'verified' as const }
           : delivery
       )
@@ -64,10 +74,13 @@ const MilkReceiving = () => {
   };
 
   const handleRejectDelivery = (deliveryId: string, reason: string) => {
+    // Convert deliveryId to a number for comparison
+    const deliveryIdNumber = Number(deliveryId);
+
     // Update the delivery status in the list
-    setPendingDeliveries(prevDeliveries =>
+    setDeliveries(prevDeliveries =>
       prevDeliveries.map(delivery =>
-        delivery.id === deliveryId
+        delivery.id === deliveryIdNumber
           ? { ...delivery, status: 'rejected' as const }
           : delivery
       )
@@ -78,9 +91,36 @@ const MilkReceiving = () => {
     setSelectedDelivery(null);
   };
 
-  const handleVerifyClick = (delivery: PendingDelivery) => {
+  const handleVerifyClick = (delivery: DeliveryData) => {
     setSelectedDelivery(delivery);
     setShowVerificationModal(true);
+  };
+
+  const handleApproveDelivery = async (deliveryId: number) => {
+    try {
+      await axiosInstance.patch(`/derived/${deliveryId}/status`, { status: 'Completed' });
+      setDeliveries(prevDeliveries =>
+        prevDeliveries.map(delivery =>
+          delivery.id === deliveryId
+            ? { ...delivery, status: 'Completed' }
+            : delivery
+        )
+      );
+      toast.success('Delivery approved successfully');
+    } catch (error) {
+      console.error('Error approving delivery:', error);
+      toast.error('Failed to approve delivery');
+    }
+  };
+
+  // Helper function to check if a date is today
+  const isToday = (someDate: Date) => {
+    const today = new Date();
+    return (
+      someDate.getDate() === today.getDate() &&
+      someDate.getMonth() === today.getMonth() &&
+      someDate.getFullYear() === today.getFullYear()
+    );
   };
 
   return (
@@ -94,7 +134,7 @@ const MilkReceiving = () => {
             <div>
               <p className="text-gray-500">Pending Deliveries</p>
               <h3 className="text-2xl font-semibold">
-                {pendingDeliveries.filter(d => d.status === 'pending').length}
+                {deliveries.filter(d => d.status === 'pending').length}
               </h3>
             </div>
             <FiTruck className="text-blue-500 text-2xl" />
@@ -105,7 +145,11 @@ const MilkReceiving = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500">Today's Received</p>
-              <h3 className="text-2xl font-semibold">850L</h3>
+              <h3 className="text-2xl font-semibold">
+                {deliveries
+                  .filter(d => isToday(new Date(d.date)))
+                  .reduce((total, d) => total + d.amount, 0)}L
+              </h3>
             </div>
             <FiCheck className="text-green-500 text-2xl" />
           </div>
@@ -122,10 +166,10 @@ const MilkReceiving = () => {
         </div>
       </div>
 
-      {/* Pending Deliveries Table */}
+      {/* Deliveries Table */}
       <div className="bg-white rounded-lg shadow-lg">
         <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold">Pending Deliveries</h2>
+          <h2 className="text-xl font-semibold">Deliveries</h2>
         </div>
 
         <div className="overflow-x-auto">
@@ -133,66 +177,52 @@ const MilkReceiving = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Time
+                  Date
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Transporter
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Source
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Type
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Declared Quantity
+                  Amount
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Action
+                  Actions
                 </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {pendingDeliveries.map((delivery) => (
+              {deliveries.map((delivery) => (
                 <tr key={delivery.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {delivery.timestamp}
+                    {new Date(delivery.date).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {delivery.transporterName}
+                    {delivery.transport.firstName} {delivery.transport.lastName}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {delivery.source}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {delivery.milkType}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {delivery.declaredQuantity}
+                    {delivery.amount}L
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <span
                       className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                        delivery.status === 'pending'
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : delivery.status === 'verified'
+                        delivery.status === 'Completed'
                           ? 'bg-green-100 text-green-800'
                           : 'bg-red-100 text-red-800'
                       }`}
                     >
-                      {delivery.status.charAt(0).toUpperCase() + delivery.status.slice(1)}
+                      {delivery.status}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     {delivery.status === 'pending' && (
                       <button
-                        onClick={() => handleVerifyClick(delivery)}
-                        className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200"
+                        onClick={() => handleApproveDelivery(delivery.id)}
+                        className="text-blue-500 hover:text-blue-700"
                       >
-                        Verify Delivery
+                        Approve
                       </button>
                     )}
                   </td>
@@ -206,7 +236,14 @@ const MilkReceiving = () => {
       {/* Verification Modal */}
       {showVerificationModal && selectedDelivery && (
         <DeliveryConfirmationModal
-          delivery={selectedDelivery}
+          delivery={{
+            ...selectedDelivery,
+            transporterId: selectedDelivery.transport.id.toString(),
+            transporterName: `${selectedDelivery.transport.firstName} ${selectedDelivery.transport.lastName}`,
+            milkType: 'default', // Replace with actual value if available
+            declaredQuantity: selectedDelivery.amount.toString(),
+            timestamp: new Date(selectedDelivery.date).toISOString(),
+          }}
           onClose={() => {
             setShowVerificationModal(false);
             setSelectedDelivery(null);

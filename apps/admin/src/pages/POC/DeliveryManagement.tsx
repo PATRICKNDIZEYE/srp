@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Breadcrumb from '../../components/Breadcrumb';
 import DateRangeFilter from '../../components/Filters/DateRangeFilter';
 import { toast } from 'react-toastify';
 import axiosInstance from '../../utils/axiosInstance';
+import AddDeliveryModal from './AddDeliveryModal';
+import AddDailyModal from './AddDailyModal';
+import DailyManagement from './DailyManagement';
 
 interface TransportAssignmentModalProps {
   milk: {
@@ -24,13 +28,13 @@ const TransportAssignmentModal: React.FC<TransportAssignmentModalProps> = ({ mil
   useEffect(() => {
     const fetchTransporters = async () => {
       try {
-        const response = await axiosInstance.get('/transporters');
+        const response = await axiosInstance.get('/transports');
         setAvailableTransporters(response.data);
       } catch (error) {
         toast.error('Failed to load transporters');
       }
     };
-
+ 
     fetchTransporters();
   }, []);
 
@@ -42,7 +46,7 @@ const TransportAssignmentModal: React.FC<TransportAssignmentModalProps> = ({ mil
     }
 
     const quantity = Number(assignQuantity);
-    const availableQty = Number(milk?.availableQuantity.replace('L', ''));
+    const availableQty = milk?.availableQuantity ? Number(milk.availableQuantity.replace('L', '')) : 0;
 
     if (!quantity || quantity <= 0) {
       toast.error('Please enter a valid quantity');
@@ -50,7 +54,7 @@ const TransportAssignmentModal: React.FC<TransportAssignmentModalProps> = ({ mil
     }
 
     if (quantity > availableQty) {
-      toast.error(`Cannot assign more than available quantity (${milk?.availableQuantity})`);
+      toast.error(`Cannot assign more than available quantity (${milk?.availableQuantity || '0L'})`);
       return;
     }
 
@@ -90,10 +94,10 @@ const TransportAssignmentModal: React.FC<TransportAssignmentModalProps> = ({ mil
                 className="w-full px-3 py-2 border rounded-lg"
                 value={assignQuantity}
                 onChange={(e) => setAssignQuantity(e.target.value)}
-                max={Number(milk.availableQuantity.replace('L', ''))}
+                max={milk?.availableQuantity ? Number(milk.availableQuantity.replace('L', '')) : 0}
                 min="1"
                 required
-                placeholder={`Max ${milk.availableQuantity}`}
+                placeholder={`Max ${milk?.availableQuantity || '0L'}`}
               />
             </div>
 
@@ -152,17 +156,23 @@ const TransportAssignmentModal: React.FC<TransportAssignmentModalProps> = ({ mil
 };
 
 const DeliveryManagement = () => {
+  const navigate = useNavigate();
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState('all');
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [selectedMilk, setSelectedMilk] = useState<any>(null);
   const [confirmedMilk, setConfirmedMilk] = useState([]);
+  const [showAddDeliveryModal, setShowAddDeliveryModal] = useState(false);
+  const [showAddDailyModal, setShowAddDailyModal] = useState(false);
+  const [selectedTransportId, setSelectedTransportId] = useState<string | null>(null);
+  const [showDailyManagement, setShowDailyManagement] = useState(false);
+  const [selectedDeliveryId, setSelectedDeliveryId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchConfirmedMilk = async () => {
       try {
-        const response = await axiosInstance.get('/confirmed-milk');
+        const response = await axiosInstance.get('/delivery');
         setConfirmedMilk(response.data);
       } catch (error) {
         toast.error('Failed to load confirmed milk data');
@@ -177,9 +187,63 @@ const DeliveryManagement = () => {
     setShowAssignModal(true);
   };
 
+  const handleApprove = async (milkId: string) => {
+    try {
+      const response = await axiosInstance.patch(`/delivery/${milkId}/status`, { newStatus: 'Completed' });
+      toast.success('Transport approved successfully');
+      setConfirmedMilk((prev) =>
+        prev.map((milk) =>
+          milk.id === milkId ? { ...milk, transportStatus: 'Completed' } : milk
+        )
+      );
+    } catch (error) {
+      toast.error('Failed to approve transport');
+    }
+  };
+
+  const handleReject = async (milkId: string) => {
+    try {
+      const response = await axiosInstance.patch(`/${milkId}/status`, { status: 'Rejected' });
+      toast.success('Transport rejected successfully');
+      setConfirmedMilk((prev) =>
+        prev.map((milk) =>
+          milk.id === milkId ? { ...milk, transportStatus: 'Rejected' } : milk
+        )
+      );
+    } catch (error) {
+      toast.error('Failed to reject transport');
+    }
+  };
+
+  const handleAddDelivery = () => {
+    setShowAddDeliveryModal(true);
+  };
+
+  const handleAddDaily = (deliveryId: string) => {
+    navigate(`/poc/daily-management/${deliveryId}`);
+  };
+
+  const refreshDeliveries = async () => {
+    try {
+      const response = await axiosInstance.get('/delivery');
+      setConfirmedMilk(response.data);
+    } catch (error) {
+      toast.error('Failed to load confirmed milk data');
+    }
+  };
+
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
       <Breadcrumb pageName="Delivery Management" />
+
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={handleAddDelivery}
+          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+        >
+          Add Delivery
+        </button>
+      </div>
 
       {/* Filters & Table */}
       <div className="bg-white rounded-lg shadow-lg">
@@ -205,14 +269,15 @@ const DeliveryManagement = () => {
                   Date
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Type
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Total Quantity
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Status
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Transporter
+                </th>
+              
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Actions
                 </th>
@@ -225,23 +290,40 @@ const DeliveryManagement = () => {
                     {milk.date}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {milk.type}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {milk.totalQuantity}
+                    {milk.amount}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <span className="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                      {milk.status}
+                      {milk.transportStatus}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <button
-                      onClick={() => handleAssignTransport(milk.id)}
-                      className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200"
-                    >
-                      Assign Transport
-                    </button>
+                    {milk.transport ? `${milk.transport.firstName} ${milk.transport.lastName}` : 'N/A'}
+                  </td>
+                
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    {milk.transportStatus === 'In Progress' && (
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleApprove(milk.id)}
+                          className="px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200"
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => handleReject(milk.id)}
+                          className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200"
+                        >
+                          Reject
+                        </button>
+                        <button
+                          onClick={() => handleAddDaily(milk.id)}
+                          className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200"
+                        >
+                          Add Daily
+                        </button>
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -249,6 +331,14 @@ const DeliveryManagement = () => {
           </table>
         </div>
       </div>
+
+      {/* Add Delivery Modal */}
+      {showAddDeliveryModal && (
+        <AddDeliveryModal
+          onClose={() => setShowAddDeliveryModal(false)}
+          onAdd={refreshDeliveries}
+        />
+      )}
 
       {/* Transport Assignment Modal */}
       {showAssignModal && (
@@ -270,6 +360,23 @@ const DeliveryManagement = () => {
               toast.error(`Failed to assign transport: ${error.response?.data?.message || error.message}`);
             }
           }}
+        />
+      )}
+
+      {/* Add Daily Modal */}
+      {showAddDailyModal && (
+        <AddDailyModal
+          onClose={() => setShowAddDailyModal(false)}
+          onAdd={refreshDeliveries}
+          initialTransportId={selectedTransportId}
+        />
+      )}
+
+      {/* Daily Management Modal */}
+      {showDailyManagement && selectedDeliveryId && (
+        <DailyManagement
+          deliveryId={selectedDeliveryId}
+          onClose={() => setShowDailyManagement(false)}
         />
       )}
     </div>
