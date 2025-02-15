@@ -8,6 +8,7 @@ class TranspDerivedModel {
         transportId: data.transportId,
         amount: data.amount,
         status: data.status,
+        productionId: data.productionId,
         transportationId: data.transportationId,
         date: data.date || new Date(), // Use current date if not provided
       },
@@ -22,7 +23,6 @@ class TranspDerivedModel {
         transportations: {
           select: {
             id: true,
-            // transpDerivedId: true, // Remove this line
             // Add valid fields from the Transportations model here
           },
         },
@@ -45,6 +45,7 @@ class TranspDerivedModel {
         transportId: data.transportId,
         amount: data.amount,
         status: data.status,
+        productionId: data.productionId,
         transportationId: data.transportationId,
         date: data.date || new Date(),
       },
@@ -64,7 +65,6 @@ class TranspDerivedModel {
         transportations: {
           select: {
             id: true,
-            // transpDerivedId: true, // Remove this line
             // Add valid fields from the Transportations model here
           },
         },
@@ -83,7 +83,8 @@ class TranspDerivedModel {
         transportations: {
           select: {
             id: true,
-            transpDerivedId: true,
+            // transpDerivedId: true, // Remove this line if 'transpDerivedId' is not a valid field
+            // Add valid fields from the Transportations model here
           },
         },
       },
@@ -105,10 +106,8 @@ class TranspDerivedModel {
         transportations: {
           select: {
             id: true,
-            transpDerivedId: true,
-            amount: true,
-            status: true,
-            date: true,
+            // transpDerivedId: true, // Remove this line if 'transpDerivedId' is not a valid field
+            // Add valid fields from the Transportations model here
           },
         },
       },
@@ -118,12 +117,13 @@ class TranspDerivedModel {
   async getTranspDerivedByTransportationId(transportationId) {
     return await prisma.transpDerived.findMany({
       where: { transportationId: parseInt(transportationId) },
-      include: { 
+      include: {
         transport: true,
         transportations: {
           select: {
             id: true,
-            transpDerivedId: true,
+            // transpDerivedId: true, // Remove this line if 'transpDerivedId' is not a valid field
+            // Add valid fields from the Transportations model here
           },
         },
       },
