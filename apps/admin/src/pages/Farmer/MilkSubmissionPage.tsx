@@ -2,18 +2,27 @@ import React, { useState, useEffect } from 'react';
 import Breadcrumb from '../../components/Breadcrumb';
 import { toast } from 'react-toastify';
 import axiosInstance from '../../utils/axiosInstance';
+import { useUserContext } from '../../context/UserContext';
+
+// Define the type for a submission
+interface Submission {
+  id: string;
+  createdAt: string;
+  milkType: string;
+  amount: number;
+  status: string;
+}
 
 const MilkSubmissionPage = () => {
+  const { userId } = useUserContext(); // Use userId from UserContext
+
   const [formData, setFormData] = useState({
     milkType: '',
     amount: '',
     notes: '',
   });
 
-  const [submissions, setSubmissions] = useState([]); // State to store submissions
-
-  // Set farmerId to 2
-  const farmerId = 1;
+  const [submissions, setSubmissions] = useState<Submission[]>([]); // Define the type for submissions
 
   useEffect(() => {
     const fetchSubmissions = async () => {
@@ -32,22 +41,16 @@ const MilkSubmissionPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // Log the formData to the console
-      console.log('Submitting data:', formData);
-
-      // Prepare the data with the specified format
       const submissionData = {
         milkType: formData.milkType,
-        amount: parseInt(formData.amount, 10), // Ensure amount is a number
+        amount: Number(formData.amount),
         notes: formData.notes,
-        status: 'Pending', // Assuming status is always 'Pending' on submission
-        farmerId: farmerId,
+        status: 'Pending',
+        farmerId: Number(userId), // Ensure farmerId is a number
       };
 
-      // Log the submissionData to the console
-      console.log('Data sent to server:', submissionData);
+      console.log('Submitting data:', submissionData); // Log the data being sent
 
-      // Send POST request to the milk-submissions endpoint
       await axiosInstance.post('/milk-submissions', submissionData);
       toast.success('Milk submission recorded! Waiting for POC confirmation.');
       setFormData({ milkType: '', amount: '', notes: '' });

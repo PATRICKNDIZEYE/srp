@@ -37,7 +37,7 @@ const BaseLoginForm: React.FC<BaseLoginFormProps> = ({ role, onSuccess }) => {
       farmer: '/auth/farmer/login',
       poc: '/login-poc',
       transport: 'login-transport',
-      production: '/api/auth/production/login',
+      production: '/login-production',
       management: '/api/auth/management/login',
       diary: '/login-diary',
     };
@@ -45,9 +45,7 @@ const BaseLoginForm: React.FC<BaseLoginFormProps> = ({ role, onSuccess }) => {
     try {
       // Prepare the data to be sent in the request
       let requestData;
-      if (role === 'poc' || role === 'transport') {
-        requestData = { phoneNumber: formData.phone, password: formData.password };
-      } else if (role === 'diary') {
+      if (role === 'poc' || role === 'transport' || role === 'diary' || role === 'production') {
         requestData = { phoneNumber: formData.phone, password: formData.password };
       } else {
         requestData = { phone: formData.phone, password: formData.password };

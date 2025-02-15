@@ -1,61 +1,178 @@
-import React, { useState } from 'react';
-import { FiCheck, FiX } from 'react-icons/fi';
+import React, { useState, useEffect } from 'react';
+import { FiCheck, FiX, FiTruck, FiAlertTriangle } from 'react-icons/fi';
 import Breadcrumb from '../../components/Breadcrumb';
 import { toast } from 'react-toastify';
-import DeliveryVerificationModal from '../../components/Production/DeliveryVerificationModal';
+import DeliveryConfirmationModal from '../../components/Diary/DeliveryConfirmationModal';
+import axiosInstance from '../../utils/axiosInstance';
+import { useUserContext } from '../../context/UserContext';
 
-interface Delivery {
+interface TransportationData {
   id: string;
-  transporterId: string;
-  transporterName: string;
-  source: string;
-  milkType: string;
-  declaredQuantity: string;
-  timestamp: string;
-  status: 'pending' | 'verified' | 'rejected';
+  diaryId: number;
+  transportId: number;
+  amount: number;
+  status: string;
+  date: string;
+  diary: {
+    id: number;
+    status: string;
+    approveStatus: string;
+    phoneNumber: string;
+    longitude: number;
+    latitude: number;
+  };
+  transport: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    phoneNumber: string;
+    status: string;
+  };
 }
 
-const ProductionDeliveries = () => {
-  const [deliveries] = useState<Delivery[]>([
-    {
-      id: '1',
-      transporterId: 'T123',
-      transporterName: 'John Driver',
-      source: 'Kigali Diary',
-      milkType: 'Fresh Milk',
-      declaredQuantity: '500L',
-      timestamp: '2024-02-20 10:30',
-      status: 'pending',
-    }
-  ]);
+const MilkReceiving = () => {
+  const { userId } = useUserContext();
+  const [selectedTransportation, setSelectedTransportation] = useState<TransportationData | null>(null);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
-  const [selectedDelivery, setSelectedDelivery] = useState<Delivery | null>(null);
+  const [transportations, setTransportations] = useState<TransportationData[]>([]);
 
-  const handleVerifyDelivery = (
-    deliveryId: string,
+  useEffect(() => {
+    // Fetch transportations from the API
+    const fetchTransportations = async () => {
+      try {
+        const response = await axiosInstance.get(`transp-derived/production/${userId}`);
+        console.log('Fetched transportations:', response.data);
+        setTransportations(response.data);
+      } catch (error) {
+        console.error('Error fetching transportations:', error);
+        toast.error('Failed to fetch transportations');
+      }
+    };
+
+    fetchTransportations();
+  }, [userId]);
+
+  const handleVerifyTransportation = (
+    transportationId: string,
     actualQuantity: string,
     quality: string,
     notes: string
   ) => {
-    setDeliveries(prevDeliveries =>
-      prevDeliveries.map(delivery =>
-        delivery.id === deliveryId
-          ? { ...delivery, status: 'verified' as const }
-          : delivery
+    setTransportations(prevTransportations =>
+      prevTransportations.map(transportation =>
+        transportation.id === transportationId
+          ? { ...transportation, status: 'verified' as const }
+          : transportation
       )
     );
-    toast.success('Delivery verified successfully');
+
+    toast.success('Transportation verified successfully');
     setShowVerificationModal(false);
-    setSelectedDelivery(null);
+    setSelectedTransportation(null);
+  };
+
+  const handleRejectTransportation = (transportationId: string, reason: string) => {
+    setTransportations(prevTransportations =>
+      prevTransportations.map(transportation =>
+        transportation.id === transportationId
+          ? { ...transportation, status: 'rejected' as const }
+          : transportation
+      )
+    );
+
+    toast.error('Transportation rejected');
+    setShowVerificationModal(false);
+    setSelectedTransportation(null);
+  };
+
+  const handleVerifyClick = (transportation: TransportationData) => {
+    setSelectedTransportation(transportation);
+    setShowVerificationModal(true);
+  };
+
+  const handleApproveTransportation = async (transportationId: string) => {
+    try {
+      // Assuming the backend expects a payload with a 'status' field
+      const payload = { status: 'Completed' };
+      console.log('Sending payload:', payload);
+      console.log('Approving transportation ID:', transportationId);
+
+      // Send a PATCH request to update the status
+      await axiosInstance.patch(`transp-derived/${transportationId}/status`, payload);
+      setTransportations(prevTransportations =>
+        prevTransportations.map(transportation =>
+          transportation.id === transportationId
+            ? { ...transportation, status: 'Completed' }
+            : transportation
+        )
+      );
+      console.log('Approved transportation ID:', transportationId);
+      toast.success('Transportation approved successfully');
+    } catch (error) {
+      console.error('Error approving transportation:', error);
+      toast.error('Failed to approve transportation');
+    }
+  };
+
+  // Helper function to check if a date is today
+  const isToday = (someDate: Date) => {
+    const today = new Date();
+    return (
+      someDate.getDate() === today.getDate() &&
+      someDate.getMonth() === today.getMonth() &&
+      someDate.getFullYear() === today.getFullYear()
+    );
   };
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-      <Breadcrumb pageName="Incoming Deliveries" />
+      <Breadcrumb pageName="Incoming Transportations" />
 
-      <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold">Pending Deliveries</h3>
+      {/* Stats Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="bg-white rounded-lg p-6 shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-500">Pending Transportations</p>
+              <h3 className="text-2xl font-semibold">
+                {transportations.filter(t => t.status === 'pending').length}
+              </h3>
+            </div>
+            <FiTruck className="text-blue-500 text-2xl" />
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg p-6 shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-500">Today's Received</p>
+              <h3 className="text-2xl font-semibold">
+                {transportations
+                  .filter(t => isToday(new Date(t.date)))
+                  .reduce((total, t) => total + t.amount, 0)}L
+              </h3>
+            </div>
+            <FiCheck className="text-green-500 text-2xl" />
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg p-6 shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-500">Total Amount Received</p>
+              <h3 className="text-2xl font-semibold">
+                {transportations.reduce((total, t) => total + t.amount, 0)}L
+              </h3>
+            </div>
+            <FiAlertTriangle className="text-red-500 text-2xl" />
+          </div>
+        </div>
+      </div>
+
+      {/* Transportations Table */}
+      <div className="bg-white rounded-lg shadow-lg">
+        <div className="p-6 border-b border-gray-200">
+          <h2 className="text-xl font-semibold">Transportations</h2>
         </div>
 
         <div className="overflow-x-auto">
@@ -63,67 +180,54 @@ const ProductionDeliveries = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Time
+                  Date
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Transporter
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Source
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Type
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Quantity
+                  Amount
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Action
+                  Actions
                 </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {deliveries.map((delivery) => (
-                <tr key={delivery.id}>
+              {transportations.map((transportation) => (
+                <tr key={transportation.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {delivery.timestamp}
+                    {new Date(transportation.date).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {delivery.transporterName}
+                    {transportation.transport.firstName} {transportation.transport.lastName}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {delivery.source}
+                    {transportation.amount}L
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {delivery.milkType}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {delivery.declaredQuantity}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                      delivery.status === 'pending'
+                    <span
+                      className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                        transportation.status === 'Completed'
+                          ? 'bg-green-100 text-green-800'
+                        : transportation.status === 'pending'
                         ? 'bg-yellow-100 text-yellow-800'
-                        : delivery.status === 'verified'
-                        ? 'bg-green-100 text-green-800'
                         : 'bg-red-100 text-red-800'
-                    }`}>
-                      {delivery.status.charAt(0).toUpperCase() + delivery.status.slice(1)}
+                      }`}
+                    >
+                      {transportation.status}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {delivery.status === 'pending' && (
+                    {transportation.status.toLowerCase() === 'pending' && (
                       <button
-                        onClick={() => {
-                          setSelectedDelivery(delivery);
-                          setShowVerificationModal(true);
-                        }}
-                        className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200"
+                        onClick={() => handleApproveTransportation(transportation.id)}
+                        className="text-blue-500 hover:text-blue-700"
                       >
-                        Verify Delivery
+                        Approve
                       </button>
                     )}
                   </td>
@@ -134,30 +238,27 @@ const ProductionDeliveries = () => {
         </div>
       </div>
 
-      {showVerificationModal && selectedDelivery && (
-        <DeliveryVerificationModal
-          delivery={selectedDelivery}
+      {/* Verification Modal */}
+      {showVerificationModal && selectedTransportation && (
+        <DeliveryConfirmationModal
+          delivery={{
+            ...selectedTransportation,
+            transporterId: selectedTransportation.transport.id.toString(),
+            transporterName: `${selectedTransportation.transport.firstName} ${selectedTransportation.transport.lastName}`,
+            milkType: 'default', // Replace with actual value if available
+            declaredQuantity: selectedTransportation.amount.toString(),
+            timestamp: new Date(selectedTransportation.date).toISOString(),
+          }}
           onClose={() => {
             setShowVerificationModal(false);
-            setSelectedDelivery(null);
+            setSelectedTransportation(null);
           }}
-          onConfirm={handleVerifyDelivery}
-          onReject={(deliveryId, reason) => {
-            setDeliveries(prevDeliveries =>
-              prevDeliveries.map(delivery =>
-                delivery.id === deliveryId
-                  ? { ...delivery, status: 'rejected' as const }
-                  : delivery
-              )
-            );
-            toast.error('Delivery rejected');
-            setShowVerificationModal(false);
-            setSelectedDelivery(null);
-          }}
+          onConfirm={handleVerifyTransportation}
+          onReject={handleRejectTransportation}
         />
       )}
     </div>
   );
 };
 
-export default ProductionDeliveries; 
+export default MilkReceiving; 

@@ -7,6 +7,7 @@ import { FiCheck, FiTruck, FiMapPin, FiDroplet } from 'react-icons/fi';
 import RecipientVerificationModal from '../../components/Transport/RecipientVerificationModal';
 import RecipientSelectionModal from '../../components/Transport/RecipientSelectionModal';
 import axiosInstance from '../../utils/axiosInstance';
+import { useUserContext } from '../../context/UserContext';
 
 interface DeliveryConfirmationModalProps {
   delivery: any;
@@ -105,6 +106,7 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
 
 const AssignedDeliveries = () => {
   const navigate = useNavigate();
+  const { userId } = useUserContext();
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState('all');
@@ -116,8 +118,9 @@ const AssignedDeliveries = () => {
 
   useEffect(() => {
     const fetchDeliveries = async () => {
+      if (!userId) return;
       try {
-        const response = await axiosInstance.get('/delivery/transport/1');
+        const response = await axiosInstance.get(`/delivery/transport/${userId}`);
         setAssignedDeliveries(response.data);
       } catch (error) {
         console.error('Error fetching deliveries:', error);
@@ -126,7 +129,7 @@ const AssignedDeliveries = () => {
     };
 
     fetchDeliveries();
-  }, []);
+  }, [userId]);
 
   // Calculate summary data
   const totalDeliveries = assignedDeliveries.length;

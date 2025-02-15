@@ -18,6 +18,8 @@ import loanRoutes from './routes/loanRoutes.js';
 // Import database connection (if necessary)
 import { connection } from './postgres/postgres.js';
 import pocRoutes from './routes/pocRoutes.js';
+import productionRoutes from './routes/productionRoutes.js';
+
 
 // Import additional routes
 import userRoutes from './routes/userRoutes.js';
@@ -28,6 +30,9 @@ import farmerRoutes from './routes/farmerRoutes.js';
 import loginTransportAuth from './auth/loginTransportAuth.js';
 import loginDiaryAuth from './auth/loginDiaryAuth.js';
 import deliveryRoutes from './routes/deliveryRoutes.js';
+import loginProductionAuth from './auth/loginProductionAuth.js';
+import transportationsRoutes from './routes/transportationsRoutes.js';
+import transpDerivedRoutes from './routes/transpDerivedRoutes.js';
 dotenv.config();
 const app = express();
 const prisma = new PrismaClient();
@@ -56,7 +61,10 @@ app.use('/api/diary', diaryRoutes);
 app.use('/api/login-diary', loginDiaryAuth);
 app.use('/api/derived', derivedRoutes);
 app.use('/api/delivery', deliveryRoutes);
-
+app.use('/api/production', productionRoutes);
+app.use('/api/login-production', loginProductionAuth);
+app.use('/api/transportations', transportationsRoutes);
+app.use('/api/transp-derived', transpDerivedRoutes);
 // Use the registerFarmerAuth function as a route handler
 
 app.post('/api/register-farmer', async (req, res) => {

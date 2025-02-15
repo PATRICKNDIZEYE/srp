@@ -55,10 +55,11 @@ import AnalyticsDashboard from './pages/Management/AnalyticsDashboard';
 import DailyManagement from './pages/POC/DailyManagement';
 import TransportDailyManagement from './pages/Transport/DailyManagement';
 // import Productionline from './pages/';
+import { UserProvider } from './context/UserContext';
 
 function App() {
   return (
-    <>
+    <UserProvider>
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Landing />} />
@@ -160,7 +161,7 @@ function App() {
         draggable
         pauseOnHover
       />
-    </>
+    </UserProvider>
   );
 }
 

@@ -12,5 +12,8 @@
     "build:ngo": "yarn workspace @minubumwe/ngo build",
     "build:backend": "yarn workspace @minubumwe/backend build",
     "start:backend": "yarn workspace @minubumwe/backend start"
+  },
+  "dependencies": {
+    "apexcharts": "^4.4.0"
   }
-} 
+}

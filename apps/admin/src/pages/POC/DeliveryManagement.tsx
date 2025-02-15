@@ -172,7 +172,7 @@ const DeliveryManagement = () => {
   useEffect(() => {
     const fetchConfirmedMilk = async () => {
       try {
-        const response = await axiosInstance.get('/delivery');
+        const response = await axiosInstance.get('/transportations');
         setConfirmedMilk(response.data);
       } catch (error) {
         toast.error('Failed to load confirmed milk data');
@@ -189,7 +189,7 @@ const DeliveryManagement = () => {
 
   const handleApprove = async (milkId: string) => {
     try {
-      const response = await axiosInstance.patch(`/delivery/${milkId}/status`, { newStatus: 'Completed' });
+      const response = await axiosInstance.patch(`/transportations/${milkId}/status`, { newStatus: 'Completed' });
       toast.success('Transport approved successfully');
       setConfirmedMilk((prev) =>
         prev.map((milk) =>
@@ -225,7 +225,7 @@ const DeliveryManagement = () => {
 
   const refreshDeliveries = async () => {
     try {
-      const response = await axiosInstance.get('/delivery');
+      const response = await axiosInstance.get('/transportations');
       setConfirmedMilk(response.data);
     } catch (error) {
       toast.error('Failed to load confirmed milk data');
@@ -320,7 +320,7 @@ const DeliveryManagement = () => {
                           onClick={() => handleAddDaily(milk.id)}
                           className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200"
                         >
-                          Add Daily
+                          Add Production
                         </button>
                       </div>
                     )}

@@ -100,7 +100,7 @@ const DailyManagement: React.FC = () => {
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-      <Breadcrumb pageName={`Daily Management for Delivery ${deliveryId}`} />
+      <Breadcrumb pageName={`Production Management for Delivery ${deliveryId}`} />
 
       {/* New Cards for Completed and Pending Data */}
       <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -143,7 +143,7 @@ const DailyManagement: React.FC = () => {
 
       <div className="bg-white rounded-lg shadow-lg">
         <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-          <h2 className="text-xl font-semibold">Daily Management for Delivery {deliveryId}</h2>
+          <h2 className="text-xl font-semibold">Production Management for Delivery {deliveryId}</h2>
           
         </div>
         <div className="overflow-x-auto">

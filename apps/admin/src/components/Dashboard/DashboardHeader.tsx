@@ -2,6 +2,7 @@ import React from 'react';
 import { FiMenu, FiBell, FiUser, FiLogOut } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { useUserContext } from '../../context/UserContext';
 
 interface DashboardHeaderProps {
   onMenuButtonClick: () => void;
@@ -10,6 +11,7 @@ interface DashboardHeaderProps {
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuButtonClick, role }) => {
   const navigate = useNavigate();
+  const { user } = useUserContext();
 
   const handleLogout = () => {
     // Add logout logic here
@@ -43,7 +45,9 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuButtonClick, ro
           <div className="relative group">
             <button className="flex items-center space-x-2 text-gray-700 hover:text-gray-900">
               <FiUser size={20} />
-              <span className="hidden md:inline">John Doe</span>
+              <span className="hidden md:inline">
+                {user ? `${user.name} (${user.phone})` : 'Loading...'}
+              </span>
             </button>
 
             <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 hidden group-hover:block">

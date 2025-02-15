@@ -37,7 +37,7 @@ const DailyManagement: React.FC = () => {
   useEffect(() => {
     const fetchDailyData = async () => {
       try {
-        const response = await axiosInstance.get(`/derived/derivery/${deliveryId}`);
+        const response = await axiosInstance.get(`/transp-derived/transportation/${deliveryId}`);
         const data = response.data.map((item: any) => ({
           id: item.id,
           date: item.date,
@@ -73,7 +73,7 @@ const DailyManagement: React.FC = () => {
   const handleApprove = async (id: number) => {
     try {
       // Update the status using the new endpoint
-      await axiosInstance.patch(`/derived/${id}/status`, { status: 'Completed' });
+      await axiosInstance.patch(`/transp-derived/${id}/status`, { status: 'Completed' });
       setDailyData((prevData) =>
         prevData.map((item) =>
           item.id === id ? { ...item, status: 'Completed' } : item
@@ -100,7 +100,7 @@ const DailyManagement: React.FC = () => {
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-      <Breadcrumb pageName={`Daily Management for Delivery ${deliveryId}`} />
+      <Breadcrumb pageName={`Prodction Management for Delivery ${deliveryId}`} />
 
       {/* New Cards for Completed and Pending Data */}
       <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -143,7 +143,7 @@ const DailyManagement: React.FC = () => {
 
       <div className="bg-white rounded-lg shadow-lg">
         <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-          <h2 className="text-xl font-semibold">Daily Management for Delivery {deliveryId}</h2>
+          <h2 className="text-xl font-semibold">Production Management for Delivery {deliveryId}</h2>
           <button
             onClick={() => {
               setSelectedTransportId(dailyData.length > 0 ? dailyData[0].transportId : null);
@@ -151,7 +151,7 @@ const DailyManagement: React.FC = () => {
             }}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
-            Add Daily
+            Add Production
           </button>
         </div>
         <div className="overflow-x-auto">

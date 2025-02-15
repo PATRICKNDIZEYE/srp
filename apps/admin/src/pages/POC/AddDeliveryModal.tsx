@@ -36,7 +36,7 @@ const AddDeliveryModal: React.FC<AddDeliveryModalProps> = ({ onClose, onAdd }) =
         transportStatus: status.trim(),
       };
 
-      await axiosInstance.post('/delivery', deliveryData, {
+      await axiosInstance.post('/transportations', deliveryData, {
         headers: {
           'Content-Type': 'application/json',
         },

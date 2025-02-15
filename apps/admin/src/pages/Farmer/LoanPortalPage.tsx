@@ -3,6 +3,7 @@ import Breadcrumb from '../../components/Breadcrumb';
 import { FiDollarSign, FiClock, FiAlertCircle } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import axiosInstance from '../../utils/axiosInstance';
+import { useUserContext } from '../../context/UserContext';
 
 // Define a type for the loan objects
 type Loan = {
@@ -33,6 +34,7 @@ type Loan = {
 };
 
 const LoanPortalPage = () => {
+  const { userId } = useUserContext(); // Use userId from UserContext
   const [showLoanForm, setShowLoanForm] = useState(false);
   const [loanAmount, setLoanAmount] = useState('');
   const [purpose, setPurpose] = useState('');
@@ -41,8 +43,6 @@ const LoanPortalPage = () => {
   const maxLoanAmount = 50000; // RF 50,000
   const currentDebt = 0; // This would come from the backend
   const monthlyIncome = 245000; // This would be calculated from milk submissions
-
-  const userId = 1; // Replace with actual logged-in user ID
 
   const fetchLoans = async () => {
     try {

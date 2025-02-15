@@ -4,9 +4,10 @@ import Breadcrumb from '../../components/Breadcrumb';
 import { toast } from 'react-toastify';
 import DeliveryConfirmationModal from '../../components/Diary/DeliveryConfirmationModal';
 import axiosInstance from '../../utils/axiosInstance';
+import { useUserContext } from '../../context/UserContext';
 
 interface DeliveryData {
-  id: number;
+  id: string;
   diaryId: number;
   transportId: number;
   amount: number;
@@ -30,10 +31,10 @@ interface DeliveryData {
 }
 
 const MilkReceiving = () => {
+  const { userId } = useUserContext();
   const [selectedDelivery, setSelectedDelivery] = useState<DeliveryData | null>(null);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [deliveries, setDeliveries] = useState<DeliveryData[]>([]);
-  const userId = 1; // Replace this with the actual logic to get the logged-in user's ID
 
   useEffect(() => {
     // Fetch deliveries from the API
@@ -56,13 +57,9 @@ const MilkReceiving = () => {
     quality: string,
     notes: string
   ) => {
-    // Convert deliveryId to a number for comparison
-    const deliveryIdNumber = Number(deliveryId);
-
-    // Update the delivery status in the list
     setDeliveries(prevDeliveries =>
       prevDeliveries.map(delivery =>
-        delivery.id === deliveryIdNumber
+        delivery.id === deliveryId
           ? { ...delivery, status: 'verified' as const }
           : delivery
       )
@@ -74,13 +71,9 @@ const MilkReceiving = () => {
   };
 
   const handleRejectDelivery = (deliveryId: string, reason: string) => {
-    // Convert deliveryId to a number for comparison
-    const deliveryIdNumber = Number(deliveryId);
-
-    // Update the delivery status in the list
     setDeliveries(prevDeliveries =>
       prevDeliveries.map(delivery =>
-        delivery.id === deliveryIdNumber
+        delivery.id === deliveryId
           ? { ...delivery, status: 'rejected' as const }
           : delivery
       )
@@ -96,7 +89,7 @@ const MilkReceiving = () => {
     setShowVerificationModal(true);
   };
 
-  const handleApproveDelivery = async (deliveryId: number) => {
+  const handleApproveDelivery = async (deliveryId: string) => {
     try {
       await axiosInstance.patch(`/derived/${deliveryId}/status`, { status: 'Completed' });
       setDeliveries(prevDeliveries =>
@@ -134,7 +127,7 @@ const MilkReceiving = () => {
             <div>
               <p className="text-gray-500">Pending Deliveries</p>
               <h3 className="text-2xl font-semibold">
-                {deliveries.filter(d => d.status === 'pending').length}
+                {deliveries.filter(d => d.status.trim().toLowerCase() === 'pending').length}
               </h3>
             </div>
             <FiTruck className="text-blue-500 text-2xl" />
@@ -158,8 +151,10 @@ const MilkReceiving = () => {
         <div className="bg-white rounded-lg p-6 shadow-lg">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500">Quality Issues</p>
-              <h3 className="text-2xl font-semibold">2</h3>
+              <p className="text-gray-500">Total Amount Received</p>
+              <h3 className="text-2xl font-semibold">
+                {deliveries.reduce((total, d) => total + d.amount, 0)}L
+              </h3>
             </div>
             <FiAlertTriangle className="text-red-500 text-2xl" />
           </div>
@@ -217,7 +212,7 @@ const MilkReceiving = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {delivery.status === 'pending' && (
+                    {delivery.status.trim().toLowerCase() === 'pending' && (
                       <button
                         onClick={() => handleApproveDelivery(delivery.id)}
                         className="text-blue-500 hover:text-blue-700"

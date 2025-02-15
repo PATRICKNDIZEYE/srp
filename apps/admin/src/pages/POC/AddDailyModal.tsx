@@ -22,16 +22,16 @@ const AddDailyModal: React.FC<AddDailyModalProps> = ({ onClose, onAdd, initialTr
   useEffect(() => {
     const fetchDiaries = async () => {
       try {
-        const response = await axiosInstance.get('/diaries');
+        const response = await axiosInstance.get('/production');
         setDiaries(response.data);
       } catch (error) {
         toast.error('Failed to fetch diaries');
       }
-    };
+    }; 
 
     const fetchTransports = async () => {
       try {
-        const response = await axiosInstance.get(`/delivery/${deriveryId}`);
+        const response = await axiosInstance.get(`/transportations/${deriveryId}`);
         const transportData = response.data.transport;
         setTransports([transportData]);
         setSelectedTransport(transportData);
@@ -39,7 +39,7 @@ const AddDailyModal: React.FC<AddDailyModalProps> = ({ onClose, onAdd, initialTr
 
         const totalAmount = response.data.amount;
 
-        const derivedResponse = await axiosInstance.get(`/derived/derivery/${deriveryId}`);
+        const derivedResponse = await axiosInstance.get(`/transp-derived/transportation/${deriveryId}`);
         const derivedTotal = derivedResponse.data.reduce((sum: number, item: any) => sum + item.amount, 0);
 
         setMaxAmount(totalAmount - derivedTotal);
