@@ -76,7 +76,7 @@ const Landing = () => {
       id: 2,
       name: 'Uwase Marie',
       role: 'Nyir\'uruganda rw\'amata mu Rwamagana',
-      image: 'https://images.unsplash.com/photo-1604868189265-c6de9e333fd0?w=400&h=400&fit=crop',
+      image: 'https://i.ytimg.com/vi/2KM8gv8FZsQ/maxresdefault.jpg',
       quote: 'Uburyo bwabo bworohereza cyane kandi bufasha mu micungire y\'ibikorwa byacu bya buri munsi.',
       rating: 5
     },
@@ -84,7 +84,7 @@ const Landing = () => {
       id: 3,
       name: 'Kamanzi Eric',
       role: 'Umuyobozi wa POC i Nyanza',
-      image: 'https://images.unsplash.com/photo-1581829128828-e71f16075a2b?w=400&h=400&fit=crop',
+      image: 'https://s3.lesviolets.com/images/4042/b802c1fc943413ced9032fc9620838db.png?v=1672656049',
       quote: 'Gukoresha SJRB byatumye dutera imbere mu buryo butangaje mu mwaka umwe gusa.',
       rating: 5
     }
