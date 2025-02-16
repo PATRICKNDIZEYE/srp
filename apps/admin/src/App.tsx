@@ -61,6 +61,7 @@ import FarmerLayout from './layouts/FarmerLayout';
 import LoginPage from './pages/Authentication/FarmerRegistration';
 import RegisterPage from './pages/Auth/RegisterPage';
 import AccountInactivePage from './components/ErrorPages/AccountInactivePage';
+import ProtectedManagementRoute from './components/ProtectedManagementRoute';
 
 function App() {
   return (
@@ -120,7 +121,14 @@ function App() {
 
         {/* Management Routes */}
         <Route element={<DashboardLayout role="management" />}>
-          <Route path="/management/dashboard" element={<ManagementDashboard />} />
+          <Route 
+            path="/management/dashboard" 
+            element={
+              <ProtectedManagementRoute>
+                <ManagementDashboard />
+              </ProtectedManagementRoute>
+            } 
+          />
           <Route path="/management/users" element={<ManagementUserManagement />} />
           <Route path="/management/finance" element={<ManagementFinancialReports />} />
           <Route path="/management/operations" element={<OperationsManagement />} />

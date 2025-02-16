@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
 import { isValidEmail } from '../../utils/validation';
+import axiosInstance from '../../utils/axios';
 
 const ManagementSignIn = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
   const [formData, setFormData] = useState({
     email: '',
@@ -39,17 +42,36 @@ const ManagementSignIn = () => {
     return isValid;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!validateForm()) return;
 
-    // Dummy authentication logic for management
-    if (formData.email === 'admin@srp.com' && formData.password === 'admin123') {
-      toast.success('Login successful!');
-      navigate('/management/dashboard');
-    } else {
-      toast.error('Invalid credentials');
+    setIsLoading(true);
+    try {
+      const response = await axiosInstance.post('/login-management', formData);
+
+      if (response.data?.token) {
+        localStorage.setItem('mgmt_token', response.data.token);
+        localStorage.setItem('mgmt_user', JSON.stringify(response.data.user));
+        
+        axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+        
+        toast.success('Kwinjira byagenze neza!');
+        
+        const from = (location.state as any)?.from?.pathname || '/management/dashboard';
+        navigate(from, { replace: true });
+      }
+    } catch (error: any) {
+      let errorMessage = 'Kwinjira ntibyagenze neza';
+      
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      
+      toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -117,9 +139,10 @@ const ManagementSignIn = () => {
 
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white rounded-lg py-2 px-4 hover:bg-blue-700 transition-colors"
+            className="w-full bg-blue-600 text-white rounded-lg py-2 px-4 hover:bg-blue-700 transition-colors disabled:bg-blue-300"
+            disabled={isLoading}
           >
-            Login
+            {isLoading ? 'Tegereza...' : 'Injira'}
           </button>
         </form>
 
