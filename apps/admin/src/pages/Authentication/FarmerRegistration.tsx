@@ -10,7 +10,7 @@ const FarmerRegistration = () => {
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);  
   const [locationError, setLocationError] = useState('');
 
   const [formData, setFormData] = useState({

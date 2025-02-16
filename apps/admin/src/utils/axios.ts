@@ -11,16 +11,16 @@ const axiosInstance = axios.create({
 // Request interceptor
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('mgmt_token');
     if (token) {
       // Check if token is expired
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         if (payload.exp * 1000 < Date.now()) {
           // Token is expired
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          window.location.href = '/signin';
+          localStorage.removeItem('mgmt_token');
+          localStorage.removeItem('mgmt_user');
+          window.location.href = '/management/signin';
           return Promise.reject('Token expired');
         }
       } catch (error) {
@@ -44,9 +44,9 @@ axiosInstance.interceptors.response.use(
       switch (error.response.status) {
         case 401:
           // Handle unauthorized
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          window.location.href = '/signin';
+          localStorage.removeItem('mgmt_token');
+          localStorage.removeItem('mgmt_user');
+          window.location.href = '/management/signin';
           break;
         case 403:
           toast.error('You do not have permission to access this resource');
