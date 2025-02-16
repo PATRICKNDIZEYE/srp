@@ -57,3 +57,8 @@ export const deleteFarmer = async (id) => {
     where: { id: parseInt(id) },
   });
 };
+export const getFarmersByPhoneNumber = async (phoneNumber) => {
+  return await prisma.farmer.findMany({
+    where: { phoneNumber },
+  });
+};

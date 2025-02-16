@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { toast } from 'react-toastify';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
 import { isValidPhone } from '../../utils/validation';
 import axiosInstance from '../../utils/axiosInstance';
+import { useUserContext } from '../../context/UserContext';
 
 interface BaseLoginFormProps {
   role: 'farmer' | 'poc' | 'transport' | 'production' | 'management' | 'diary';
@@ -11,6 +12,7 @@ interface BaseLoginFormProps {
 }
 
 const BaseLoginForm: React.FC<BaseLoginFormProps> = ({ role, onSuccess }) => {
+  const { setUser } = useUserContext();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     phone: '',
@@ -20,6 +22,16 @@ const BaseLoginForm: React.FC<BaseLoginFormProps> = ({ role, onSuccess }) => {
     phone: '',
     password: '',
   });
+
+  // Define user data endpoints for each role
+  const userEndpoints: Record<string, string> = {
+    farmer: '/farmer/phone/',
+    poc: '/pocs/phone/',
+    transport: '/transports/phone/',
+    production: '/production/phone/',
+    management: '/users/phone/',
+    diary: '/diary/phone/',
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,10 +69,31 @@ const BaseLoginForm: React.FC<BaseLoginFormProps> = ({ role, onSuccess }) => {
       if (response.status === 200) {
         toast.success('Login successful!');
         onSuccess(formData.phone);
+
+        // Fetch user data after successful login
+        try {
+          const userResponse = await axiosInstance.get(`${userEndpoints[role]}${formData.phone}`);
+          console.log('User data response:', userResponse);
+
+          if (userResponse.status === 200) {
+            // Store user data in local storage
+            localStorage.setItem('userData', JSON.stringify(userResponse.data));
+            console.log('User data stored in local storage:', userResponse.data);
+
+            // Update the UserContext with the fetched user data
+            setUser(userResponse.data);
+          } else {
+            toast.error('Failed to fetch user data');
+          }
+        } catch (fetchError) {
+          console.error('Error fetching user data:', fetchError);
+          toast.error('An error occurred while fetching user data');
+        }
       } else {
         toast.error('Invalid credentials');
       }
     } catch (error) {
+      console.error('Error during login:', error);
       toast.error('An error occurred during login');
     }
   };
