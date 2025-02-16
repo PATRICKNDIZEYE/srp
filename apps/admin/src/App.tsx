@@ -60,7 +60,12 @@ import ProtectedFarmerRoute from './components/ProtectedFarmerRoute';
 import FarmerLayout from './layouts/FarmerLayout';
 import LoginPage from './pages/Authentication/FarmerRegistration';
 import RegisterPage from './pages/Auth/RegisterPage';
+import ProductionDeliveryManagement from './pages/Production/DeliveryManagement';
+import ProductionDailyManagement from './pages/Production/DailyManagement';
 import AccountInactivePage from './components/ErrorPages/AccountInactivePage';
+import ProductionManagement from './pages/Transport/ProductionManagement';
+import AssignedTransportations from './pages/Transport/AssignedTransportation';
+import ProductionSettings from './pages/Production/ProductionSettings';
 
 function App() {
   return (
@@ -74,6 +79,7 @@ function App() {
         <Route path="/transport/signin" element={<TransportSignIn />} />
         <Route path="/production/signin" element={<ProductionSignIn />} />
         <Route path="/management/signin" element={<ManagementSignIn />} />
+          <Route path="/poc/daily-management/:transportationId" element={<DailyManagement />} />
         <Route path="/diary/signin" element={<DiarySignIn />} />
 
         {/* Farmer Routes */}
@@ -106,7 +112,9 @@ function App() {
           <Route path="/transport/dashboard" element={<TransportDashboard />} />
           <Route path="/transport/deliveries" element={<AssignedDeliveries />} />
           <Route path="/transport/daily-management/:deliveryId" element={<TransportDailyManagement />} />
-          <Route path="/transport/settings" element={<Settings />} />
+          {/* <Route path="/transport/settings" element={<TransportSettings />} /> */}
+          <Route path="/transport/assigned-transportations" element={<AssignedTransportations />}  />
+          <Route path="/transport/production-management/:deliveryId" element={<ProductionManagement />} />
         </Route>
 
         {/* Production Routes */}
@@ -114,8 +122,9 @@ function App() {
           <Route path="/production/dashboard" element={<ProductionDashboard />} />
           <Route path="/production/deliveries" element={<ProductionDeliveries />} />
           <Route path="/production/sales" element={<ProductionSales />} />
-          <Route path="/production/settings" element={<Settings />} />
-          {/* <Route path="/production/line" element={<Productionline />} /> */}
+          <Route path="/production/settings" element={<ProductionSettings />} />
+          <Route path="/production/daily-management/:deliveryId" element={<ProductionDailyManagement />} />
+          <Route path="/production/delivery-management" element={<ProductionDeliveryManagement />} />
         </Route>
 
         {/* Management Routes */}

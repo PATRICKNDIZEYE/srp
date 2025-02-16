@@ -44,12 +44,14 @@ const DashboardSidebar: React.FC<SidebarProps> = ({ role, isOpen, onClose }) => 
     transport: [
       { name: 'Dashboard', icon: FiHome, path: '/transport/dashboard' },
       { name: 'Assigned Deliveries', icon: FiTruck, path: '/transport/deliveries' },
+      { name: 'Transportation Management', icon: FiTruck, path: '/transport/assigned-transportations'},
       { name: 'Settings', icon: FiSettings, path: '/transport/settings' },
     ],
     production: [
       { name: 'Dashboard', icon: FiHome, path: '/production/dashboard' },
       { name: 'Deliveries', icon: FiTruck, path: '/production/deliveries' },
       { name: 'Sales', icon: FiFileText, path: '/production/sales' },
+      { name: 'Delivery Management', icon: FiTruck, path: '/production/delivery-management' },
       { name: 'Settings', icon: FiSettings, path: '/production/settings' },
     ],
     diary: [
