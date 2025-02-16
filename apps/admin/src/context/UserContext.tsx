@@ -1,53 +1,68 @@
-import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
-import axiosInstance from '../utils/axiosInstance'; // Import axiosInstance
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import axiosInstance from '../utils/axios';
 
 interface User {
-  id: string;
-  name: string;
-  email: string;
+  id: number;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
   role: string;
-  phone: string; // Add phone to the User interface
 }
 
 interface UserContextType {
-  userId: string;
   user: User | null;
+  loading: boolean;
+  error: string | null;
   setUser: (user: User | null) => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
-export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [userId, setUserId] = useState<string>('1'); // Replace '1' with actual logic to get user ID
+export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Fetch user data using axiosInstance
-    const fetchUserData = async () => {
+    const fetchUser = async () => {
+      const storedUser = localStorage.getItem('user');
+      const token = localStorage.getItem('token');
+
+      if (!storedUser || !token) {
+        setLoading(false);
+        return;
+      }
+
       try {
-        const response = await axiosInstance.get(`/users/${userId}`);
-        setUser(response.data);
+        const userData = JSON.parse(storedUser);
+        setUser(userData);
       } catch (error) {
-        console.error('Failed to fetch user data:', error);
+        console.error('Error parsing user data:', error);
+        setError('Failed to load user data');
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchUserData();
-  }, [userId]);
+    fetchUser();
+  }, []);
 
   return (
-    <UserContext.Provider value={{ userId, user, setUser }}>
+    <UserContext.Provider value={{ user, loading, error, setUser }}>
       {children}
     </UserContext.Provider>
   );
 };
 
+// Export both hooks for backward compatibility
 export const useUserContext = () => {
   const context = useContext(UserContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useUserContext must be used within a UserProvider');
   }
   return context;
 };
+
+export const useUser = useUserContext; // Alias for the new name
 
 export default UserContext; 

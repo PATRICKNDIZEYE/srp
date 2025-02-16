@@ -8,40 +8,40 @@ const RoleSelection = () => {
   const roles = [
     {
       id: 1,
-      title: 'Farmer',
-      description: 'Register or login as a milk supplier',
+      title: 'Umuhinzi',
+      description: 'Iyandikishe cyangwa winjire nk\'utanga amata',
       icon: '👨‍🌾',
       path: '/farmer/register',
       allowRegistration: true
     },
     {
       id: 2,
-      title: 'Collection Point (POC)',
-      description: 'Manage milk collection and testing',
+      title: 'Icyicaro cy\'Ikusanyirizo (POC)',
+      description: 'Gucunga ikusanyirizo n\'isuzuma ry\'amata',
       icon: '🏢',
       path: '/poc/signin',
       allowRegistration: false
     },
     {
       id: 3,
-      title: 'Delivery/Transport',
-      description: 'Manage milk transportation',
+      title: 'Gutwara Amata',
+      description: 'Gucunga gutwara amata',
       icon: '🚛',
       path: '/transport/signin',
       allowRegistration: false
     },
     {
       id: 4,
-      title: 'Production Site',
-      description: 'Manage milk processing and production',
+      title: 'Uruganda',
+      description: 'Gucunga gukora no gutunganya amata',
       icon: '🏭',
       path: '/production/signin',
       allowRegistration: false
     },
     {
       id: 5,
-      title: 'Management',
-      description: 'Admin, HR, and System Management',
+      title: 'Ubuyobozi',
+      description: 'Admin, HR, no gucunga sisitemu',
       icon: '👥',
       path: '/management/signin',
       allowRegistration: false
@@ -49,7 +49,7 @@ const RoleSelection = () => {
     {
       id: 6,
       title: 'Diary',
-      description: 'Manage milk sales and inventory',
+      description: 'Gucunga kugurisha no kubika amata',
       icon: '🏪',
       path: '/diary/signin',
       allowRegistration: false
@@ -61,14 +61,14 @@ const RoleSelection = () => {
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            Select Your Role
+            Hitamo Uruhare Rwawe
           </h2>
           <p className="text-gray-600">
-            Choose your role to continue to the appropriate portal
+            Hitamo uruhare rwawe kugirango ukomeze ku rubuga rukwiye
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {roles.map((role) => (
             <motion.div
               key={role.id}
@@ -85,7 +85,7 @@ const RoleSelection = () => {
                 <button
                   className="w-full bg-blue-600 text-white rounded-lg py-2 px-4 hover:bg-blue-700 transition-colors"
                 >
-                  {role.allowRegistration ? 'Register/Login' : 'Login'}
+                  {role.allowRegistration ? 'Iyandikishe/Injira' : 'Injira'}
                 </button>
               </div>
             </motion.div>

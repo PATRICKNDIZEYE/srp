@@ -1,26 +1,24 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { FiEye, FiEyeOff } from 'react-icons/fi';
+import { FiEye, FiEyeOff, FiMapPin, FiLoader } from 'react-icons/fi';
 import { isValidPhone } from '../../utils/validation';
-import axiosInstance from '../../utils/axiosInstance';
-import axios, { AxiosError } from 'axios';
+import axiosInstance from '../../utils/axios';
+import { AxiosError } from 'axios';
 
 const FarmerRegistration = () => {
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [errors, setErrors] = useState({
-    phone: '',
-    password: '',
-    confirmPassword: ''
-  });
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [locationError, setLocationError] = useState('');
 
   const [formData, setFormData] = useState({
     fullName: '',
     phone: '',
-    location: '',
+    district: '',
+    sector: '',
+    cell: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -28,263 +26,372 @@ const FarmerRegistration = () => {
     nationalId: '',
     longitude: '',
     latitude: '',
-    farmType: '',
-    farmSize: ''
+    farmType: 'dairy'
   });
+
+  const [errors, setErrors] = useState({
+    phone: '',
+    password: '',
+    confirmPassword: '',
+    location: ''
+  });
+
+  const getCurrentLocation = () => {
+    setIsLoadingLocation(true);
+    setLocationError('');
+
+    if (!navigator.geolocation) {
+      setLocationError('Geolocation is not supported by your browser');
+      setIsLoadingLocation(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}&addressdetails=1&zoom=18`
+          );
+          const data = await response.json();
+          const address = data.address;
+          
+          const district = address.county || address.city || address.town || address.district || '';
+          const sector = address.suburb || address.village || address.subdivision || '';
+          const cell = address.neighbourhood || address.hamlet || address.locality || '';
+
+          setFormData(prev => ({
+            ...prev,
+            latitude: position.coords.latitude.toString(),
+            longitude: position.coords.longitude.toString(),
+            district,
+            sector,
+            cell
+          }));
+
+          if (!district || !sector || !cell) {
+            toast.warning('Amwe mu makuru y\'aho uherereye ntabwo yuzuye. Nyamuneka uzuza ubwawe.');
+          }
+        } catch (error) {
+          setLocationError('Ntibishoboye kubona aho uherereye. Nyamuneka uzuza ubwawe.');
+        } finally {
+          setIsLoadingLocation(false);
+        }
+      },
+      (error) => {
+        let errorMessage = 'Ntibishoboye kubona aho uherereye.';
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = 'Nyamuneka emerera urubuga kubona aho uherereye.';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = 'Aho uherereye ntabwo habashije kuboneka.';
+            break;
+          case error.TIMEOUT:
+            errorMessage = 'Igihe cyo kubona aho uherereye cyararenze.';
+            break;
+        }
+        setLocationError(errorMessage);
+        setIsLoadingLocation(false);
+      }
+    );
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validate phone number
+
     if (!isValidPhone(formData.phone)) {
       setErrors({
         ...errors,
-        phone: 'Please enter a valid Rwandan phone number'
+        phone: 'Nimero ya telefone ntiyemewe'
       });
       return;
     }
 
-    if (isLogin) {
-      // Login logic
+    if (!isLogin) {
       try {
-        const response = await axiosInstance.post('/login-farmer', {
-          phoneNumber: formData.phone,
-          password: formData.password
-        });
-        console.log('Login successful:', response.data);
-        toast.success('Login successful!');
-        navigate('/farmer/dashboard');
-      } catch (error) {
-        const axiosError = error as AxiosError;
-        console.error('Error during login:', axiosError.response ? axiosError.response.data : axiosError.message);
-        toast.error('Invalid credentials');
-      }
-    } else {
-      // Registration logic
-      if (formData.password !== formData.confirmPassword) {
-        toast.error('Passwords do not match');
-        return;
-      }
-
-      try {
-        const formattedBirthday = formData.birthday
-          ? new Date(formData.birthday).toISOString()
-          : '1990-01-01T00:00:00.000Z';
-
         const registrationData = {
-          firstName: formData.fullName.split(' ')[0] || '',
-          lastName: formData.fullName.split(' ')[1] || '',
-          birthday: formattedBirthday,
-          nationalId: formData.nationalId || '123456789',
+          firstName: formData.fullName.split(' ')[0],
+          lastName: formData.fullName.split(' ').slice(1).join(' '),
+          birthday: formData.birthday || '1990-01-01T00:00:00.000Z',
+          nationalId: formData.nationalId,
           phoneNumber: formData.phone,
-          longitude: parseFloat(formData.longitude) || 40.7128,
-          latitude: parseFloat(formData.latitude) || 74.006,
-          username: formData.fullName.split(' ')[0].toLowerCase() || 'lionson',
+          longitude: parseFloat(formData.longitude) || 0,
+          latitude: parseFloat(formData.latitude) || 0,
+          username: formData.fullName.split(' ')[0].toLowerCase(),
           password: formData.password,
-          farmDetails: {
-            type: formData.farmType || 'organic',
-            size: formData.farmSize || '5 acres'
-          },
-          status: 'active'
+          status: 'pending'
         };
 
-        console.log('Registration Data:', registrationData);
-
-        // Make a POST request to register-farmer endpoint
         const response = await axiosInstance.post('/register-farmer', registrationData);
+
         if (response.status === 201) {
-          toast.success('Registration successful! Please login.');
-          setIsLogin(true);
+          toast.success('Kwiyandikisha byagenze neza! Mutegereze kwemezwa na POC uri hafi yanyu.');
+          navigate('/signin');
         }
       } catch (error) {
         const axiosError = error as AxiosError;
-        if (axiosError.response && axiosError.response.data) {
-          toast.error(`Registration failed: ${axiosError.response.data.message}`);
-        } else {
-          toast.error('Registration failed. Please try again.');
+        let errorMessage = 'Kwiyandikisha ntibyagenze neza.';
+        
+        if (typeof axiosError.response?.data === 'string') {
+          switch(axiosError.response.data) {
+            case 'Farmer with this National ID already exists.':
+              errorMessage = 'Iyi nimero y\'irangamuntu isanzwe yaranditswe.';
+              break;
+            case 'National ID is required.':
+              errorMessage = 'Nimero y\'irangamuntu irakenewe.';
+              break;
+          }
         }
+        toast.error(errorMessage);
+      }
+    } else {
+      try {
+        if (!formData.phone || !formData.password) {
+          toast.error('Uzuza amakuru yose asabwa');
+          return;
+        }
+
+        const loginData = {
+          phoneNumber: formData.phone.replace(/\s/g, ''),
+          password: formData.password
+        };
+
+        const response = await axiosInstance.post('/login-farmer', loginData);
+
+        if (response.data?.token) {
+          if (response.data.user.status === 'pending') {
+            toast.error('Konti yawe iracyategereje kwemezwa na POC.');
+            return;
+          }
+
+          if (response.data.user.status === 'rejected') {
+            toast.error('Konti yawe yaranzwe. Hamagara POC uri hafi yawe.');
+            return;
+          }
+
+          localStorage.setItem('token', response.data.token);
+          localStorage.setItem('user', JSON.stringify(response.data.user));
+          toast.success('Kwinjira byagenze neza!');
+          navigate('/farmer/dashboard');
+        }
+      } catch (error) {
+        const axiosError = error as AxiosError;
+        let errorMessage = 'Telefone cyangwa ijambo ryibanga sibyo.';
+
+        if (typeof axiosError.response?.data === 'string') {
+          switch(axiosError.response.data) {
+            case 'User not found':
+              errorMessage = 'Iyi nimero ya telefone ntabwo yanditse.';
+              break;
+            case 'Invalid password':
+              errorMessage = 'Ijambo ry\'ibanga siryo.';
+              break;
+            case 'Account is inactive':
+              navigate('/account-inactive');
+              return;
+          }
+        }
+        toast.error(errorMessage);
       }
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white py-12 px-4">
-      <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg p-8">
+      <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-8">
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            {isLogin ? 'Farmer Login' : 'Farmer Registration'}
+            {isLogin ? 'Kwinjira nk\'Umuhinzi' : 'Kwiyandikisha nk\'Umuhinzi'}
           </h2>
           <p className="text-gray-600">
             {isLogin
-              ? 'Welcome back! Please login to your account'
-              : 'Create your farmer account to get started'}
+              ? 'Murakaza neza! Injira mu konti yawe'
+              : 'Iyandikishe kugirango utangire gukoresha system'}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {!isLogin && (
-            <>
+          {!isLogin ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-gray-700 mb-2">Full Name</label>
+                <label className="block text-gray-700 mb-2">Amazina yombi</label>
                 <input
                   type="text"
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={formData.fullName}
-                  onChange={(e) =>
-                    setFormData({ ...formData, fullName: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                   required
+                  placeholder="Amazina yawe yombi"
                 />
               </div>
+
               <div>
-                <label className="block text-gray-700 mb-2">Location</label>
+                <label className="block text-gray-700 mb-2">Nimero y'irangamuntu</label>
                 <input
                   type="text"
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
-                  value={formData.location}
-                  onChange={(e) =>
-                    setFormData({ ...formData, location: e.target.value })
-                  }
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={formData.nationalId}
+                  onChange={(e) => setFormData({ ...formData, nationalId: e.target.value })}
                   required
+                  placeholder="1 1999 8 0123456 1 23"
                 />
               </div>
+
               <div>
-                <label className="block text-gray-700 mb-2">Birthday</label>
+                <label className="block text-gray-700 mb-2">Itariki y'amavuko</label>
                 <input
                   type="date"
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={formData.birthday}
-                  onChange={(e) =>
-                    setFormData({ ...formData, birthday: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, birthday: e.target.value })}
                   required
                 />
               </div>
+
               <div>
-                <label className="block text-gray-700 mb-2">National ID</label>
+                <label className="block text-gray-700 mb-2">Telefoni</label>
                 <input
-                  type="text"
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
-                  value={formData.nationalId}
-                  onChange={(e) =>
-                    setFormData({ ...formData, nationalId: e.target.value })
-                  }
+                  type="tel"
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   required
+                  placeholder="07X XXX XXXX"
                 />
+                {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
               </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-gray-700 mb-2">Aho uherereye</label>
+                <div className="flex gap-4 mb-4">
+                  <button
+                    type="button"
+                    onClick={getCurrentLocation}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    disabled={isLoadingLocation}
+                  >
+                    {isLoadingLocation ? (
+                      <FiLoader className="animate-spin" />
+                    ) : (
+                      <FiMapPin />
+                    )}
+                    Koresha GPS
+                  </button>
+                </div>
+                {locationError && (
+                  <p className="text-red-500 text-sm mb-4">{locationError}</p>
+                )}
+                <div className="grid grid-cols-3 gap-4">
+                  <input
+                    type="text"
+                    placeholder="Akarere"
+                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={formData.district}
+                    onChange={(e) => setFormData({ ...formData, district: e.target.value })}
+                    required
+                  />
+                  <input
+                    type="text"
+                    placeholder="Umurenge"
+                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={formData.sector}
+                    onChange={(e) => setFormData({ ...formData, sector: e.target.value })}
+                    required
+                  />
+                  <input
+                    type="text"
+                    placeholder="Akagari"
+                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={formData.cell}
+                    onChange={(e) => setFormData({ ...formData, cell: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
               <div>
-                <label className="block text-gray-700 mb-2">Longitude</label>
+                <label className="block text-gray-700 mb-2">Telefoni</label>
                 <input
-                  type="text"
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
-                  value={formData.longitude}
-                  onChange={(e) =>
-                    setFormData({ ...formData, longitude: e.target.value })
-                  }
+                  type="tel"
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    errors.phone ? 'border-red-500' : ''
+                  }`}
+                  value={formData.phone}
+                  onChange={(e) => {
+                    setFormData({ ...formData, phone: e.target.value });
+                    if (errors.phone) setErrors({ ...errors, phone: '' });
+                  }}
                   required
+                  placeholder="07X XXX XXXX"
                 />
+                {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
               </div>
+
               <div>
-                <label className="block text-gray-700 mb-2">Latitude</label>
-                <input
-                  type="text"
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
-                  value={formData.latitude}
-                  onChange={(e) =>
-                    setFormData({ ...formData, latitude: e.target.value })
-                  }
-                  required
-                />
+                <label className="block text-gray-700 mb-2">Ijambo ry'ibanga</label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
+                  </button>
+                </div>
               </div>
-              <div>
-                <label className="block text-gray-700 mb-2">Farm Type</label>
-                <input
-                  type="text"
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
-                  value={formData.farmType}
-                  onChange={(e) =>
-                    setFormData({ ...formData, farmType: e.target.value })
-                  }
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-gray-700 mb-2">Farm Size</label>
-                <input
-                  type="text"
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
-                  value={formData.farmSize}
-                  onChange={(e) =>
-                    setFormData({ ...formData, farmSize: e.target.value })
-                  }
-                  required
-                />
-              </div>
-            </>
+            </div>
           )}
 
-          <div>
-            <label className="block text-gray-700 mb-2">Phone Number</label>
-            <input
-              type="tel"
-              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500 ${
-                errors.phone ? 'border-red-500' : ''
-              }`}
-              value={formData.phone}
-              onChange={(e) => {
-                setFormData({ ...formData, phone: e.target.value });
-                if (errors.phone) setErrors({ ...errors, phone: '' });
-              }}
-              placeholder="078XXXXXXX"
-              required
-            />
-            {errors.phone && (
-              <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-gray-700 mb-2">Password</label>
-            <div className="relative">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
-                value={formData.password}
-                onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
-                }
-                required
-              />
-              <button
-                type="button"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
-              </button>
-            </div>
-          </div>
-
+          {/* Show confirm password only for registration */}
           {!isLogin && (
-            <div>
-              <label className="block text-gray-700 mb-2">Confirm Password</label>
-              <input
-                type="password"
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
-                value={formData.confirmPassword}
-                onChange={(e) =>
-                  setFormData({ ...formData, confirmPassword: e.target.value })
-                }
-                required
-              />
+            <div className="space-y-4">
+              <div>
+                <label className="block text-gray-700 mb-2">Ijambo ry'ibanga</label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-gray-700 mb-2">Subiramo ijambo ry'ibanga</label>
+                <input
+                  type="password"
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={formData.confirmPassword}
+                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                  required
+                />
+              </div>
             </div>
           )}
 
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white rounded-lg py-2 px-4 hover:bg-blue-700 transition-colors"
+            className="w-full bg-blue-600 text-white rounded-lg py-3 px-4 hover:bg-blue-700 transition-colors font-medium"
           >
-            {isLogin ? 'Login' : 'Register'}
+            {isLogin ? 'Injira' : 'Iyandikishe'}
           </button>
         </form>
 
@@ -294,8 +401,8 @@ const FarmerRegistration = () => {
             onClick={() => setIsLogin(!isLogin)}
           >
             {isLogin
-              ? "Don't have an account? Register"
-              : 'Already have an account? Login'}
+              ? "Nta konti ufite? Iyandikishe"
+              : 'Usanzwe ufite konti? Injira'}
           </button>
         </div>
       </div>

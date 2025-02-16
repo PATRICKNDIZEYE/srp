@@ -1,6 +1,6 @@
 datasource db {
   provider = "postgresql"
-  url      = "postgresql://postgres:lionson@localhost:2005/slp"
+  url      = env("DATABASE_URL")
 }
 
 generator client {
@@ -8,16 +8,16 @@ generator client {
 }
 
 model MilkSubmission {
-  id        Int      @id @default(autoincrement()) 
-  milkType  String  
-  amount    Float   
-  notes     String? 
-  status    String  
-  createdAt DateTime @default(now()) 
-  updatedAt DateTime @updatedAt     
-  farmerId  Int      
+  id        Int      @id @default(autoincrement())
+  milkType  String
+  amount    Float
+  notes     String?
+  status    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  farmerId  Int
 
-  farmer    Farmer   @relation("FarmerToMilkSubmission", fields: [farmerId], references: [id])  // Relationship to the Farmer model
+  farmer Farmer @relation("FarmerToMilkSubmission", fields: [farmerId], references: [id]) // Relationship to the Farmer model
 }
 
 model User {
@@ -35,108 +35,108 @@ model User {
 }
 
 model Stock {
-  id          Int       @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   name        String
   data        Json
   productType String
   quantity    Int
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  farmer      Farmer?   @relation(fields: [farmerId], references: [id])
-  farmerId    Int?      @unique
-  
-  poc         POC?      @relation(fields: [pocId], references: [id])
-  pocId       Int?      @unique
-  
+  farmer   Farmer? @relation(fields: [farmerId], references: [id])
+  farmerId Int?    @unique
+
+  poc   POC? @relation(fields: [pocId], references: [id])
+  pocId Int? @unique
+
   transport   Transport? @relation(fields: [transportId], references: [id])
   transportId Int?       @unique
 }
 
 model POC {
-  id          Int       @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   firstName   String
   lastName    String
   birthday    DateTime
-  nationalId  String    @unique
-  phoneNumber String    @unique
+  nationalId  String   @unique
+  phoneNumber String   @unique
   longitude   Float
   latitude    Float
-  username    String    @unique
+  username    String   @unique
   password    String
   address     Json
   status      String
-  
-  farmer      Farmer?   @relation("POCToFarmer")
-  farmerId    Int?      @unique
-  
+
+  farmer   Farmer? @relation("POCToFarmer")
+  farmerId Int?    @unique
+
   transport   Transport? @relation("POCToTransport")
   transportId Int?       @unique
-  
-  stocks      Stock[]
+
+  stocks          Stock[]
   transportations Transportations[] @relation("POCToTransportations")
 }
 
 model Farmer {
-  id                Int       @id @default(autoincrement())
-  firstName         String
-  lastName          String
-  birthday          DateTime
-  nationalId        String    @unique
-  phoneNumber       String    @unique
-  longitude         Float
-  latitude          Float
-  username          String    @unique
-  password          String
-  farmDetails       Json
-  status            String
-  
-  poc               POC?      @relation("POCToFarmer", fields: [pocId], references: [id])
-  pocId             Int?      @unique
-  
-  stocks            Stock[]
-  milkSubmissions   MilkSubmission[] @relation("FarmerToMilkSubmission")
-  
-  loans             Loan[]  
+  id          Int      @id @default(autoincrement())
+  firstName   String
+  lastName    String
+  birthday    DateTime
+  nationalId  String   @unique
+  phoneNumber String   @unique
+  longitude   Float
+  latitude    Float
+  username    String   @unique
+  password    String
+  farmDetails Json
+  status      String
+
+  poc   POC? @relation("POCToFarmer", fields: [pocId], references: [id])
+  pocId Int? @unique
+
+  stocks          Stock[]
+  milkSubmissions MilkSubmission[] @relation("FarmerToMilkSubmission")
+
+  loans Loan[]
+  payments    Payment[]
 }
 
 model Transport {
-  id              Int       @id @default(autoincrement())
-  firstName       String
-  lastName        String
-  birthday        DateTime
-  nationalId      String    @unique
-  phoneNumber     String    @unique
-  longitude       Float
-  latitude        Float
-  username        String    @unique
-  password        String
-  status          String
-  delivered       Json?
-  
-  poc             POC?      @relation("POCToTransport", fields: [pocId], references: [id])
-  pocId           Int?      @unique
-  
-  
-  stocks          Stock[]
-  derivedData     Derivery[]
+  id          Int      @id @default(autoincrement())
+  firstName   String
+  lastName    String
+  birthday    DateTime
+  nationalId  String   @unique
+  phoneNumber String   @unique
+  longitude   Float
+  latitude    Float
+  username    String   @unique
+  password    String
+  status      String
+  delivered   Json?
 
-  derivedEntries  Derived[] @relation("TransportToDerived")
+  poc   POC? @relation("POCToTransport", fields: [pocId], references: [id])
+  pocId Int? @unique
+
+  stocks      Stock[]
+  derivedData Derivery[]
+
+  derivedEntries  Derived[]         @relation("TransportToDerived")
   transportations Transportations[] @relation("TransportToTransportations")
-  transpDerived   TranspDerived[] @relation("TransportToTranspDerived")
+  transpDerived   TranspDerived[]   @relation("TransportToTranspDerived")
 }
 
 model Derivery {
-  id               Int        @id @default(autoincrement())
-  transportId      Int
-  productionId     Int
-  amount           Float
-  transportStatus  String
-  date             DateTime   @default(now())
+  id              Int      @id @default(autoincrement())
+  transportId     Int
+  productionId    Int
+  amount          Float
+  transportStatus String
+  date            DateTime @default(now())
 
-  transport        Transport  @relation(fields: [transportId], references: [id])
-  transpDerived    TranspDerived[] @relation("DeriveryToTranspDerived")
-  derivedEntries   Derived[]
+  transport      Transport       @relation(fields: [transportId], references: [id])
+  transpDerived  TranspDerived[] @relation("DeriveryToTranspDerived")
+  derivedEntries Derived[]
 }
 
 model Derived {
@@ -148,80 +148,108 @@ model Derived {
   status      String
   date        DateTime @default(now())
 
-  diary       Diary     @relation("DiaryToDerived", fields: [diaryId], references: [id])
-  transport   Transport @relation("TransportToDerived", fields: [transportId], references: [id])
-  derivery    Derivery  @relation(fields: [deriveryId], references: [id])
-
+  diary     Diary     @relation("DiaryToDerived", fields: [diaryId], references: [id])
+  transport Transport @relation("TransportToDerived", fields: [transportId], references: [id])
+  derivery  Derivery  @relation(fields: [deriveryId], references: [id])
 }
 
 model Diary {
-  id             Int       @id @default(autoincrement())
-  status         String
-  approveStatus  String    @default("pending")
-  phoneNumber    String    @unique
-  password       String
-  longitude      Float
-  latitude       Float
+  id            Int    @id @default(autoincrement())
+  status        String
+  approveStatus String @default("pending")
+  phoneNumber   String @unique
+  password      String
+  longitude     Float
+  latitude      Float
 
   derivedEntries Derived[] @relation("DiaryToDerived")
 }
 
 model Production {
-  id             Int       @id @default(autoincrement())
-  status         String
-  approveStatus  String    @default("pending")
-  phoneNumber    String    @unique
-  password       String
-  longitude      Float
-  latitude       Float
-  transpDerived   TranspDerived[] @relation("ProductionToTranspDerived")
+  id            Int             @id @default(autoincrement())
+  status        String
+  approveStatus String          @default("pending")
+  phoneNumber   String          @unique
+  password      String
+  longitude     Float
+  latitude      Float
+  transpDerived TranspDerived[] @relation("ProductionToTranspDerived")
 }
 
 model Loan {
-  id            Int      @id @default(autoincrement())
-  loanAmount    Float  
-  purpose       String  
-  status        LoanStatus 
-  requestDate   DateTime @default(now()) 
-  farmerId      Int     
-  farmer        Farmer   @relation(fields: [farmerId], references: [id])
-
-  @@index([farmerId])
+  id          Int        @id @default(autoincrement())
+  loanAmount  Float
+  purpose     String
+  status      LoanStatus @default(PENDING)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  farmerId    Int
+  farmer      Farmer     @relation(fields: [farmerId], references: [id])
 }
 
 enum LoanStatus {
-  Pending
-  Approved
-  Completed
-  Rejected
+  PENDING
+  APPROVED
+  REJECTED
+  PAID
 }
 
 model Transportations {
-  id               Int        @id @default(autoincrement())
-  transportId      Int
-  pocId            Int
-  amount           Float
-  transportStatus  String
-  date             DateTime   @default(now())
+  id              Int      @id @default(autoincrement())
+  transportId     Int
+  pocId           Int
+  amount          Float
+  transportStatus String
+  date            DateTime @default(now())
 
-  transport        Transport  @relation("TransportToTransportations", fields: [transportId], references: [id])
-  poc              POC        @relation("POCToTransportations", fields: [pocId], references: [id])
-  transpDerived    TranspDerived[] @relation("TranspDerivedToTransportations")
+  transport     Transport       @relation("TransportToTransportations", fields: [transportId], references: [id])
+  poc           POC             @relation("POCToTransportations", fields: [pocId], references: [id])
+  transpDerived TranspDerived[] @relation("TranspDerivedToTransportations")
 }
 
 model TranspDerived {
-  id              Int      @id @default(autoincrement())
-  transportId     Int
-  amount          Float
-  status          String
-  date            DateTime @default(now())
-  productionId    Int
+  id               Int      @id @default(autoincrement())
+  transportId      Int
+  amount           Float
+  status           String
+  date             DateTime @default(now())
+  productionId     Int
   transportationId Int
 
   transportations Transportations @relation("TranspDerivedToTransportations", fields: [transportationId], references: [id])
 
-  production      Production @relation("ProductionToTranspDerived", fields: [productionId], references: [id])
-  transport       Transport  @relation("TransportToTranspDerived", fields: [transportId], references: [id])
-  deriveries      Derivery[] @relation("DeriveryToTranspDerived")
+  production Production @relation("ProductionToTranspDerived", fields: [productionId], references: [id])
+  transport  Transport  @relation("TransportToTranspDerived", fields: [transportId], references: [id])
+  deriveries Derivery[] @relation("DeriveryToTranspDerived")
 }
 
+model Payment {
+  id          Int      @id @default(autoincrement())
+  farmerId    Int
+  amount      Float
+  startDate   DateTime
+  endDate     DateTime
+  status      String   @default("pending") // pending, paid, cancelled
+  paidAt      DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  farmer      Farmer   @relation(fields: [farmerId], references: [id])
+
+  @@index([farmerId])
+  @@index([status])
+}
+
+model Manager {
+  id          Int      @id @default(autoincrement())
+  firstName   String
+  lastName    String
+  birthday    DateTime
+  nationalId  String   @unique
+  phoneNumber String   @unique
+  longitude   Float
+  latitude    Float
+  username    String   @unique
+  password    String
+  role        String   // super_admin, admin, etc.
+  status      String
+}

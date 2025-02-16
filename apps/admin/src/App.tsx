@@ -56,6 +56,11 @@ import DailyManagement from './pages/POC/DailyManagement';
 import TransportDailyManagement from './pages/Transport/DailyManagement';
 // import Productionline from './pages/';
 import { UserProvider } from './context/UserContext';
+import ProtectedFarmerRoute from './components/ProtectedFarmerRoute';
+import FarmerLayout from './layouts/FarmerLayout';
+import LoginPage from './pages/Authentication/FarmerRegistration';
+import RegisterPage from './pages/Auth/RegisterPage';
+import AccountInactivePage from './components/ErrorPages/AccountInactivePage';
 
 function App() {
   return (
@@ -72,12 +77,18 @@ function App() {
         <Route path="/diary/signin" element={<DiarySignIn />} />
 
         {/* Farmer Routes */}
-        <Route element={<DashboardLayout role="farmer" />}>
-          <Route path="/farmer/dashboard" element={<FarmerDashboard />} />
-          <Route path="/farmer/submit-milk" element={<MilkSubmissionPage />} />
-          <Route path="/farmer/payments" element={<PaymentsPage />} />
-          <Route path="/farmer/loan" element={<LoanPortalPage />} />
-          <Route path="/farmer/settings" element={<Settings />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/farmer" element={
+          <ProtectedFarmerRoute>
+            <FarmerLayout />
+          </ProtectedFarmerRoute>
+        }>
+          <Route path="dashboard" element={<FarmerDashboard />} />
+          <Route path="submit-milk" element={<MilkSubmissionPage />} />
+          <Route path="payments" element={<PaymentsPage />} />
+          <Route path="loan" element={<LoanPortalPage />} />
+          <Route path="settings" element={<Settings />} />
         </Route>
 
         {/* POC Routes */}
@@ -134,18 +145,11 @@ function App() {
               <DefaultLayout />
             </ProtectedAdminRoute>
           }
-        >
-          {/* All admin routes should start with /admin */}
-
-          <Route path="/admin/ngos" element={<NGOManagement />} />
-          <Route path="/admin/dashboard" element={<Dashboard />} />
-          <Route path="/admin/work-plans" element={<WorkPlanManagement />} />
-          <Route path="/admin/reports" element={<ReportManagement />} />
-          <Route path="/admin/settings" element={<Settings />} />
-          <Route path="/admin/users" element={<AdminUserManagement />} />
-          <Route path="/admin/chat" element={<Chat />} />
-          <Route path="/admin/documents" element={<Documents />} />
+        >]
         </Route>
+
+        {/* Error Pages */}
+        <Route path="/account-inactive" element={<AccountInactivePage />} />
 
         {/* Error Routes */}
         <Route path="*" element={<Error404 />} />

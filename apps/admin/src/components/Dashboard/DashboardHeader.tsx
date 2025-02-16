@@ -15,6 +15,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuButtonClick, ro
 
   const handleLogout = () => {
     // Add logout logic here
+    sessionStorage.clear();
     toast.success('Logged out successfully');
     navigate('/');
   };
@@ -46,7 +47,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuButtonClick, ro
             <button className="flex items-center space-x-2 text-gray-700 hover:text-gray-900">
               <FiUser size={20} />
               <span className="hidden md:inline">
-                {user ? `${user.name} (${user.phone})` : 'Loading...'}
+                {user ? `${(user.firstName === null ? user.lastName : user.firstName) }` : 'Loading...'}
               </span>
             </button>
 
@@ -56,7 +57,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuButtonClick, ro
                 className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
               >
                 <FiLogOut size={16} />
-                <span>Logout</span>
+                <span>Sohoka</span>
               </button>
             </div>
           </div>

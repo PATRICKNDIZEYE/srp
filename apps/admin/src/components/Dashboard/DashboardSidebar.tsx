@@ -28,11 +28,11 @@ interface SidebarProps {
 const DashboardSidebar: React.FC<SidebarProps> = ({ role, isOpen, onClose }) => {
   const menuItems = {
     farmer: [
-      { name: 'Dashboard', icon: FiHome, path: '/farmer/dashboard' },
-      { name: 'Submit Milk', icon: FiDroplet, path: '/farmer/submit-milk' },
-      { name: 'Payments', icon: FiDollarSign, path: '/farmer/payments' },
-      { name: 'Loan Portal', icon: FiCreditCard, path: '/farmer/loan' },
-      { name: 'Settings', icon: FiSettings, path: '/farmer/settings' },
+      { name: 'AHABANZA', icon: FiHome, path: '/farmer/dashboard' },
+      { name: 'AMATA', icon: FiDroplet, path: '/farmer/submit-milk' },
+      { name: 'UBWISHYU', icon: FiDollarSign, path: '/farmer/payments' },
+      { name: 'INGUZANYO', icon: FiCreditCard, path: '/farmer/loan' },
+      { name: 'IGENAMITERERE', icon: FiSettings, path: '/farmer/settings' },
     ],
     poc: [
       { name: 'Dashboard', icon: FiHome, path: '/poc/dashboard' },

@@ -33,6 +33,9 @@ import deliveryRoutes from './routes/deliveryRoutes.js';
 import loginProductionAuth from './auth/loginProductionAuth.js';
 import transportationsRoutes from './routes/transportationsRoutes.js';
 import transpDerivedRoutes from './routes/transpDerivedRoutes.js';
+import statsRoutes from './routes/statsRoutes.js';
+import paymentRoutes from './routes/paymentRoutes.js';
+import { authenticateToken } from './middlewares/auth.js';
 dotenv.config();
 const app = express();
 const prisma = new PrismaClient();
@@ -50,7 +53,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/stocks', stockRoutes);
-app.use('/api/milk-submissions', milkSubmissionRoutes);
+app.use('/api/milk-submissions', authenticateToken, milkSubmissionRoutes);
 app.use('/api/login-farmer', loginFarmerAuth);
 app.use('/api/login-transport', loginTransportAuth);
 app.use('/api/login-poc', loginPOCAuth);
@@ -65,6 +68,8 @@ app.use('/api/production', productionRoutes);
 app.use('/api/login-production', loginProductionAuth);
 app.use('/api/transportations', transportationsRoutes);
 app.use('/api/transp-derived', transpDerivedRoutes);
+app.use('/api/stats', statsRoutes);
+app.use('/api/payment', authenticateToken, paymentRoutes);
 // Use the registerFarmerAuth function as a route handler
 
 app.post('/api/register-farmer', async (req, res) => {
@@ -80,7 +85,7 @@ app.post('/api/register-farmer', async (req, res) => {
 app.use('/api/users', userRoutes);
 app.use('/api/transports', transportRoutes);
 app.use('/api/diaries', diaryRoutes);
-app.use('/api/farmer', farmerRoutes);
+app.use('/api/farmer', authenticateToken, farmerRoutes);
 // Start Server
 const PORT = process.env.PORT || 2025;
 connection();  // You can remove this if you are using Prisma's automatic connection management

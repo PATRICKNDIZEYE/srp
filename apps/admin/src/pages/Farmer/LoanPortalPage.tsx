@@ -2,144 +2,136 @@ import React, { useState, useEffect } from 'react';
 import Breadcrumb from '../../components/Breadcrumb';
 import { FiDollarSign, FiClock, FiAlertCircle } from 'react-icons/fi';
 import { toast } from 'react-toastify';
-import axiosInstance from '../../utils/axiosInstance';
-import { useUserContext } from '../../context/UserContext';
+import axiosInstance from '../../utils/axios';
+import { useUser } from '../../context/UserContext';
+import { formatNumber } from '../../utils/formatters';
 
-// Define a type for the loan objects
-type Loan = {
+interface Loan {
   id: number;
   loanAmount: number;
   purpose: string;
   status: string;
-  requestDate: string;
-  farmerId: number;
-  farmer: {
-    id: number;
-    firstName: string;
-    lastName: string;
-    birthday: string;
-    nationalId: string;
-    phoneNumber: string;
-    longitude: number;
-    latitude: number;
-    username: string;
-    password: string;
-    farmDetails: {
-      size: string;
-      type: string;
-    };
-    status: string;
-    pocId: number | null;
-  };
-};
+  createdAt: string;
+}
+
+interface LoanSummary {
+  maxLoanAmount: number;
+  currentDebt: number;
+  monthlyIncome: number;
+  eligibleAmount: number;
+}
 
 const LoanPortalPage = () => {
-  const { userId } = useUserContext(); // Use userId from UserContext
-  const [showLoanForm, setShowLoanForm] = useState(false);
-  const [loanAmount, setLoanAmount] = useState('');
-  const [purpose, setPurpose] = useState('');
+  const { user } = useUser();
   const [loans, setLoans] = useState<Loan[]>([]);
-
-  const maxLoanAmount = 50000; // RF 50,000
-  const currentDebt = 0; // This would come from the backend
-  const monthlyIncome = 245000; // This would be calculated from milk submissions
-
-  const fetchLoans = async () => {
-    try {
-      const response = await axiosInstance.get(`/loans/farmer/${userId}`);
-      setLoans(response.data);
-    } catch (error) {
-      toast.error('Failed to fetch loans');
-    }
-  };
+  const [summary, setSummary] = useState<LoanSummary>({
+    maxLoanAmount: 0,
+    currentDebt: 0,
+    monthlyIncome: 0,
+    eligibleAmount: 0
+  });
+  const [showLoanForm, setShowLoanForm] = useState(false);
+  const [formData, setFormData] = useState({
+    loanAmount: '',
+    purpose: ''
+  });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchLoans();
-  }, [userId]);
+    if (user) {
+      fetchLoanData();
+    }
+  }, [user]);
+
+  const fetchLoanData = async () => {
+    try {
+      const [loansRes, summaryRes] = await Promise.all([
+        axiosInstance.get(`/loans/farmer/${user?.id}`),
+        axiosInstance.get(`/loans/farmer/${user?.id}/summary`)
+      ]);
+
+      setLoans(loansRes.data);
+      setSummary(summaryRes.data);
+    } catch (error) {
+      toast.error('Hari ikibazo. Ongera ugerageze.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const amount = Number(loanAmount);
-    
-    if (amount > maxLoanAmount) {
-      toast.error(`Maximum loan amount is RF ${maxLoanAmount}`);
-      return;
-    }
+    if (!user) return;
 
-    if (amount > monthlyIncome * 0.5) {
-      toast.error('Loan amount cannot exceed 50% of your monthly income');
+    const amount = Number(formData.loanAmount);
+    if (amount > summary.maxLoanAmount) {
+      toast.error(`Ntarengwa ni ${formatNumber(summary.maxLoanAmount)} Rwf`);
       return;
     }
 
     try {
-      const loanData = {
+      await axiosInstance.post('/loans', {
+        farmerId: user.id,
         loanAmount: amount,
-        purpose,
-        status: 'Pending',
-        farmerId: userId,
-      };
-
-      // Log the data being sent
-      console.log('Sending loan request:', loanData);
-
-      // Send loan request to the backend
-      const response = await axiosInstance.post('/loans', loanData);
-
-      // Log the response for debugging
-      console.log('Response:', response);
-
-      // Check if the response status indicates success
-      if (response.status >= 200 && response.status < 300) {
-        toast.success('Loan request submitted successfully!');
-        setShowLoanForm(false);
-        setLoanAmount('');
-        setPurpose('');
-        fetchLoans(); // Refresh loan list
-      } else {
-        toast.error('Failed to submit loan request');
-      }
+        purpose: formData.purpose,
+        status: 'pending'
+      });
+      
+      toast.success('Inguzanyo yawe yoherejwe neza!');
+      setShowLoanForm(false);
+      setFormData({ loanAmount: '', purpose: '' });
+      fetchLoanData(); // Refresh data
     } catch (error) {
-      console.error('Error submitting loan request:', error);
-      toast.error('An error occurred while submitting the loan request');
+      toast.error('Hari ikibazo. Ongera ugerageze.');
     }
   };
 
+  if (loading) {
+    return <div className="p-4">Biratunganywa...</div>;
+  }
+
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-      <Breadcrumb pageName="Loan Portal" />
+      <Breadcrumb pageName="Inguzanyo" />
 
       {/* Loan Status Cards */}
       <div className="grid gap-4 md:grid-cols-3 mb-6">
         <div className="bg-white rounded-lg p-6 shadow-lg">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-700">Available Credit</h3>
+            <h3 className="text-lg font-semibold text-gray-700">Amafaranga Ashoboka</h3>
             <FiDollarSign className="text-blue-600" size={24} />
           </div>
           <div className="mt-2">
-            <div className="text-2xl font-bold text-blue-600">RF {maxLoanAmount}</div>
-            <div className="text-sm text-gray-500">Maximum amount</div>
+            <div className="text-2xl font-bold text-blue-600">
+              {formatNumber(summary.maxLoanAmount)} Rwf
+            </div>
+            <div className="text-sm text-gray-500">Ntarengwa</div>
           </div>
         </div>
 
         <div className="bg-white rounded-lg p-6 shadow-lg">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-700">Current Debt</h3>
+            <h3 className="text-lg font-semibold text-gray-700">Umwenda Uriho</h3>
             <FiClock className="text-gray-600" size={24} />
           </div>
           <div className="mt-2">
-            <div className="text-2xl font-bold text-gray-800">RF {currentDebt}</div>
-            <div className="text-sm text-gray-500">Outstanding balance</div>
+            <div className="text-2xl font-bold text-gray-800">
+              {formatNumber(summary.currentDebt)} Rwf
+            </div>
+            <div className="text-sm text-gray-500">Asigaye kwishyurwa</div>
           </div>
         </div>
 
         <div className="bg-white rounded-lg p-6 shadow-lg">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-700">Monthly Income</h3>
+            <h3 className="text-lg font-semibold text-gray-700">Amafaranga y'Ukwezi</h3>
             <FiAlertCircle className="text-green-600" size={24} />
           </div>
           <div className="mt-2">
-            <div className="text-2xl font-bold text-green-600">RF {monthlyIncome}</div>
-            <div className="text-sm text-gray-500">Based on milk submissions</div>
+            <div className="text-2xl font-bold text-green-600">
+              {formatNumber(summary.monthlyIncome)} Rwf
+            </div>
+            <div className="text-sm text-gray-500">Kuva ku mata watanze</div>
           </div>
         </div>
       </div>
@@ -147,106 +139,117 @@ const LoanPortalPage = () => {
       {/* Loan Request Section */}
       <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold text-gray-800">Loan Request</h2>
+          <h2 className="text-xl font-semibold text-gray-800">Gusaba Inguzanyo</h2>
           <button
             onClick={() => setShowLoanForm(!showLoanForm)}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
-            {showLoanForm ? 'Cancel Request' : 'Request Loan'}
+            {showLoanForm ? 'Reka' : 'Saba Inguzanyo'}
           </button>
         </div>
 
         {showLoanForm && (
-          <form onSubmit={handleSubmit} className="max-w-2xl mx-auto space-y-6">
-            <div>
-              <label className="block text-gray-700 font-medium mb-2">
-                Loan Amount (RF)
-              </label>
-              <input
-                type="number"
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={loanAmount}
-                onChange={(e) => setLoanAmount(e.target.value)}
-                required
-                min="1000"
-                max={maxLoanAmount}
-                placeholder="Enter amount in RF"
-              />
-              <p className="text-sm text-gray-500 mt-1">
-                Maximum available: RF {maxLoanAmount}
-              </p>
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full">
+              <h2 className="text-xl font-semibold mb-4">Saba Inguzanyo</h2>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Amafaranga
+                  </label>
+                  <input
+                    type="number"
+                    name="loanAmount"
+                    value={formData.loanAmount}
+                    onChange={(e) => setFormData({ ...formData, loanAmount: e.target.value })}
+                    className="w-full p-2 border rounded"
+                    placeholder="Urugero: 50000"
+                    required
+                    min="1000"
+                    max={summary.maxLoanAmount}
+                  />
+                  <p className="text-sm text-gray-500 mt-1">
+                    Ntarengwa: {formatNumber(summary.maxLoanAmount)} Rwf
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Impamvu
+                  </label>
+                  <textarea
+                    value={formData.purpose}
+                    onChange={(e) => setFormData({ ...formData, purpose: e.target.value })}
+                    className="w-full p-2 border rounded"
+                    rows={3}
+                    placeholder="Andika impamvu y'inguzanyo..."
+                    required
+                  />
+                </div>
+                <div className="flex justify-end gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowLoanForm(false)}
+                    className="px-4 py-2 text-gray-600"
+                  >
+                    Reka
+                  </button>
+                  <button
+                    type="submit"
+                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                  >
+                    Ohereza
+                  </button>
+                </div>
+              </form>
             </div>
-
-            <div>
-              <label className="block text-gray-700 font-medium mb-2">
-                Purpose of Loan
-              </label>
-              <textarea
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={purpose}
-                onChange={(e) => setPurpose(e.target.value)}
-                rows={3}
-                required
-                placeholder="Briefly describe why you need this loan"
-              />
-            </div>
-
-            <div className="flex justify-end">
-              <button
-                type="submit"
-                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-              >
-                Submit Request
-              </button>
-            </div>
-          </form>
+          </div>
         )}
       </div>
 
       {/* Loan History */}
       <div className="bg-white rounded-lg shadow-lg">
         <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-800">Loan History</h2>
+          <h2 className="text-xl font-semibold text-gray-800">Amateka y'Inguzanyo</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Request Date
+                  Itariki
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Amount
+                  Amafaranga
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Purpose
+                  Impamvu
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Status
+                  Imiterere
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {loans.map((loan) => (
                 <tr key={loan.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {new Date(loan.requestDate).toLocaleDateString()}
+                  <td className="px-6 py-4">
+                    {new Date(loan.createdAt).toLocaleDateString()}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    RF {loan.loanAmount}
+                  <td className="px-6 py-4">
+                    {formatNumber(loan.loanAmount)} Rwf
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-6 py-4">
                     {loan.purpose}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                        loan.status === 'Completed'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-blue-100 text-blue-800'
-                      }`}
-                    >
-                      {loan.status}
+                  <td className="px-6 py-4">
+                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                      loan.status === 'approved' ? 'bg-green-100 text-green-800' :
+                      loan.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      {loan.status === 'approved' ? 'Yemewe' :
+                       loan.status === 'pending' ? 'Itegerejwe' :
+                       'Yanzwe'}
                     </span>
                   </td>
                 </tr>

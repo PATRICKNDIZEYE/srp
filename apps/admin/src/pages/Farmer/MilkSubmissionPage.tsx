@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import Breadcrumb from '../../components/Breadcrumb';
 import { toast } from 'react-toastify';
-import axiosInstance from '../../utils/axiosInstance';
-import { useUserContext } from '../../context/UserContext';
+import axiosInstance from '../../utils/axios';
+import { useUser } from '../../context/UserContext';
+import { formatNumber } from '../../utils/formatters';
 
 // Define the type for a submission
 interface Submission {
@@ -14,141 +15,145 @@ interface Submission {
 }
 
 const MilkSubmissionPage = () => {
-  const { userId } = useUserContext(); // Use userId from UserContext
-
+  const { user } = useUser();
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [formData, setFormData] = useState({
-    milkType: '',
+    milkType: 'inshushyu',
     amount: '',
-    notes: '',
+    notes: ''
   });
-
-  const [submissions, setSubmissions] = useState<Submission[]>([]); // Define the type for submissions
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    const fetchSubmissions = async () => {
-      try {
-        const response = await axiosInstance.get('/milk-submissions');
-        setSubmissions(response.data);
-      } catch (error) {
-        console.error('Error fetching submissions:', error);
-        toast.error('Failed to load recent submissions.');
-      }
-    };
-
+    if (!user) return;
     fetchSubmissions();
-  }, []); // Fetch submissions on component mount
+  }, [user]);
+
+  const fetchSubmissions = async () => {
+    try {
+      const response = await axiosInstance.get(`/milk-submissions/farmer/${user?.id}`);
+      setSubmissions(response.data.submissions || []);
+    } catch (error) {
+      toast.error('Hari ikibazo. Ongera ugerageze.');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
+
     try {
-      const submissionData = {
+      setIsSubmitting(true);
+      const response = await axiosInstance.post('/milk-submissions', {
         milkType: formData.milkType,
-        amount: Number(formData.amount),
+        amount: parseFloat(formData.amount),
         notes: formData.notes,
-        status: 'Pending',
-        farmerId: Number(userId), // Ensure farmerId is a number
-      };
+        farmerId: user.id
+      });
 
-      console.log('Submitting data:', submissionData); // Log the data being sent
-
-      await axiosInstance.post('/milk-submissions', submissionData);
-      toast.success('Milk submission recorded! Waiting for POC confirmation.');
-      setFormData({ milkType: '', amount: '', notes: '' });
+      if (response.status === 201) {
+        toast.success('Amata yoherejwe neza!');
+        setFormData({
+          milkType: '',
+          amount: '',
+          notes: ''
+        });
+        fetchSubmissions();
+      }
     } catch (error) {
-      console.error('Error submitting milk data:', error);
-      toast.error('Failed to submit milk data. Please try again.');
+      console.error('Submission error:', error);
+      toast.error('Hari ikibazo. Ongera ugerageze.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-      <Breadcrumb pageName="Submit Milk" />
+      <Breadcrumb pageName="Gutanga Amata" />
 
       <div className="max-w-2xl mx-auto">
         <div className="bg-white rounded-lg shadow-lg p-6">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-6">Submit New Milk Collection</h2>
+          <h2 className="text-2xl font-semibold text-gray-800 mb-6">Gutanga Amata Mashya</h2>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-gray-700 font-medium mb-2">
-                Milk Type
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Ubwoko bw'Amata
               </label>
               <select
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={formData.milkType}
                 onChange={(e) => setFormData({ ...formData, milkType: e.target.value })}
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               >
-                <option value="">Select Type</option>
                 <option value="inshushyu">Inshushyu</option>
-                <option value="ikivuguto">Ikivuguto</option>
+                <option value="umuhondo">Umuhondo</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-gray-700 font-medium mb-2">
-                Amount (Liters)
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Ingano (Litiro)
               </label>
               <input
                 type="number"
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                step="0.1"
                 value={formData.amount}
                 onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
-                min="1"
-                placeholder="Enter amount in liters"
+                placeholder="Urugero: 5.5"
               />
             </div>
 
             <div>
-              <label className="block text-gray-700 font-medium mb-2">
-                Additional Notes (Optional)
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Icyitonderwa
               </label>
               <textarea
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 rows={3}
-                placeholder="Any additional information..."
+                placeholder="Andika hano icyo ushaka kumenyekanisha..."
               />
             </div>
 
             <div className="flex justify-end space-x-4">
               <button
-                type="button"
-                onClick={() => setFormData({ milkType: '', amount: '', notes: '' })}
-                className="px-6 py-2 border rounded-lg hover:bg-gray-50"
-              >
-                Clear
-              </button>
-              <button
                 type="submit"
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                disabled={isSubmitting}
+                className={`px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 ${
+                  isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
               >
-                Submit
+                {isSubmitting ? 'Biratunganywa...' : 'Ohereza Amata'}
               </button>
             </div>
           </form>
         </div>
 
         {/* Recent Submissions */}
-        <div className="mt-8 bg-white rounded-lg shadow-lg p-6">
-          <h3 className="text-xl font-semibold text-gray-800 mb-4">Recent Submissions</h3>
+        <div className="mt-8 bg-white rounded-lg shadow-lg">
+          <div className="p-6 border-b border-gray-200">
+            <h3 className="text-xl font-semibold text-gray-800">Amata Watanze Vuba</h3>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Date
+                    Itariki
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Type
+                    Ubwoko
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Amount
+                    Ingano
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Status
+                    Imiterere
                   </th>
                 </tr>
               </thead>
@@ -159,20 +164,20 @@ const MilkSubmissionPage = () => {
                       {new Date(submission.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {submission.milkType}
+                      {submission.milkType === 'inshushyu' ? 'Inshushyu' : 'Umuhondo'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {submission.amount}L
+                      {formatNumber(submission.amount)}L
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                          submission.status === 'Accepted'
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-yellow-100 text-yellow-800'
-                        }`}
-                      >
-                        {submission.status}
+                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                        submission.status === 'accepted' ? 'bg-green-100 text-green-800' :
+                        submission.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-red-100 text-red-800'
+                      }`}>
+                        {submission.status === 'accepted' ? 'Yemewe' :
+                         submission.status === 'pending' ? 'Itegerejwe' :
+                         'Yanzwe'}
                       </span>
                     </td>
                   </tr>

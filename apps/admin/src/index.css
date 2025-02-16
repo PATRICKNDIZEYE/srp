@@ -1,0 +1,4 @@
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 80px; /* This accounts for the fixed header */
+} 
