@@ -62,6 +62,8 @@ import LoginPage from './pages/Authentication/FarmerRegistration';
 import RegisterPage from './pages/Auth/RegisterPage';
 import AccountInactivePage from './components/ErrorPages/AccountInactivePage';
 import ProtectedManagementRoute from './components/ProtectedManagementRoute';
+import AssignedTransportations from './pages/Transport/AssignedTransportation';
+import ProductionManagement from './pages/Transport/ProductionManagement';
 
 function App() {
   return (
@@ -107,6 +109,9 @@ function App() {
           <Route path="/transport/dashboard" element={<TransportDashboard />} />
           <Route path="/transport/deliveries" element={<AssignedDeliveries />} />
           <Route path="/transport/daily-management/:deliveryId" element={<TransportDailyManagement />} />
+          
+          <Route path="/transport/assigned-transportations" element={<AssignedTransportations />}  />
+          <Route path="/transport/production-management/:deliveryId" element={<ProductionManagement />} />
           <Route path="/transport/settings" element={<Settings />} />
         </Route>
 
