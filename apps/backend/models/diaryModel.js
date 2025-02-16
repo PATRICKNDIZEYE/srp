@@ -50,3 +50,13 @@ export const deleteDiary = async (id) => {
     where: { id: parseInt(id) },
   });
 };
+// Get a diary entry by phone number
+export const getDiaryByPhoneNumber = async (phoneNumber) => {
+  try {
+    return await prisma.diary.findUnique({
+      where: { phoneNumber: phoneNumber },
+    });
+  } catch (error) {
+    throw new Error('Error fetching diary by phone number: ' + error.message);
+  }
+};

@@ -1,6 +1,6 @@
 import express from "express";
 import bcrypt from "bcrypt";
-import { createFarmer, getFarmers, getFarmerById, updateFarmer, deleteFarmer } from "../models/farmerModel.js";
+import { createFarmer, getFarmers,getFarmersByPhoneNumber, getFarmerById, updateFarmer, deleteFarmer } from "../models/farmerModel.js";
 
 const router = express.Router();
 
@@ -104,5 +104,17 @@ router.delete("/:id", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
+// Get farmer entries by phone number
+router.get("/phone/:phoneNumber", async (req, res) => {
+  try {
+    const farmers = await getFarmersByPhoneNumber(req.params.phoneNumber);
+    if (farmers.length > 0) {
+      res.status(200).json(farmers);
+    } else {
+      res.status(404).json({ message: "No farmer entries found for this phone number" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 export default router;

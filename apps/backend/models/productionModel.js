@@ -50,3 +50,10 @@ export const deleteProduction = async (id) => {
     where: { id: parseInt(id) },
   });
 }; 
+
+
+export const getProductionsByPhoneNumber = async (phoneNumber) => {
+  return await prisma.production.findMany({
+    where: { phoneNumber },
+  });
+};
