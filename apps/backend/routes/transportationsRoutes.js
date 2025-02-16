@@ -7,7 +7,9 @@ import {
   listTransportations,
   getTransportationsByPocId,
   getTransportationsByProductionId,
-  updateTransportationStatus
+  updateTransportationStatus,
+  getTransportationsByTransportId,
+  getTransportationsByPhoneNumber
 } from "../models/transportationsModel.js";
 
 const router = express.Router();
@@ -144,6 +146,34 @@ router.patch("/:id/status", async (req, res) => {
     }
   } catch (error) {
     res.status(400).json({ error: error.message });
+  }
+});
+
+// Get transportation entries by Transport ID
+router.get("/transport/:transportId", async (req, res) => {
+  try {
+    const transportations = await getTransportationsByTransportId(req.params.transportId);
+    if (transportations.length > 0) {
+      res.status(200).json(transportations);
+    } else {
+      res.status(404).json({ message: "No transportation entries found for this Transport ID" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get transportation entries by phone number
+router.get("/phone/:phoneNumber", async (req, res) => {
+  try {
+    const transportations = await getTransportationsByPhoneNumber(req.params.phoneNumber);
+    if (transportations.length > 0) {
+      res.status(200).json(transportations);
+    } else {
+      res.status(404).json({ message: "No transportation entries found for this phone number" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 

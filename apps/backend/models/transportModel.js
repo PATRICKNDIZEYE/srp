@@ -60,3 +60,15 @@ export const deleteTransport = async (id) => {
     where: { id: parseInt(id) },
   });
 };
+// Function to get a transport by phone number
+export const getTransportByPhoneNumber = async (phoneNumber) => {
+  try {
+    // Assuming you are using a database like MongoDB with Mongoose
+    const transport = await prisma.transport.findUnique({
+      where: { phoneNumber: phoneNumber },
+    });
+    return transport;
+  } catch (error) {
+    throw new Error("Error fetching transport by phone number: " + error.message);
+  }
+};

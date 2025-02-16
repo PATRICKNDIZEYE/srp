@@ -1,20 +1,35 @@
 import express from "express";
-import { createDerivery, getDeriveryEntries, getDeriveryById, updateDerivery, deleteDerivery, changeDeriveryStatus, getDeriveryByTransportId } from "../models/deliveryModel.js";
+import { 
+  createDelivery, 
+  getDeliveryEntries, 
+  getDeliveryById, 
+  updateDelivery, 
+  deleteDelivery, 
+  changeDeliveryStatus, 
+  getDeliveryByTransportId 
+} from "../models/deliveryModel.js";
 
 const router = express.Router();
 
 // Create a new derivery entry
 router.post("/", async (req, res) => {
   try {
-    const { transportId, pocId, amount, transportStatus } = req.body;
+    console.log("Request body for creating delivery:", req.body); // Log the request body
+    const { transportId, productionId, amount, transportStatus } = req.body;
 
-    if (!transportId || !pocId || !amount || !transportStatus) {
+    if (!transportId || !productionId || !amount || !transportStatus) {
+      console.log("Missing fields:", {
+        transportId: !transportId,
+        productionId: !productionId,
+        amount: !amount,
+        transportStatus: !transportStatus,
+      });
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    const derivery = await createDerivery({
+    const derivery = await createDelivery({
       transportId,
-      pocId,
+      productionId,
       amount,
       transportStatus,
     });
@@ -28,37 +43,38 @@ router.post("/", async (req, res) => {
 // Get all derivery entries
 router.get("/", async (req, res) => {
   try {
-    const deriveryEntries = await getDeriveryEntries();
+    const deriveryEntries = await getDeliveryEntries();
     res.status(200).json(deriveryEntries);  // Status 200 for successful GET
   } catch (error) {
     res.status(500).json({ error: "Failed to retrieve derivery entries" });  // Handle server errors
   }
 });
 
-// Get a derivery entry by ID
+// Get a delivery entry by ID
 router.get("/:id", async (req, res) => {
   try {
-    const derivery = await getDeriveryById(req.params.id);
-    if (derivery) {
-      res.status(200).json(derivery);  // Return the derivery if found
+    const delivery = await getDeliveryById(req.params.id);
+    if (delivery) {
+      res.status(200).json(delivery);  // Return the delivery if found
     } else {
-      res.status(404).json({ message: "Derivery entry not found" });  // Entry not found
+      res.status(404).json({ message: "Delivery entry not found" });  // Entry not found
     }
   } catch (error) {
-    res.status(500).json({ error: "Failed to retrieve derivery entry" });  // Handle server errors
+    res.status(500).json({ error: "Failed to retrieve delivery entry" });  // Handle server errors
   }
 });
 
 // Update a derivery entry by ID
 router.put("/:id", async (req, res) => {
   try {
+    console.log("Request body for updating delivery:", req.body); // Log the request body
     const { transportId, pocId, amount, transportStatus } = req.body;
 
     if (!transportId || !pocId || !amount || !transportStatus) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    const derivery = await updateDerivery(req.params.id, {
+    const derivery = await updateDelivery(req.params.id, {
       transportId,
       pocId,
       amount,
@@ -78,7 +94,7 @@ router.put("/:id", async (req, res) => {
 // Delete a derivery entry by ID
 router.delete("/:id", async (req, res) => {
   try {
-    const derivery = await deleteDerivery(req.params.id);
+    const derivery = await deleteDelivery(req.params.id);
     if (derivery) {
       res.status(200).json({ message: "Derivery entry deleted successfully" });  // Success message
     } else {
@@ -92,13 +108,14 @@ router.delete("/:id", async (req, res) => {
 // Change the status of a derivery entry by ID
 router.patch("/:id/status", async (req, res) => {
   try {
+    console.log("Request body for changing delivery status:", req.body); // Log the request body
     const { newStatus } = req.body;
 
     if (!newStatus) {
       return res.status(400).json({ error: "Missing new status" });
     }
 
-    const derivery = await changeDeriveryStatus(req.params.id, newStatus);
+    const derivery = await changeDeliveryStatus(req.params.id, newStatus);
 
     if (derivery) {
       res.status(200).json(derivery);  // Return the updated derivery
@@ -113,7 +130,7 @@ router.patch("/:id/status", async (req, res) => {
 // Get delivery entries by transport ID
 router.get("/transport/:transportId", async (req, res) => {
   try {
-    const deriveryEntries = await getDeriveryByTransportId(req.params.transportId);
+    const deriveryEntries = await getDeliveryByTransportId(req.params.transportId);
     if (deriveryEntries.length > 0) {
       res.status(200).json(deriveryEntries);
     } else {

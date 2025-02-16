@@ -7,7 +7,13 @@ class TransportationsModel {
   }
 
   async getTransportationById(id) {
-    return await prisma.transportations.findUnique({ where: { id: parseInt(id) } });
+    return await prisma.transportations.findUnique({
+      where: { id: parseInt(id) },
+      include: {
+        transport: true,
+        poc: true,
+      },
+    });
   }
 
   async updateTransportation(id, data) {
@@ -19,12 +25,21 @@ class TransportationsModel {
   }
 
   async listTransportations() {
-    return await prisma.transportations.findMany();
+    return await prisma.transportations.findMany({
+      include: {
+        transport: true,
+        poc: true,
+      },
+    });
   }
 
   async getTransportationsByPocId(pocId) {
     return await prisma.transportations.findMany({
       where: { pocId: parseInt(pocId) },
+      include: {
+        transport: true,
+        poc: true,
+      },
     });
   }
 
@@ -33,7 +48,7 @@ class TransportationsModel {
       where: { productionId: parseInt(productionId) },
       include: {
         transport: true,
-      }
+      },
     });
   }
 
@@ -44,6 +59,21 @@ class TransportationsModel {
     });
   }
 
+  async getTransportationsByTransportId(transportId) {
+    return await prisma.transportations.findMany({
+      where: { transportId: parseInt(transportId) },
+      include: {
+        transport: true,
+        poc: true,
+      },
+    });
+  }
+
+  async getTransportationsByPhoneNumber(phoneNumber) {
+    return await prisma.transportations.findMany({
+      where: { phoneNumber },
+    });
+  }
 }
 
 const transportationsModel = new TransportationsModel();
@@ -56,3 +86,5 @@ export const listTransportations = transportationsModel.listTransportations.bind
 export const getTransportationsByPocId = transportationsModel.getTransportationsByPocId.bind(transportationsModel);
 export const getTransportationsByProductionId = transportationsModel.getTransportationsByProductionId.bind(transportationsModel);
 export const updateTransportationStatus = transportationsModel.updateTransportationStatus.bind(transportationsModel);
+export const getTransportationsByTransportId = transportationsModel.getTransportationsByTransportId.bind(transportationsModel);
+export const getTransportationsByPhoneNumber = transportationsModel.getTransportationsByPhoneNumber.bind(transportationsModel);

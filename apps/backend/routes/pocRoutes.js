@@ -1,6 +1,6 @@
 import express from "express";
 import bcrypt from "bcrypt";
-import { createPOC, getPOCs, getPOCById, updatePOC, deletePOC } from "../models/pocModel.js";
+import { createPOC, getPOCs, getPOCById, updatePOC, deletePOC, getPOCsByPhoneNumber } from "../models/pocModel.js";
 
 const router = express.Router();
 
@@ -101,6 +101,19 @@ router.delete("/:id", async (req, res) => {
       res.status(200).json({ message: "POC deleted successfully" });
     } else {
       res.status(404).json({ message: "POC not found" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+// Get POC entries by phone number
+router.get("/phone/:phoneNumber", async (req, res) => {
+  try {
+    const pocs = await getPOCsByPhoneNumber(req.params.phoneNumber);
+    if (pocs.length > 0) {
+      res.status(200).json(pocs);
+    } else {
+      res.status(404).json({ message: "No POC entries found for this phone number" });
     }
   } catch (error) {
     res.status(500).json({ error: error.message });
