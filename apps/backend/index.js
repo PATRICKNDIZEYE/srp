@@ -36,9 +36,11 @@ import transpDerivedRoutes from './routes/transpDerivedRoutes.js';
 import statsRoutes from './routes/statsRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import { authenticateToken } from './middlewares/auth.js';
+import { managementLogin } from './controllers/auth.controller.js';
 dotenv.config();
 const app = express();
 const prisma = new PrismaClient();
+const router = express.Router();
 
 
 // CORS and Middleware
@@ -51,6 +53,8 @@ app.use(errorHandling);
 app.get('/', (req, res) => {
   res.send("SRP Server");
 });
+
+app.post('/api/login-management', managementLogin);
 
 app.use('/api/stocks', stockRoutes);
 app.use('/api/milk-submissions', authenticateToken, milkSubmissionRoutes);

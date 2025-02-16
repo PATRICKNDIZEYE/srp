@@ -16,7 +16,7 @@ async function main() {
   await prisma.pOC.deleteMany();
 
   // Create Manager User (Super Admin)
-  const manager = await prisma.user.create({
+  const superAdmin = await prisma.user.create({
     data: {
       username: 'superadmin',
       email: 'admin@srp.rw',
