@@ -50,7 +50,7 @@ const BaseLoginForm: React.FC<BaseLoginFormProps> = ({ role, onSuccess }) => {
       poc: '/login-poc',
       transport: 'login-transport',
       production: '/login-production',
-      management: '/api/auth/management/login',
+      management: '/auth/management/login',
       diary: '/login-diary',
     };
 

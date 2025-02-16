@@ -64,6 +64,8 @@ import AccountInactivePage from './components/ErrorPages/AccountInactivePage';
 import ProtectedManagementRoute from './components/ProtectedManagementRoute';
 import AssignedTransportations from './pages/Transport/AssignedTransportation';
 import ProductionManagement from './pages/Transport/ProductionManagement';
+import ProductionDailyManagement from './pages/Production/DailyManagement';
+import ProductionDeliveryManagement from './pages/Production/DeliveryManagement';
 
 function App() {
   return (
@@ -121,6 +123,8 @@ function App() {
           <Route path="/production/deliveries" element={<ProductionDeliveries />} />
           <Route path="/production/sales" element={<ProductionSales />} />
           <Route path="/production/settings" element={<Settings />} />
+          <Route path="/production/daily-management/:deliveryId" element={<ProductionDailyManagement />} />
+          <Route path="/production/delivery-management" element={<ProductionDeliveryManagement />} />
           {/* <Route path="/production/line" element={<Productionline />} /> */}
         </Route>
 
