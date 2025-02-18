@@ -19,6 +19,7 @@ import loanRoutes from './routes/loanRoutes.js';
 import { connection } from './postgres/postgres.js';
 import pocRoutes from './routes/pocRoutes.js';
 import productionRoutes from './routes/productionRoutes.js';
+import { loginAdminAuth } from './auth/loginAdminAuth.js';
 
 
 // Import additional routes
@@ -57,7 +58,7 @@ app.get('/', (req, res) => {
 app.post('/api/login-management', managementLogin);
 
 app.use('/api/stocks', stockRoutes);
-app.use('/api/milk-submissions', authenticateToken, milkSubmissionRoutes);
+app.use('/api/milk-submissions',milkSubmissionRoutes);
 app.use('/api/login-farmer', loginFarmerAuth);
 app.use('/api/login-transport', loginTransportAuth);
 app.use('/api/login-poc', loginPOCAuth);
@@ -73,7 +74,8 @@ app.use('/api/login-production', loginProductionAuth);
 app.use('/api/transportations', transportationsRoutes);
 app.use('/api/transp-derived', transpDerivedRoutes);
 app.use('/api/stats', statsRoutes);
-app.use('/api/payment', authenticateToken, paymentRoutes);
+app.use('/api/payment',paymentRoutes);
+app.use('/api/login-admin', loginAdminAuth);
 // Use the registerFarmerAuth function as a route handler
 
 app.post('/api/register-farmer', async (req, res) => {
@@ -89,7 +91,7 @@ app.post('/api/register-farmer', async (req, res) => {
 app.use('/api/users', userRoutes);
 app.use('/api/transports', transportRoutes);
 app.use('/api/diaries', diaryRoutes);
-app.use('/api/farmer', authenticateToken, farmerRoutes);
+app.use('/api/farmer', farmerRoutes);
 // Start Server
 const PORT = process.env.PORT || 2025;
 connection();  // You can remove this if you are using Prisma's automatic connection management

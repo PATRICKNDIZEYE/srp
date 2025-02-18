@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';  // Use bcrypt for consistency
 import { prisma } from "../postgres/postgres.js";
 import { Prisma } from '@prisma/client';  // Import Prisma for error handling
+import jwt from 'jsonwebtoken';  // Add this import
 
 export default async function loginTransportAuth(req, res) {
   try {
@@ -29,9 +30,21 @@ export default async function loginTransportAuth(req, res) {
       return res.status(401).json({ message: "Invalid password" });
     }
 
-    // Return Transport details upon successful login
+    // Generate JWT token
+    const token = jwt.sign(
+      { 
+        id: transport.id,
+        phoneNumber: transport.phoneNumber,
+        role: 'transport'  // Assuming role is transport
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    // Return Transport details and token upon successful login
     res.status(200).json({
       message: "Login successful",
+      token,
       transport: {
         id: transport.id,
         firstName: transport.firstName,

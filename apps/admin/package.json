@@ -27,6 +27,7 @@
     "jspdf": "^2.5.2",
     "jspdf-autotable": "^3.8.4",
     "jsvectormap": "^1.6.0",
+    "jwt-decode": "^4.0.0",
     "leaflet": "^1.9.4",
     "match-sorter": "^6.3.1",
     "next": "^15.1.5",
@@ -47,6 +48,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@types/jwt-decode": "^3.1.0",
     "@types/react": "^19.0.7",
     "@types/react-dom": "^19.0.3",
     "@vitejs/plugin-react": "^4.0.3",

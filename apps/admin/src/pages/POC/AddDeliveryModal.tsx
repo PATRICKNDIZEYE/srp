@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import axiosInstance from '../../utils/axiosInstance';
+import { useUser } from '../../context/UserContext';
 
 interface AddDeliveryModalProps {
   onClose: () => void;
@@ -8,6 +9,7 @@ interface AddDeliveryModalProps {
 }
 
 const AddDeliveryModal: React.FC<AddDeliveryModalProps> = ({ onClose, onAdd }) => {
+  const { user } = useUser();
   const [transportId, setTransportId] = useState('');
   const [amount, setAmount] = useState('');
   const [status, setStatus] = useState('In Progress');

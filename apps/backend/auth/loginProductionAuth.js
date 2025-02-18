@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import { prisma } from "../postgres/postgres.js";
 import { Prisma } from '@prisma/client';
+import jwt from 'jsonwebtoken';
 
 export default async function loginProductionAuth(req, res) {
   try {
@@ -27,9 +28,21 @@ export default async function loginProductionAuth(req, res) {
       return res.status(401).json({ message: "Invalid password" });
     }
 
-    // Return Production details upon successful login
+    // Generate JWT token
+    const token = jwt.sign(
+      { 
+        id: production.id,
+        phoneNumber: production.phoneNumber,
+        role: 'production'  // Assuming role is production
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    // Return Production details and token upon successful login
     res.status(200).json({
       message: "Login successful",
+      token,
       production: {
         id: production.id,
         status: production.status,

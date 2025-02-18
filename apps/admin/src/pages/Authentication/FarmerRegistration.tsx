@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { FiEye, FiEyeOff, FiMapPin, FiLoader } from 'react-icons/fi';
 import { isValidPhone } from '../../utils/validation';
 import axiosInstance from '../../utils/axios';
 import { AxiosError } from 'axios';
+import { jwtDecode } from "jwt-decode";
+
 
 const FarmerRegistration = () => {
   const navigate = useNavigate();
@@ -12,13 +14,11 @@ const FarmerRegistration = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);  
   const [locationError, setLocationError] = useState('');
-
+ 
   const [formData, setFormData] = useState({
     fullName: '',
     phone: '',
-    district: '',
-    sector: '',
-    cell: '',
+    location: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -26,7 +26,11 @@ const FarmerRegistration = () => {
     nationalId: '',
     longitude: '',
     latitude: '',
-    farmType: 'dairy'
+    farmType: '',
+    farmSize: '',
+    district: '',
+    sector: '',
+    cell: ''
   });
 
   const [errors, setErrors] = useState({
@@ -102,96 +106,83 @@ const FarmerRegistration = () => {
     if (!isValidPhone(formData.phone)) {
       setErrors({
         ...errors,
-        phone: 'Nimero ya telefone ntiyemewe'
+        phone: 'Please enter a valid Rwandan phone number'
       });
       return;
     }
 
-    if (!isLogin) {
+    if (isLogin) {
       try {
-        const registrationData = {
-          firstName: formData.fullName.split(' ')[0],
-          lastName: formData.fullName.split(' ').slice(1).join(' '),
-          birthday: formData.birthday || '1990-01-01T00:00:00.000Z',
-          nationalId: formData.nationalId,
+        const response = await axiosInstance.post('/login-farmer', {
           phoneNumber: formData.phone,
-          longitude: parseFloat(formData.longitude) || 0,
-          latitude: parseFloat(formData.latitude) || 0,
-          username: formData.fullName.split(' ')[0].toLowerCase(),
-          password: formData.password,
-          status: 'pending'
-        };
+          password: formData.password
+        });
 
-        const response = await axiosInstance.post('/register-farmer', registrationData);
+        const { token } = response.data;
+        const decodedToken: any = jwtDecode(token);
+        localStorage.setItem('token', token);
+        localStorage.setItem('role', decodedToken.role);
 
-        if (response.status === 201) {
-          toast.success('Kwiyandikisha byagenze neza! Mutegereze kwemezwa na POC uri hafi yanyu.');
-          navigate('/signin');
-        }
+        // Fetch user details after successful login
+        const userResponse = await axiosInstance.get(`/farmer/phone/${formData.phone}`);
+        const userData = userResponse.data;
+        console.log('User Data:', userData); // Handle user data as needed
+
+        // Store user data in localStorage
+        localStorage.setItem('user', JSON.stringify(userData));
+
+        toast.success('Login successful!');
+        navigate('/farmer/dashboard');
       } catch (error) {
         const axiosError = error as AxiosError;
-        let errorMessage = 'Kwiyandikisha ntibyagenze neza.';
-        
-        if (typeof axiosError.response?.data === 'string') {
-          switch(axiosError.response.data) {
-            case 'Farmer with this National ID already exists.':
-              errorMessage = 'Iyi nimero y\'irangamuntu isanzwe yaranditswe.';
-              break;
-            case 'National ID is required.':
-              errorMessage = 'Nimero y\'irangamuntu irakenewe.';
-              break;
-          }
-        }
-        toast.error(errorMessage);
+        console.error('Error during login:', axiosError.response ? axiosError.response.data : axiosError.message);
+        toast.error('Invalid credentials');
       }
     } else {
-      try {
-        if (!formData.phone || !formData.password) {
-          toast.error('Uzuza amakuru yose asabwa');
-          return;
-        }
+      if (formData.password !== formData.confirmPassword) {
+        toast.error('Passwords do not match');
+        return;
+      }
 
-        const loginData = {
-          phoneNumber: formData.phone.replace(/\s/g, ''),
-          password: formData.password
+      // Validate nationalId
+      if (!formData.nationalId || formData.nationalId.length !== 16) {
+        toast.error('Please enter a valid national ID');
+        return;
+      }
+
+      try {
+        const formattedBirthday = formData.birthday
+          ? new Date(formData.birthday).toISOString()
+          : '1990-01-01T00:00:00.000Z';
+
+        const registrationData = {
+          firstName: formData.fullName.split(' ')[0] || '',
+          lastName: formData.fullName.split(' ').slice(1).join(' ') || '',
+          birthday: formattedBirthday,
+          nationalId: formData.nationalId,
+          phoneNumber: formData.phone,
+          longitude: parseFloat(formData.longitude) || 30.123456,
+          latitude: parseFloat(formData.latitude) || -1.987654,
+          username: formData.fullName.split(' ')[0].toLowerCase() + Math.floor(Math.random() * 1000),
+          password: formData.password,
+          farmDetails: formData.location || 'Farm in Kigali',
+          status: 'Active'
         };
 
-        const response = await axiosInstance.post('/login-farmer', loginData);
+        console.log('Registration Data:', registrationData);
 
-        if (response.data?.token) {
-          if (response.data.user.status === 'pending') {
-            toast.error('Konti yawe iracyategereje kwemezwa na POC.');
-            return;
-          }
-
-          if (response.data.user.status === 'rejected') {
-            toast.error('Konti yawe yaranzwe. Hamagara POC uri hafi yawe.');
-            return;
-          }
-
-          localStorage.setItem('token', response.data.token);
-          localStorage.setItem('user', JSON.stringify(response.data.user));
-          toast.success('Kwinjira byagenze neza!');
-          navigate('/farmer/dashboard');
+        const response = await axiosInstance.post('/register-farmer', registrationData);
+        if (response.status === 201) {
+          toast.success('Registration successful! Please login.');
+          setIsLogin(true);
         }
       } catch (error) {
-        const axiosError = error as AxiosError;
-        let errorMessage = 'Telefone cyangwa ijambo ryibanga sibyo.';
-
-        if (typeof axiosError.response?.data === 'string') {
-          switch(axiosError.response.data) {
-            case 'User not found':
-              errorMessage = 'Iyi nimero ya telefone ntabwo yanditse.';
-              break;
-            case 'Invalid password':
-              errorMessage = 'Ijambo ry\'ibanga siryo.';
-              break;
-            case 'Account is inactive':
-              navigate('/account-inactive');
-              return;
-          }
+        const axiosError = error as AxiosError<{ message: string }>;
+        if (axiosError.response && axiosError.response.data) {
+          toast.error(`Registration failed: ${axiosError.response.data.message}`);
+        } else {
+          toast.error('Registration failed. Please try again.');
         }
-        toast.error(errorMessage);
       }
     }
   };

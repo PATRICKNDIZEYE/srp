@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';  // Use bcrypt for consistency
 import { prisma } from "../postgres/postgres.js";
 import { Prisma } from '@prisma/client';  // Import Prisma for error handling
+import jwt from 'jsonwebtoken';  // Add this import
 
 export default async function loginPOCAuth(req, res) {
   try {
@@ -27,9 +28,21 @@ export default async function loginPOCAuth(req, res) {
       return res.status(401).json({ message: "Invalid password" });
     }
 
-    // Return POC details upon successful login
+    // Generate JWT token
+    const token = jwt.sign(
+      { 
+        id: poc.id,
+        phoneNumber: poc.phoneNumber,
+        role: 'poc'  // Assuming role is poc
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    // Return POC details and token upon successful login
     res.status(200).json({
       message: "Login successful",
+      token,
       poc: {
         id: poc.id,
         firstName: poc.firstName,

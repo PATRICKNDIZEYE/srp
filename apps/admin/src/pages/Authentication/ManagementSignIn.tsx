@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
 import { isValidEmail } from '../../utils/validation';
 import axiosInstance from '../../utils/axios';
+import { jwtDecode } from 'jwt-decode';
 
 const ManagementSignIn = () => {
   const navigate = useNavigate();
@@ -49,13 +50,15 @@ const ManagementSignIn = () => {
 
     setIsLoading(true);
     try {
-      const response = await axiosInstance.post('/login-management', formData);
+      const response = await axiosInstance.post('/login-admin', formData);
 
       if (response.data?.token) {
-        localStorage.setItem('mgmt_token', response.data.token);
-        localStorage.setItem('mgmt_user', JSON.stringify(response.data.user));
-        
-        axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+        const { token } = response.data;
+        const decodedToken: any = jwtDecode(token);
+        localStorage.setItem('mgmt_token', token);
+        localStorage.setItem('role', decodedToken.role);
+
+        axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         
         toast.success('Kwinjira byagenze neza!');
         
@@ -163,4 +166,4 @@ const ManagementSignIn = () => {
   );
 };
 
-export default ManagementSignIn; 
+export default ManagementSignIn;  

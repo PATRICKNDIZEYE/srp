@@ -1,13 +1,13 @@
 import axios from 'axios';
 
-const token = localStorage.getItem('adminToken');
+// Function to get token, initially a placeholder
+let getToken = () => localStorage.getItem('adminToken');
 
 // Create axios instance with default config
 const axiosInstance = axios.create({
     baseURL: 'http://localhost:2025/api',
     headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {})
+        // Add any default headers here if needed
     },
     timeout: 10000, // Add timeout for requests
 });
@@ -15,7 +15,7 @@ const axiosInstance = axios.create({
 // Request interceptor
 axiosInstance.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('adminToken');
+        const token = getToken();
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -25,6 +25,11 @@ axiosInstance.interceptors.request.use(
         return Promise.reject(error);
     }
 );
+
+// Function to set the token retrieval function
+export const setTokenGetter = (getter: () => string | null) => {
+    getToken = getter;
+};
 
 // Response interceptor to handle common errors
 axiosInstance.interceptors.response.use(

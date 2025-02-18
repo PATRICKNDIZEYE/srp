@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import Breadcrumb from '../../components/Breadcrumb';
 import { toast } from 'react-toastify';
 import axiosInstance from '../../utils/axios';
-import { useUser } from '../../context/UserContext';
 import { formatNumber } from '../../utils/formatters';
+import { useUser } from '../../context/UserContext';
 
 // Define the type for a submission
 interface Submission {
@@ -25,22 +25,29 @@ const MilkSubmissionPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!user) return;
-    fetchSubmissions();
-  }, [user]);
+    if (!user?.id || !user?.token) return;
 
-  const fetchSubmissions = async () => {
-    try {
-      const response = await axiosInstance.get(`/milk-submissions/farmer/${user?.id}`);
-      setSubmissions(response.data.submissions || []);
-    } catch (error) {
-      toast.error('Hari ikibazo. Ongera ugerageze.');
-    }
-  };
+    const fetchSubmissions = async () => {
+      try {
+        const response = await axiosInstance.get(`/milk-submissions/farmer/${user.id}`, {
+          headers: {
+            Authorization: `Bearer ${user.token}`
+          }
+        });
+        setSubmissions(response.data.submissions || []);
+      } catch (error) {
+        const err = error as any;
+        console.error('Fetch submissions error:', err.response ? err.response.data : err.message);
+        toast.error('Hari ikibazo. Ongera ugerageze.');
+      }
+    };
+
+    fetchSubmissions();
+  }, [user?.id, user?.token]); // Depend on `user.id` and `user.token` to prevent unnecessary calls
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user?.id || !user?.token) return;
 
     try {
       setIsSubmitting(true);
@@ -49,19 +56,31 @@ const MilkSubmissionPage = () => {
         amount: parseFloat(formData.amount),
         notes: formData.notes,
         farmerId: user.id
+      }, {
+        headers: {
+          Authorization: `Bearer ${user.token}`
+        }
       });
 
       if (response.status === 201) {
         toast.success('Amata yoherejwe neza!');
         setFormData({
-          milkType: '',
+          milkType: 'inshushyu', // Ensure it resets to a valid default value
           amount: '',
           notes: ''
         });
-        fetchSubmissions();
+
+        // Refetch submissions after a successful submission
+        const newResponse = await axiosInstance.get(`/milk-submissions/farmer/${user.id}`, {
+          headers: {
+            Authorization: `Bearer ${user.token}`
+          }
+        });
+        setSubmissions(newResponse.data.submissions || []);
       }
     } catch (error) {
-      console.error('Submission error:', error);
+      const err = error as any;
+      console.error('Submission error:', err.response ? err.response.data : err.message);
       toast.error('Hari ikibazo. Ongera ugerageze.');
     } finally {
       setIsSubmitting(false);
@@ -161,7 +180,7 @@ const MilkSubmissionPage = () => {
                 {submissions.map((submission) => (
                   <tr key={submission.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {new Date(submission.createdAt).toLocaleDateString()}
+                      {new Date(submission.createdAt).toLocaleDateString('rw-RW')}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {submission.milkType === 'inshushyu' ? 'Inshushyu' : 'Umuhondo'}
@@ -191,4 +210,4 @@ const MilkSubmissionPage = () => {
   );
 };
 
-export default MilkSubmissionPage; 
+export default MilkSubmissionPage;
