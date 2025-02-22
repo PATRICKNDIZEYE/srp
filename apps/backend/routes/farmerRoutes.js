@@ -1,6 +1,6 @@
 import express from "express";
 import bcrypt from "bcrypt";
-import { createFarmer, getFarmers,getFarmersByPhoneNumber, getFarmerById, updateFarmer, deleteFarmer } from "../models/farmerModel.js";
+import { createFarmer, getFarmers,getFarmersByPhoneNumber, getFarmerById, updateFarmer, deleteFarmer, updateFarmerStatus } from "../models/farmerModel.js";
 
 const router = express.Router();
 
@@ -104,6 +104,7 @@ router.delete("/:id", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 // Get farmer entries by phone number
 router.get("/phone/:phoneNumber", async (req, res) => {
   try {
@@ -117,4 +118,20 @@ router.get("/phone/:phoneNumber", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+// Update Farmer Status by ID
+router.patch("/:id/status", async (req, res) => {
+  try {
+    const { status } = req.body;
+    const farmer = await updateFarmerStatus(req.params.id, status);
+    if (farmer) {
+      res.status(200).json(farmer);
+    } else {
+      res.status(404).json({ message: "Farmer not found" });
+    }
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 export default router;

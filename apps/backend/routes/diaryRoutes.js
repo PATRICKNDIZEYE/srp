@@ -6,6 +6,7 @@ import {
   updateDiary,
   deleteDiary,
   getDiaryByPhoneNumber,
+  updateDiaryStatus,
 } from "../models/diaryModel.js";
 
 const router = express.Router();
@@ -99,6 +100,7 @@ router.delete("/:id", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 // Récupérer une entrée par numéro de téléphone
 router.get("/phone/:phoneNumber", async (req, res) => {
   try {
@@ -112,4 +114,20 @@ router.get("/phone/:phoneNumber", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+// Update Diary Status by ID
+router.patch("/:id/status", async (req, res) => {
+  try {
+    const { status } = req.body;
+    const diary = await updateDiaryStatus(req.params.id, status);
+    if (diary) {
+      res.status(200).json(diary);
+    } else {
+      res.status(404).json({ message: "Diary entry not found" });
+    }
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 export default router;

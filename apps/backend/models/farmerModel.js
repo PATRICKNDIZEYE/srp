@@ -62,3 +62,11 @@ export const getFarmersByPhoneNumber = async (phoneNumber) => {
     where: { phoneNumber },
   });
 };
+
+// Update Farmer Status by ID
+export const updateFarmerStatus = async (id, status) => {
+  return await prisma.farmer.update({
+    where: { id: parseInt(id) },
+    data: { status },
+  });
+};
