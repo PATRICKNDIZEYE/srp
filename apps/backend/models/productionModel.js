@@ -57,3 +57,11 @@ export const getProductionsByPhoneNumber = async (phoneNumber) => {
     where: { phoneNumber },
   });
 };
+
+// Update Production Status by ID
+export const updateProductionStatus = async (id, status) => {
+  return await prisma.production.update({
+    where: { id: parseInt(id) },
+    data: { status },
+  });
+};

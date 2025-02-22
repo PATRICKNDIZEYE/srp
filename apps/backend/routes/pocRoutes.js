@@ -1,6 +1,6 @@
 import express from "express";
 import bcrypt from "bcrypt";
-import { createPOC, getPOCs, getPOCById, updatePOC, deletePOC, getPOCsByPhoneNumber } from "../models/pocModel.js";
+import { createPOC, getPOCs, getPOCById, updatePOC, deletePOC, getPOCsByPhoneNumber, updatePOCStatus } from "../models/pocModel.js";
 
 const router = express.Router();
 
@@ -117,6 +117,21 @@ router.get("/phone/:phoneNumber", async (req, res) => {
     }
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+// Update POC Status by ID
+router.patch("/:id/status", async (req, res) => {
+  try {
+    const { status } = req.body;
+    const poc = await updatePOCStatus(req.params.id, status);
+    if (poc) {
+      res.status(200).json(poc);
+    } else {
+      res.status(404).json({ message: "POC not found" });
+    }
+  } catch (error) {
+    res.status(400).json({ error: error.message });
   }
 });
 

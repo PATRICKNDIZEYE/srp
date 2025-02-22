@@ -60,3 +60,11 @@ export const getDiaryByPhoneNumber = async (phoneNumber) => {
     throw new Error('Error fetching diary by phone number: ' + error.message);
   }
 };
+
+// Update Diary Status by ID
+export const updateDiaryStatus = async (id, status) => {
+  return await prisma.diary.update({
+    where: { id: parseInt(id) },
+    data: { status },
+  });
+};
