@@ -38,9 +38,11 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ user, onClose, onSubmit }
     phone: user.phone,
     role: user.role,
     site: user.site,
-    coordinates: user.coordinates,
+    coordinates: user.coordinates || { lat: 0, lng: 0 },
     status: user.status
   });
+
+  const { lat, lng } = formData.coordinates;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

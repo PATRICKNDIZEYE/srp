@@ -6,6 +6,7 @@ import {
   updateProduction,
   deleteProduction,
   getProductionsByPhoneNumber,
+  updateProductionStatus,
 } from "../models/productionModel.js";
 
 const router = express.Router();
@@ -99,6 +100,7 @@ router.delete("/:id", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 // Get production entries by phone number
 router.get("/phone/:phoneNumber", async (req, res) => {
   try {
@@ -112,4 +114,20 @@ router.get("/phone/:phoneNumber", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+// Update Production Status by ID
+router.patch("/:id/status", async (req, res) => {
+  try {
+    const { status } = req.body;
+    const production = await updateProductionStatus(req.params.id, status);
+    if (production) {
+      res.status(200).json(production);
+    } else {
+      res.status(404).json({ message: "Production entry not found" });
+    }
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 export default router; 

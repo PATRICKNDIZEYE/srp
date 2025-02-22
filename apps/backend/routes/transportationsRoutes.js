@@ -128,17 +128,11 @@ router.get("/production/:productionId", async (req, res) => {
   }
 });
 
-// Update transportation status by ID
+// Update Transportation Status by ID
 router.patch("/:id/status", async (req, res) => {
   try {
-    const { transportStatus } = req.body;
-
-    if (!transportStatus) {
-      return res.status(400).json({ error: "Transport status is required." });
-    }
-
-    const transportation = await updateTransportationStatus(req.params.id, transportStatus);
-
+    const { status } = req.body;
+    const transportation = await updateTransportationStatus(req.params.id, status);
     if (transportation) {
       res.status(200).json(transportation);
     } else {

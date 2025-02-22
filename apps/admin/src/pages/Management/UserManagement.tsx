@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiUserPlus, FiEdit2, FiTrash2, FiMapPin } from 'react-icons/fi';
+import { FiUserPlus, FiEdit2, FiTrash2, FiMapPin, FiRefreshCw } from 'react-icons/fi';
 import Breadcrumb from '../../components/Breadcrumb';
 import { toast } from 'react-toastify';
 import DeleteUserModal from '../../components/Management/DeleteUserModal';
@@ -9,6 +9,7 @@ import AddPocForm from '../../components/Management/AddPocForm';
 import AddFarmerModal from '../../components/Management/AddFarmerModal';
 import AddTransportModal from '../../components/Management/AddTransportModal';
 import AddUserModal from '../../components/Management/AddUserModal';
+import AddEditFarmerModal from '../../components/Management/AddEditFarmerModal';
 
 interface User {
   id: number;
@@ -45,6 +46,8 @@ const UserManagement = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [showAddFarmerModal, setShowAddFarmerModal] = useState(false);
+  const [selectedFarmer, setSelectedFarmer] = useState<any>(null);
 
   const fetchData = async () => {
     try {
@@ -151,6 +154,45 @@ const UserManagement = () => {
     }
   };
 
+  const handleAddFarmer = (farmerData: any) => {
+    // Logic to handle adding a farmer
+    console.log('Farmer Data:', farmerData);
+    setShowAddFarmerModal(false);
+    fetchData(); // Refresh data after adding
+  };
+
+  const handleEditFarmer = (farmerData: any) => {
+    // Logic to handle editing a farmer
+    console.log('Edited Farmer Data:', farmerData);
+    setSelectedFarmer(null);
+    fetchData(); // Refresh data after editing
+  };
+
+  const handleChangeStatus = async (userId: number, currentStatus: string) => {
+    try {
+      const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+      let endpoint = '';
+
+      if (activeTab === 'users') {
+        endpoint = `/users/${userId}/status`;
+      } else if (activeTab === 'farmers') {
+        endpoint = `/farmer/${userId}/status`;
+      } else if (activeTab === 'pocs') {
+        endpoint = `/pocs/${userId}/status`;
+      } else if (activeTab === 'transports') {
+        endpoint = `/transports/${userId}/status`;
+      }
+
+      if (endpoint) {
+        await axiosInstance.patch(endpoint, { status: newStatus });
+        toast.success(`Status changed to ${newStatus}`);
+        fetchData(); // Refresh data after status change
+      }
+    } catch (error) {
+      toast.error('Failed to change status');
+    }
+  };
+
   const AddUserForm = ({ onClose, onSubmit }: { onClose: () => void; onSubmit: (data: any) => void }) => (
     <div>
       {/* Form fields for adding a user */}
@@ -246,18 +288,52 @@ const UserManagement = () => {
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
       <Breadcrumb pageName="User Management" />
       
-      <div className="tabs">
-        <button onClick={() => setActiveTab('users')}>Users</button>
-        <button onClick={() => setActiveTab('farmers')}>Farmers</button>
-        <button onClick={() => setActiveTab('pocs')}>POCs</button>
-        <button onClick={() => setActiveTab('transports')}>Transports</button>
+      <div className="tabs flex space-x-4 mb-6">
+        <button
+          onClick={() => setActiveTab('users')}
+          className={`px-4 py-2 rounded-lg font-semibold transition-colors duration-300 ${
+            activeTab === 'users' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+        >
+          Users
+        </button>
+        <button
+          onClick={() => setActiveTab('farmers')}
+          className={`px-4 py-2 rounded-lg font-semibold transition-colors duration-300 ${
+            activeTab === 'farmers' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+        >
+          Farmers
+        </button>
+        <button
+          onClick={() => setActiveTab('pocs')}
+          className={`px-4 py-2 rounded-lg font-semibold transition-colors duration-300 ${
+            activeTab === 'pocs' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+        >
+          POCs
+        </button>
+        <button
+          onClick={() => setActiveTab('transports')}
+          className={`px-4 py-2 rounded-lg font-semibold transition-colors duration-300 ${
+            activeTab === 'transports' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+        >
+          Transports
+        </button>
       </div>
 
       <div className="bg-white rounded-lg shadow-lg overflow-hidden">
         <div className="p-6 border-b border-gray-200 flex justify-between items-center">
           <h2 className="text-xl font-semibold">{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}</h2>
           <button 
-            onClick={() => setShowAddModal(true)}
+            onClick={() => {
+              if (activeTab === 'farmers') {
+                setShowAddFarmerModal(true);
+              } else {
+                setShowAddModal(true);
+              }
+            }}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700"
           >
             <FiUserPlus />
@@ -295,7 +371,7 @@ const UserManagement = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm">{user.nationalId || 'No ID'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">{user.phoneNumber || 'No phone'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                     {user.longitude}, {user.latitude}
+                    {user.coordinates ? `${user.coordinates.lat}, ${user.coordinates.lng}` : 'No coordinates'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-2 py-1 text-xs rounded-full ${
@@ -308,8 +384,12 @@ const UserManagement = () => {
                     <div className="flex gap-2">
                       <button 
                         onClick={() => {
-                          setSelectedUser(user);
-                          setShowEditModal(true);
+                          if (activeTab === 'farmers') {
+                            setSelectedFarmer(user);
+                          } else {
+                            setSelectedUser(user);
+                            setShowEditModal(true);
+                          }
                         }}
                         className="text-blue-600 hover:text-blue-800"
                       >
@@ -323,6 +403,12 @@ const UserManagement = () => {
                         className="text-red-600 hover:text-red-800"
                       >
                         <FiTrash2 />
+                      </button>
+                      <button 
+                        onClick={() => handleChangeStatus(user.id, user.status)}
+                        className="text-yellow-600 hover:text-yellow-800"
+                      >
+                        <FiRefreshCw />
                       </button>
                     </div>
                   </td>
@@ -340,10 +426,20 @@ const UserManagement = () => {
         />
       )}
 
-      {showAddModal && activeTab === 'farmers' && (
-        <AddFarmerForm
-          onClose={() => setShowAddModal(false)}
-          onSubmit={handleAddUser}
+      {showAddFarmerModal && (
+        <AddEditFarmerModal
+          isOpen={showAddFarmerModal}
+          onClose={() => setShowAddFarmerModal(false)}
+          onSubmit={handleAddFarmer}
+        />
+      )}
+
+      {selectedFarmer && (
+        <AddEditFarmerModal
+          isOpen={!!selectedFarmer}
+          onClose={() => setSelectedFarmer(null)}
+          onSubmit={handleEditFarmer}
+          initialData={selectedFarmer}
         />
       )}
 
