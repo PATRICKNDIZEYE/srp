@@ -68,15 +68,15 @@ const Landing = () => {
       id: 1,
       name: 'Mugisha Jean',
       role: 'Umuhinzi wo mu Nyagatare',
-      image: 'https://images.unsplash.com/photo-1605727216801-e27ce1d0cc28?w=400&h=400&fit=crop',
-      quote: 'SJRB yatumye gutanga amata byoroha cyane. Ubu nshobora gukurikirana aho amata yanjye ageze hose.',
+      image: 'https://dairybusinessafrica.com/wp-content/uploads/2024/01/9cc5eda8-83fd-499e-b41e-0dcaa4bb5e75.jpg',
+      quote: 'SJRP yatumye gutanga amata byoroha cyane. Ubu nshobora gukurikirana aho amata yanjye ageze hose.',
       rating: 5
     },
     {
       id: 2,
       name: 'Uwase Marie',
       role: 'Nyir\'uruganda rw\'amata mu Rwamagana',
-      image: 'https://i.ytimg.com/vi/2KM8gv8FZsQ/maxresdefault.jpg',
+      image: 'https://dairybusinessafrica.com/wp-content/uploads/2024/01/9cc5eda8-83fd-499e-b41e-0dcaa4bb5e75.jpg',
       quote: 'Uburyo bwabo bworohereza cyane kandi bufasha mu micungire y\'ibikorwa byacu bya buri munsi.',
       rating: 5
     },
@@ -84,8 +84,8 @@ const Landing = () => {
       id: 3,
       name: 'Kamanzi Eric',
       role: 'Umuyobozi wa POC i Nyanza',
-      image: 'https://s3.lesviolets.com/images/4042/b802c1fc943413ced9032fc9620838db.png?v=1672656049',
-      quote: 'Gukoresha SJRB byatumye dutera imbere mu buryo butangaje mu mwaka umwe gusa.',
+      image: 'https://dairybusinessafrica.com/wp-content/uploads/2024/01/9cc5eda8-83fd-499e-b41e-0dcaa4bb5e75.jpg',
+      quote: 'Gukoresha SJRP byatumye dutera imbere mu buryo butangaje mu mwaka umwe gusa.',
       rating: 5
     }
   ];
@@ -95,36 +95,36 @@ const Landing = () => {
       id: 1,
       title: 'Iyandikishe',
       description: 'Uzuza amakuru yawe nk\'amazina, aho uherereye, na nimero ya telephone',
-      icon: <FiUsers className="w-16 h-16 text-blue-500" />,
-      image: 'https://img.freepik.com/free-vector/mobile-login-concept-illustration_114360-83.jpg'
+      icon: <FiUsers />,
+      image: 'https://dairybusinessafrica.com/wp-content/uploads/2024/01/9cc5eda8-83fd-499e-b41e-0dcaa4bb5e75.jpg'
     },
     {
       id: 2,
       title: 'TEGEREZA Ko wakemerwa',
       description: 'Aho amata akusanyirizwa kuri POC iri hafi yawe izakwemera',
-      icon: <FiMapPin className="w-16 h-16 text-green-500" />,
-      image: 'https://img.freepik.com/free-vector/checking-boxes-concept-illustration_114360-2429.jpg'
+      icon: <FiMapPin />,
+      image: 'https://dairybusinessafrica.com/wp-content/uploads/2024/01/9cc5eda8-83fd-499e-b41e-0dcaa4bb5e75.jpg'
     },
     {
       id: 3,
       title: 'Tangira Gutanga Amata',
       description: 'Jyana amata kuri POC, bazayapima, bakayanoza, bakayakira',
-      icon: <FiDroplet className="w-16 h-16 text-yellow-500" />,
-      image: 'https://img.freepik.com/free-vector/dairy-products-concept-illustration_114360-17098.jpg'
+      icon: <FiDroplet />,
+      image: 'https://dairybusinessafrica.com/wp-content/uploads/2024/01/9cc5eda8-83fd-499e-b41e-0dcaa4bb5e75.jpg'
     },
     {
       id: 4,
       title: 'Kwishyurwa',
       description: 'Wakirira amafaranga yawe kuri Mobile Money cyangwa kuri Banki',
-      icon: <FiDollarSign className="w-16 h-16 text-purple-500" />,
-      image: 'https://img.freepik.com/free-vector/digital-wallet-abstract-concept-illustration_335657-3896.jpg'
+      icon: <FiDollarSign />,
+      image: 'https://dairybusinessafrica.com/wp-content/uploads/2024/01/9cc5eda8-83fd-499e-b41e-0dcaa4bb5e75.jpg'
     },
     {
       id: 5,
       title: 'Gusaba Inguzanyo',
       description: 'Ushobora gusaba inguzanyo ukurikije umusaruro wawe w\'amata watanze',
-      icon: <FiDollarSign className="w-16 h-16 text-pink-500" />,
-      image: 'https://img.freepik.com/free-vector/bank-loan-approved-concept-illustration_114360-7824.jpg'
+      icon: <FiDollarSign />,
+      image: 'https://dairybusinessafrica.com/wp-content/uploads/2024/01/9cc5eda8-83fd-499e-b41e-0dcaa4bb5e75.jpg'
     }
   ];
 
@@ -139,7 +139,7 @@ const Landing = () => {
     {
       id: 2,
       title: 'Gahunda yo Guteza Imbere Ubuhinzi',
-      description: 'SJRB ifatanije na RAB mu guteza imbere ubuhinzi bw\'inka mu Rwanda.',
+      description: 'SJRP ifatanije na RAB mu guteza imbere ubuhinzi bw\'inka mu Rwanda.',
       date: '2024-03-10',
       link: '/news/farming-program'
     }
@@ -181,16 +181,18 @@ const Landing = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await axiosInstance.get('/stats/dashboard');
-        setStats({
-          totalFarmers: response.data.totalFarmers,
-          totalMilkLiters: response.data.totalMilkLiters ,
-          activePOCs: response.data.activePOCs,
-          activeDiaries: response.data.activeDiaries,
-          qualityRate: response.data.qualityRate,
-        });
+        const response = await axiosInstance.get('/api/stats/dashboard');
+        setStats(response.data);
       } catch (error) {
         console.error('Error fetching stats:', error);
+        // Set default values on error
+        setStats({
+          totalFarmers: 0,
+          totalMilkLiters: 0,
+          activePOCs: 0,
+          activeDiaries: 0,
+          qualityRate: 0
+        });
       }
     };
 
@@ -214,6 +216,13 @@ const Landing = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+      <header className="bg-white shadow-md py-4 px-6 flex justify-between items-center">
+        <div className="flex items-center">
+          <h1 className="text-2xl font-bold text-blue-600">SJRP</h1>
+          <span className="ml-4 text-gray-600">Smart Milk Collection System</span>
+        </div>
+      </header>
+
       {/* Top Contact Bar */}
       <div className="bg-blue-900 text-white py-2">
         <div className="container mx-auto px-4">
@@ -222,8 +231,8 @@ const Landing = () => {
               <a href="tel:+250788123456" className="flex items-center">
                 <FiPhoneCall className="mr-2" /> +250 788 123 456
               </a>
-              <a href="mailto:info@sjrb.rw" className="flex items-center">
-                <FiMessageCircle className="mr-2" /> info@sjrb.rw
+              <a href="mailto:info@SJRP.rw" className="flex items-center">
+                <FiMessageCircle className="mr-2" /> info@SJRP.rw
               </a>
             </div>
             <div className="flex items-center space-x-4">
@@ -241,7 +250,7 @@ const Landing = () => {
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <h1 className="text-2xl font-bold">SJRB</h1>
+              <h1 className="text-2xl font-bold">SJRP</h1>
             </div>
             
             <div className="hidden md:flex space-x-8">
@@ -273,7 +282,7 @@ const Landing = () => {
         <div className="flex flex-col md:flex-row items-center justify-between gap-12">
           <div className="flex-1">
             <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-              Murakaza neza kuri <span className="text-blue-600">SJRB</span>
+              Murakaza neza kuri <span className="text-blue-600">SJRP</span>
           </h1>
           <p className="text-xl text-gray-600 mb-8">
     Gukurikirana amata ava ku makusanyirizo
@@ -295,7 +304,7 @@ const Landing = () => {
           </div>
           <div className="flex-1">
             <img 
-              src="https://www.africa.com/wp-content/uploads/2022/03/7.jpeg?w=800&h=600&fit=crop"
+              src="https://dairybusinessafrica.com/wp-content/uploads/2024/01/9cc5eda8-83fd-499e-b41e-0dcaa4bb5e75.jpg"
               alt="Ubuhinzi bw'Inka mu Rwanda"
               className="w-full max-w-lg mx-auto rounded-lg shadow-xl"
             />
@@ -400,7 +409,7 @@ const Landing = () => {
           <div className="container mx-auto px-4">
             <h2 className="text-3xl font-bold text-center mb-4">Uko Watangira</h2>
             <p className="text-center text-gray-600 mb-16 max-w-2xl mx-auto">
-              Intambwe zoroshye zo gutangira gukoresha SJRB
+              Intambwe zoroshye zo gutangira gukoresha SJRP
             </p>
             
             <div className="space-y-16">
@@ -473,7 +482,7 @@ const Landing = () => {
 
         {/* Testimonials Section */}
         <div className="mt-32 container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-4">Abakoresha SJRB Bavuga Iki?</h2>
+          <h2 className="text-3xl font-bold text-center mb-4">Abakoresha SJRP Bavuga Iki?</h2>
           <p className="text-center text-gray-600 mb-16 max-w-2xl mx-auto">
             Reba ibyo abandi bavuga ku buryo bwacu
           </p>
@@ -541,7 +550,7 @@ const Landing = () => {
         <div className="mt-24 text-center">
           <h2 className="text-3xl font-bold mb-6">Witegure Gutangira?</h2>
           <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
-            Iyandikishe kuri SJRB none maze utangire gukoresha uburyo bworoshye bwo gutanga no gukurikirana amata yawe.
+            Iyandikishe kuri SJRP none maze utangire gukoresha uburyo bworoshye bwo gutanga no gukurikirana amata yawe.
           </p>
           <button
             onClick={() => navigate('/farmer/register')}
@@ -563,16 +572,16 @@ const Landing = () => {
                 <FiMessageCircle className="w-12 h-12 text-blue-500 mb-4" />
                 <h3 className="text-xl font-semibold mb-2">Twandikire</h3>
                 <p className="text-gray-600 mb-4">Subiza itarenze amasaha 24</p>
-                <a href="mailto:support@sjrb.rw" className="text-blue-600 hover:underline">
-                  support@sjrb.rw
+                <a href="mailto:support@SJRP.rw" className="text-blue-600 hover:underline">
+                  support@SJRP.rw
                 </a>
               </div>
               <div className="flex-1 bg-white p-8 rounded-xl shadow-lg">
                 <FiPhoneCall className="w-12 h-12 text-green-500 mb-4" />
                 <h3 className="text-xl font-semibold mb-2">Duhamagare</h3>
                 <p className="text-gray-600 mb-4">Kuva 7:00 - 18:00</p>
-                <a href="tel:+250788123456" className="text-blue-600 hover:underline">
-                  +250 788 123 456
+                <a href="tel:+250792575100" className="text-blue-600 hover:underline">
+                  +250 792 575 100
                 </a>
               </div>
             </div>
@@ -609,22 +618,22 @@ const Landing = () => {
 
         {/* Add Impact Section */}
         <div className="mt-24 bg-blue-50 rounded-xl p-8">
-          <h2 className="text-3xl font-bold text-center mb-8">Akamaro ka SJRB mu Rwanda</h2>
+          <h2 className="text-3xl font-bold text-center mb-8">Akamaro ka SJRP mu Rwanda</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
             <div>
               <img 
-                src="https://images.unsplash.com/photo-1591184510259-b6f1be3d7aff?w=800&h=600&fit=crop"
+                src="https://dairybusinessafrica.com/wp-content/uploads/2024/01/9cc5eda8-83fd-499e-b41e-0dcaa4bb5e75.jpg"
                 alt="Ubuhinzi mu Rwanda"
                 className="rounded-lg shadow-xl mb-4 object-cover h-64 w-full"
               />
               <h3 className="text-xl font-semibold mb-2">Guteza Imbere Ubuhinzi</h3>
               <p className="text-gray-600">
-                SJRB ifasha abahinzi gukurikirana neza umusaruro wabo no kuwugeza ku isoko mu buryo bworoshye.
+                SJRP ifasha abahinzi gukurikirana neza umusaruro wabo no kuwugeza ku isoko mu buryo bworoshye.
               </p>
             </div>
             <div>
               <img 
-                src="https://images.unsplash.com/photo-1580929753603-10519c6e480a?w=800&h=600&fit=crop"
+                src="https://dairybusinessafrica.com/wp-content/uploads/2024/01/9cc5eda8-83fd-499e-b41e-0dcaa4bb5e75.jpg"
                 alt="Iterambere mu Rwanda"
                 className="rounded-lg shadow-xl mb-4 object-cover h-64 w-full"
               />
@@ -642,39 +651,24 @@ const Landing = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="relative group">
               <img 
-                src="https://images.unsplash.com/photo-1591184510259-b6f1be3d7aff?w=800&h=600&fit=crop"
+                src="https://dairybusinessafrica.com/wp-content/uploads/2024/01/9cc5eda8-83fd-499e-b41e-0dcaa4bb5e75.jpg"
                 alt="Umuhinzi wa mbere"
                 className="rounded-lg shadow-xl w-full h-72 object-cover"
               />
-              <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg flex items-center justify-center">
-                <p className="text-white text-center px-4">
-                  "Natangiye n'inka 2, ubu mfite 15 kandi ntanga amata menshi buri munsi"
-                </p>
-              </div>
             </div>
             <div className="relative group">
               <img 
-                src="https://images.unsplash.com/photo-1580929753603-10519c6e480a?w=800&h=600&fit=crop"
+                src="https://dairybusinessafrica.com/wp-content/uploads/2024/01/9cc5eda8-83fd-499e-b41e-0dcaa4bb5e75.jpg"
                 alt="Umuhinzi wa kabiri"
                 className="rounded-lg shadow-xl w-full h-72 object-cover"
               />
-              <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg flex items-center justify-center">
-                <p className="text-white text-center px-4">
-                  "SJRB yatumye mpora mbona isoko ry'amata yanjye buri gihe"
-                </p>
-              </div>
             </div>
             <div className="relative group">
               <img 
-                src="https://images.unsplash.com/photo-1597930991699-b99f8aaa7768?w=800&h=600&fit=crop"
+                src="https://dairybusinessafrica.com/wp-content/uploads/2024/01/9cc5eda8-83fd-499e-b41e-0dcaa4bb5e75.jpg"
                 alt="Umuhinzi wa gatatu"
                 className="rounded-lg shadow-xl w-full h-72 object-cover"
               />
-              <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg flex items-center justify-center">
-                <p className="text-white text-center px-4">
-                  "Ubu nshobora kwishyura amashuri y'abana banjye nta kibazo"
-                </p>
-              </div>
             </div>
           </div>
         </div>
@@ -686,8 +680,8 @@ const Landing = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
             <div>
               <h3 className="font-semibold mb-4">Aho duherereye</h3>
-              <p className="text-gray-600">Kigali, Rwanda</p>
-              <p className="text-gray-600">Tel: +250 788 123 456</p>
+              <p className="text-gray-600">Gasabo, Nduba, BUTARE</p>
+              <p className="text-gray-600">Tel: +250 792 575 100</p>
             </div>
             <div>
               <h3 className="font-semibold mb-4">Amasaha y'akazi</h3>
@@ -696,11 +690,11 @@ const Landing = () => {
             </div>
             <div>
               <h3 className="font-semibold mb-4">Twandikire</h3>
-              <p className="text-gray-600">Email: info@sjrb.rw</p>
+              <p className="text-gray-600">Email: info@SJRP.rw</p>
             </div>
           </div>
           <div className="text-center text-gray-600 border-t pt-8">
-            <p>{new Date().getFullYear()} SJRB. Uburenganzira bwose .</p>
+            <p>{new Date().getFullYear()} SJRP. Uburenganzira bwose .</p>
             <p><b>Contact developer : </b> +250 793639763</p>
           </div>
         </div>
