@@ -7,6 +7,7 @@ import axiosInstance from '../../utils/axiosInstance';
 import AddDeliveryModal from './AddDeliveryModal';
 import AddDailyModal from './AddDailyModal';
 import DailyManagement from './DailyManagement';
+import { useUser } from '../../context/UserContext';
 
 interface TransportAssignmentModalProps {
   milk: {
@@ -156,6 +157,7 @@ const TransportAssignmentModal: React.FC<TransportAssignmentModalProps> = ({ mil
 };
 
 const DeliveryManagement = () => {
+  const { user } = useUser();
   const navigate = useNavigate();
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
   const [filterOpen, setFilterOpen] = useState(false);

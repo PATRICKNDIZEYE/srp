@@ -40,25 +40,34 @@ const PaymentsPage = () => {
   const [selectedStatus, setSelectedStatus] = useState('all');
 
   useEffect(() => {
-    if (!user) return;
+    if (!user?.id || !user?.token) return;
+
+    const fetchPaymentData = async () => {
+      try {
+        const [paymentsRes, summaryRes] = await Promise.all([
+          axiosInstance.get(`/payment/farmer/${user.id}`, {
+            headers: {
+              Authorization: `Bearer ${user.token}`
+            }
+          }),
+          axiosInstance.get(`/payment/farmer/${user.id}/summary`, {
+            headers: {
+              Authorization: `Bearer ${user.token}`
+            }
+          })
+        ]);
+
+        setPayments(paymentsRes.data);
+        setSummary(summaryRes.data);
+      } catch (error) {
+        console.error('Error fetching payment data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchPaymentData();
-  }, [user]);
-
-  const fetchPaymentData = async () => {
-    try {
-      const [paymentsRes, summaryRes] = await Promise.all([
-        axiosInstance.get(`/payments/farmer/${user?.id}`),
-        axiosInstance.get(`/payments/farmer/${user?.id}/summary`)
-      ]);
-
-      setPayments(paymentsRes.data);
-      setSummary(summaryRes.data);
-    } catch (error) {
-      console.error('Error fetching payment data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [user?.id, user?.token]);
 
   // Filter data based on selected filters
   const filterData = (data: Payment[]) => {

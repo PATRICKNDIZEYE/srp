@@ -6,6 +6,7 @@ import { useParams } from 'react-router-dom';
 import AddDailyModal from './AddDailyModal';
 import CardDataStats from '../../components/CardDataStats';
 import { FiCheckCircle, FiAlertCircle, FiDroplet, FiTruck } from 'react-icons/fi';
+import { useUser } from '../../context/UserContext';
 
 // Define the type for the daily data
 interface DailyData {
@@ -23,6 +24,7 @@ interface RouteParams {
 }
 
 const DailyManagement: React.FC = () => {
+  const { user } = useUser();
   const { deliveryId } = useParams<RouteParams>();
   const [dailyData, setDailyData] = useState<DailyData[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);

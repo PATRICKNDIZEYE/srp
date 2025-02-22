@@ -4,7 +4,6 @@ import Breadcrumb from '../../components/Breadcrumb';
 import { toast } from 'react-toastify';
 import DeliveryConfirmationModal from '../../components/Diary/DeliveryConfirmationModal';
 import axiosInstance from '../../utils/axiosInstance';
-import { useUserContext } from '../../context/UserContext';
 
 interface DeliveryData {
   id: string;
@@ -31,7 +30,9 @@ interface DeliveryData {
 }
 
 const MilkReceiving = () => {
-  const { userId } = useUserContext();
+  // Parse userData from localStorage and extract the id
+  const userData = localStorage.getItem('userData');
+  const userId = userData ? JSON.parse(userData).id : null;
   const [selectedDelivery, setSelectedDelivery] = useState<DeliveryData | null>(null);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [deliveries, setDeliveries] = useState<DeliveryData[]>([]);
@@ -39,6 +40,10 @@ const MilkReceiving = () => {
   useEffect(() => {
     // Fetch deliveries from the API
     const fetchDeliveries = async () => {
+      if (!userId) {
+        console.error('No userId found');
+        return;
+      }
       try {
         const response = await axiosInstance.get(`/derived/diary/${userId}`);
         setDeliveries(response.data);

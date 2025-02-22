@@ -106,7 +106,9 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
 
 const AssignedDeliveries = () => {
   const navigate = useNavigate();
-  const { userId } = useUserContext();
+  // Parse userData from localStorage and extract the id
+  const userData = localStorage.getItem('userData');
+  const userId = userData ? JSON.parse(userData).id : null;
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState('all');
@@ -118,10 +120,16 @@ const AssignedDeliveries = () => {
 
   useEffect(() => {
     const fetchDeliveries = async () => {
-      if (!userId) return;
+      if (!userId) {
+        console.log('No userId found');
+        return;
+      }
       try {
+        console.log('Fetching deliveries for userId:', userId);
         const response = await axiosInstance.get(`/delivery/transport/${userId}`);
+        console.log('API response:', response);
         setAssignedDeliveries(response.data);
+        console.log('Fetched Deliveries:', response.data);
       } catch (error) {
         console.error('Error fetching deliveries:', error);
         toast.error('Failed to fetch deliveries');
@@ -320,7 +328,7 @@ const AssignedDeliveries = () => {
                     {new Date(delivery.date).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {delivery.poc.firstName} {delivery.poc.lastName}
+                    {/* {delivery.poc.firstName} {delivery.poc.lastName} */}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     {delivery.amount}L

@@ -5,6 +5,7 @@ import { FiEye, FiEyeOff } from 'react-icons/fi';
 import { isValidPhone } from '../../utils/validation';
 import axiosInstance from '../../utils/axiosInstance';
 import { useUserContext } from '../../context/UserContext';
+import { jwtDecode } from 'jwt-decode';
 
 interface BaseLoginFormProps {
   role: 'farmer' | 'poc' | 'transport' | 'production' | 'management' | 'diary';
@@ -50,7 +51,7 @@ const BaseLoginForm: React.FC<BaseLoginFormProps> = ({ role, onSuccess }) => {
       poc: '/login-poc',
       transport: 'login-transport',
       production: '/login-production',
-      management: '/api/auth/management/login',
+      management: '/login-admin',
       diary: '/login-diary',
     };
 
@@ -67,8 +68,20 @@ const BaseLoginForm: React.FC<BaseLoginFormProps> = ({ role, onSuccess }) => {
       const response = await axiosInstance.post(endpoints[role], requestData);
 
       if (response.status === 200) {
+        const { token } = response.data;
+        const decodedToken: any = jwtDecode(token);
+        console.log('Decoded token:', decodedToken);
+        localStorage.setItem('token', token);
+        localStorage.setItem('role', decodedToken.role);
+
         toast.success('Login successful!');
         onSuccess(formData.phone);
+
+        // Store token and role in local storage
+        localStorage.setItem('authToken', response.data.token);
+        localStorage.setItem('userRole', role);
+        console.log('Stored role:', response.data.role);
+        console.log('Stored userRole:', localStorage.getItem('userRole'));
 
         // Fetch user data after successful login
         try {

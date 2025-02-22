@@ -62,6 +62,14 @@ import LoginPage from './pages/Authentication/FarmerRegistration';
 import RegisterPage from './pages/Auth/RegisterPage';
 import AccountInactivePage from './components/ErrorPages/AccountInactivePage';
 import ProtectedManagementRoute from './components/ProtectedManagementRoute';
+import AssignedTransportations from './pages/Transport/AssignedTransportation';
+import ProductionManagement from './pages/Transport/ProductionManagement';
+import ProductionDailyManagement from './pages/Production/DailyManagement';
+import ProductionDeliveryManagement from './pages/Production/DeliveryManagement';
+import ProtectedProductionRoute from './components/ProtectedProductionRoute';
+import ProtectedTransportRoute from './components/ProtectedTransportRoute';
+import ProtectedDiaryRoute from './components/ProtectedDiaryRoute';
+import ProtectedPOCRoute from './components/ProtectedPOCRoute';
 
 function App() {
   return (
@@ -80,11 +88,7 @@ function App() {
         {/* Farmer Routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/farmer" element={
-          <ProtectedFarmerRoute>
-            <FarmerLayout />
-          </ProtectedFarmerRoute>
-        }>
+        <Route path="/farmer" element={<FarmerLayout />}>
           <Route path="dashboard" element={<FarmerDashboard />} />
           <Route path="submit-milk" element={<MilkSubmissionPage />} />
           <Route path="payments" element={<PaymentsPage />} />
@@ -107,6 +111,8 @@ function App() {
           <Route path="/transport/dashboard" element={<TransportDashboard />} />
           <Route path="/transport/deliveries" element={<AssignedDeliveries />} />
           <Route path="/transport/daily-management/:deliveryId" element={<TransportDailyManagement />} />
+          <Route path="/transport/assigned-transportations" element={<AssignedTransportations />} />
+          <Route path="/transport/production-management/:deliveryId" element={<ProductionManagement />} />
           <Route path="/transport/settings" element={<Settings />} />
         </Route>
 
@@ -116,19 +122,13 @@ function App() {
           <Route path="/production/deliveries" element={<ProductionDeliveries />} />
           <Route path="/production/sales" element={<ProductionSales />} />
           <Route path="/production/settings" element={<Settings />} />
-          {/* <Route path="/production/line" element={<Productionline />} /> */}
+          <Route path="/production/daily-management/:deliveryId" element={<ProductionDailyManagement />} />
+          <Route path="/production/delivery-management" element={<ProductionDeliveryManagement />} />
         </Route>
 
         {/* Management Routes */}
         <Route element={<DashboardLayout role="management" />}>
-          <Route 
-            path="/management/dashboard" 
-            element={
-              <ProtectedManagementRoute>
-                <ManagementDashboard />
-              </ProtectedManagementRoute>
-            } 
-          />
+          <Route path="/management/dashboard" element={<ManagementDashboard />} />
           <Route path="/management/users" element={<ManagementUserManagement />} />
           <Route path="/management/finance" element={<ManagementFinancialReports />} />
           <Route path="/management/operations" element={<OperationsManagement />} />
@@ -144,16 +144,6 @@ function App() {
           <Route path="/diary/sales" element={<SalesHistory dateRange={{ start: '', end: '' }} />} />
           <Route path="/diary/finances" element={<AdminFinancialReports period="daily" />} />
           <Route path="/diary/settings" element={<Settings />} />
-        </Route>
-
-        {/* Protected Admin Routes */}
-        <Route
-          element={
-            <ProtectedAdminRoute>
-              <DefaultLayout />
-            </ProtectedAdminRoute>
-          }
-        >]
         </Route>
 
         {/* Error Pages */}

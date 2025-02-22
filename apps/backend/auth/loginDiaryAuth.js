@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import { prisma } from "../postgres/postgres.js";
 import { Prisma } from '@prisma/client';
+import jwt from 'jsonwebtoken';
 
 export default async function loginDiaryAuth(req, res) {
   try {
@@ -27,9 +28,21 @@ export default async function loginDiaryAuth(req, res) {
       return res.status(401).json({ message: "Invalid password" });
     }
 
-    // Return Diary details upon successful login
+    // Generate JWT token
+    const token = jwt.sign(
+      { 
+        id: diary.id,
+        phoneNumber: diary.phoneNumber,
+        role: 'diary'  // Assuming role is diary
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    // Return Diary details and token upon successful login
     res.status(200).json({
       message: "Login successful",
+      token,
       diary: {
         id: diary.id,
         status: diary.status,

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { BsGlobe, BsShieldLock, BsEnvelope, BsBell, BsPalette, BsPerson, BsCheckCircle } from 'react-icons/bs';
 import AxiosInstance from "../utils/axiosInstance.ts";
 import { toast } from 'react-toastify';
+import { useUserContext } from '../context/UserContext';
 
 interface User {
   id: string;
@@ -14,6 +15,7 @@ interface User {
 
 const Settings = () => {
   const { t } = useTranslation();
+  const { user } = useUserContext();
   const [activeTab, setActiveTab] = useState('general');
   const [loading, setLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -48,10 +50,8 @@ const Settings = () => {
 
   const fetchCurrentUser = async () => {
     try {
-      const adminData = localStorage.getItem('adminData');
-      if (adminData) {
-        const user = JSON.parse(adminData);
-        const response = await AxiosInstance.get(`/users/${user.id}`);
+      if (user) {
+        const response = await AxiosInstance.get(`/farmer/${user.id}`);
         setCurrentUser(response.data);
         setFormData({
           username: response.data.username,
@@ -83,7 +83,7 @@ const Settings = () => {
         updateData.password = formData.newPassword;
       }
 
-      await AxiosInstance.put(`/users/${currentUser.id}`, updateData);
+      await AxiosInstance.put(`/farmer/${currentUser.id}`, updateData);
       toast.success('Profile updated successfully');
       setShowSuccess(true);
       fetchCurrentUser();

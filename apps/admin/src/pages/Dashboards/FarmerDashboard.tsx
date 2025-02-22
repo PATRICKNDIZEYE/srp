@@ -46,9 +46,17 @@ const FarmerDashboard = () => {
     const fetchDashboardData = async () => {
       if (!user) return;
 
+      // // Log user id and token
+      // console.log('User ID:', user.id);
+      // console.log('User Token:', user.token);
+
       try {
         // Get milk submissions data
-        const milkResponse = await axiosInstance.get(`/milk-submissions/farmer/${user.id}`);
+        const milkResponse = await axiosInstance.get(`/milk-submissions/farmer/${user.id}`, {
+          headers: {
+            Authorization: `Bearer ${user.token}`
+          }
+        });
         console.log('Milk submissions:', milkResponse.data);
         
         if (milkResponse.data) {
@@ -60,7 +68,11 @@ const FarmerDashboard = () => {
         }
 
         // Get payment data
-        const paymentResponse = await axiosInstance.get(`/payment/farmer/${user.id}/summary`);
+        const paymentResponse = await axiosInstance.get(`/payment/farmer/${user.id}/summary`, {
+          headers: {
+            Authorization: `Bearer ${user.token}`
+          }
+        });
         console.log('Payment data:', paymentResponse.data);
         
         if (paymentResponse.data) {

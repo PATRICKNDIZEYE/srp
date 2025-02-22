@@ -106,7 +106,9 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
 
 const AssignedTransportations = () => {
   const navigate = useNavigate();
-  const { userId } = useUserContext();
+  // Parse userData from localStorage and extract the id
+  const userData = localStorage.getItem('userData');
+  const userId = userData ? JSON.parse(userData).id : null;
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState('all');

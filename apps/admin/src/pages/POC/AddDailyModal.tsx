@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import axiosInstance from '../../utils/axiosInstance';
+import { useUser } from '../../context/UserContext';
 
 interface AddDailyModalProps {
   onClose: () => void;
@@ -10,6 +11,7 @@ interface AddDailyModalProps {
 }
 
 const AddDailyModal: React.FC<AddDailyModalProps> = ({ onClose, onAdd, initialTransportId, deriveryId }) => {
+  const { user } = useUser();
   const [diaryId, setDiaryId] = useState('');
   const [transportId, setTransportId] = useState(initialTransportId || '');
   const [amount, setAmount] = useState('');

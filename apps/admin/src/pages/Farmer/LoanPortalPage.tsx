@@ -38,30 +38,38 @@ const LoanPortalPage = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
-      fetchLoanData();
-    }
-  }, [user]);
+    if (!user?.id || !user?.token) return;
 
-  const fetchLoanData = async () => {
-    try {
-      const [loansRes, summaryRes] = await Promise.all([
-        axiosInstance.get(`/loans/farmer/${user?.id}`),
-        axiosInstance.get(`/loans/farmer/${user?.id}/summary`)
-      ]);
+    const fetchLoanData = async () => {
+      try {
+        const [loansRes, summaryRes] = await Promise.all([
+          axiosInstance.get(`/loans/farmer/${user.id}`, {
+            headers: {
+              Authorization: `Bearer ${user.token}`
+            }
+          }),
+          axiosInstance.get(`/loans/farmer/${user.id}/summary`, {
+            headers: {
+              Authorization: `Bearer ${user.token}`
+            }
+          })
+        ]);
 
-      setLoans(loansRes.data);
-      setSummary(summaryRes.data);
-    } catch (error) {
-      toast.error('Hari ikibazo. Ongera ugerageze.');
-    } finally {
-      setLoading(false);
-    }
-  };
+        setLoans(loansRes.data);
+        setSummary(summaryRes.data);
+      } catch (error) {
+        toast.error('Hari ikibazo. Ongera ugerageze.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLoanData();
+  }, [user?.id, user?.token]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user?.id || !user?.token) return;
 
     const amount = Number(formData.loanAmount);
     if (amount > summary.maxLoanAmount) {
@@ -75,6 +83,10 @@ const LoanPortalPage = () => {
         loanAmount: amount,
         purpose: formData.purpose,
         status: 'pending'
+      }, {
+        headers: {
+          Authorization: `Bearer ${user.token}`
+        }
       });
       
       toast.success('Inguzanyo yawe yoherejwe neza!');

@@ -14,9 +14,6 @@ router.get('/farmer/:farmerId', authenticateToken, async (req, res) => {
       where: {
         farmerId
       },
-      include: {
-        milkSubmissions: true
-      },
       orderBy: {
         createdAt: 'desc'
       }

@@ -4,7 +4,6 @@ import Breadcrumb from '../../components/Breadcrumb';
 import { toast } from 'react-toastify';
 import DeliveryConfirmationModal from '../../components/Diary/DeliveryConfirmationModal';
 import axiosInstance from '../../utils/axiosInstance';
-import { useUserContext } from '../../context/UserContext';
 
 interface TransportationData {
   id: string;
@@ -31,7 +30,9 @@ interface TransportationData {
 }
 
 const MilkReceiving = () => {
-  const { userId } = useUserContext();
+  // Parse userData from localStorage and extract the id from the first object
+  const userData = localStorage.getItem('userData');
+  const userId = userData ? JSON.parse(userData)[0]?.id : null;
   const [selectedTransportation, setSelectedTransportation] = useState<TransportationData | null>(null);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [transportations, setTransportations] = useState<TransportationData[]>([]);
@@ -39,6 +40,10 @@ const MilkReceiving = () => {
   useEffect(() => {
     // Fetch transportations from the API
     const fetchTransportations = async () => {
+      if (!userId) {
+        console.error('No userId found');
+        return;
+      }
       try {
         const response = await axiosInstance.get(`transp-derived/production/${userId}`);
         console.log('Fetched transportations:', response.data);

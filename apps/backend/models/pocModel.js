@@ -57,3 +57,8 @@ export const deletePOC = async (id) => {
     where: { id: parseInt(id) },
   });
 };
+export const getPOCsByPhoneNumber = async (phoneNumber) => {
+  return await prisma.pOC.findMany({
+    where: { phoneNumber },
+  });
+};
