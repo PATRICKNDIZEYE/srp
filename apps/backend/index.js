@@ -92,6 +92,10 @@ app.use('/api/users', userRoutes);
 app.use('/api/transports', transportRoutes);
 app.use('/api/diaries', diaryRoutes);
 app.use('/api/farmer', farmerRoutes);
+
+// Add new route path for milk-sub
+app.use('/api/milk-sub', milkSubmissionRoutes);
+
 // Start Server
 const PORT = process.env.PORT || 2025;
 connection();  // You can remove this if you are using Prisma's automatic connection management

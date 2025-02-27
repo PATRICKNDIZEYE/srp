@@ -14,6 +14,7 @@ const FarmerRegistration = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);  
   const [locationError, setLocationError] = useState('');
+  const [pocs, setPocs] = useState([]);
  
   const [formData, setFormData] = useState({
     fullName: '',
@@ -31,7 +32,8 @@ const FarmerRegistration = () => {
     district: '',
     sector: '',
     cell: '',
-    copyField: ''
+    copyField: '',
+    pocId: ''
   });
 
   const [errors, setErrors] = useState({
@@ -40,6 +42,19 @@ const FarmerRegistration = () => {
     confirmPassword: '',
     location: ''
   });
+
+  useEffect(() => {
+    const fetchPocs = async () => {
+      try {
+        const response = await axiosInstance.get('/pocs');
+        setPocs(response.data);
+      } catch (error) {
+        console.error('Error fetching POCs:', error);
+      }
+    };
+
+    fetchPocs();
+  }, []);
 
   const getCurrentLocation = () => {
     setIsLoadingLocation(true);
@@ -167,7 +182,8 @@ const FarmerRegistration = () => {
           username: formData.fullName.split(' ')[0].toLowerCase() + Math.floor(Math.random() * 1000),
           password: formData.password,
           farmDetails: formData.location || 'Farm in Kigali',
-          status: 'Active'
+          status: 'Active',
+          pocId: formData.pocId
         };
 
         console.log('Registration Data:', registrationData);
@@ -276,6 +292,23 @@ const FarmerRegistration = () => {
                   placeholder="07X XXX XXXX"
                 />
                 {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
+              </div>
+
+              <div>
+                <label className="block text-gray-700 mb-2">Point of Contact (POC)</label>
+                <select
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={formData.pocId}
+                  onChange={(e) => setFormData({ ...formData, pocId: e.target.value })}
+                  required
+                >
+                  <option value="">Select POC</option>
+                  {pocs.map((poc) => (
+                    <option key={poc.id} value={poc.id}>
+                      {poc.firstName} {poc.lastName}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="md:col-span-2">

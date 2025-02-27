@@ -1,5 +1,5 @@
 import express from "express";
-import { createMilkSubmission, getMilkSubmissions, getMilkSubmissionById, updateMilkSubmission, deleteMilkSubmission, getMilkSubmissionsByFarmerId } from "../models/milkSubmissionModel.js";
+import { createMilkSubmission, createMilkSub, getMilkSubmissions, getMilkSubmissionById, updateMilkSubmission, deleteMilkSubmission, getMilkSubmissionsByFarmerId } from "../models/milkSubmissionModel.js";
 import { prisma } from '../postgres/postgres.js';
 import { authenticateToken, checkFarmerRole } from '../middlewares/auth.js';
 import { sendSMS } from '../utils/sms.js';
@@ -43,6 +43,53 @@ router.post("/", authenticateToken, checkFarmerRole, async (req, res) => {
     res.status(201).json(submission);
   } catch (error) {
     console.error('Error creating milk submission:', error);
+    res.status(500).json({ 
+      error: 'Failed to create milk submission',
+      details: error.message 
+    });
+  }
+});
+
+// Create a new milk submission using createMilkSub
+router.post("/poc", async (req, res) => {
+  try {
+    const { milkType, amount, notes, farmerId } = req.body;
+
+    if (!farmerId) {
+      return res.status(400).json({ error: 'Farmer ID is required' });
+    }
+
+    console.log('Creating milk submission for farmer:', farmerId); // Debugging log
+
+    const submission = await createMilkSub({
+      milkType,
+      amount: parseFloat(amount),
+      notes,
+      status: 'pending',
+      farmerId,
+    });
+
+    // Send SMS notification
+    const farmer = await prisma.farmer.findUnique({
+      where: { id: farmerId }
+    });
+
+    if (farmer?.phoneNumber) {
+      try {
+        await sendSMS(farmer.phoneNumber, 'MILK_SUBMISSION', [
+          amount,
+          milkType,
+          new Date()
+        ]);
+      } catch (smsError) {
+        console.error('SMS sending failed:', smsError);
+        // Don't fail the request if SMS fails
+      }
+    }
+
+    res.status(201).json(submission);
+  } catch (error) {
+    console.error('Error creating milk submission:', error); // More detailed error logging
     res.status(500).json({ 
       error: 'Failed to create milk submission',
       details: error.message 
