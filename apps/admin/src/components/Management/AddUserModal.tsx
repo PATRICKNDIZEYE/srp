@@ -149,12 +149,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ onClose, onSubmit }) => {
                 onChange={e => setFormData(prev => ({ ...prev, role: e.target.value }))}
                 required
               >
-                <option value="">Select Role</option>
-                <option value="ADMIN">ADMIN</option>
-                <option value="Production Manager">Production Manager</option>
-                <option value="Transport Coordinator">Transport Coordinator</option>
-                <option value="Diary Manager">Diary Manager</option>
-                <option value="POC Manager">POC Manager</option>
+                <option value="Admin">Admin</option>
               </select>
             </div>
           </div>

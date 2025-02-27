@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import axiosInstance from '../../utils/axiosInstance'; // Ensure this path is correct
+import axiosInstance from '../../utils/axios'; // Corrected import path
 import Breadcrumb from '../../components/Breadcrumb';
 import DateRangeFilter from '../../components/Filters/DateRangeFilter';
 import { toast } from 'react-toastify';
+import AddSubmitMilk from '../../components/AddSubmitMilk';
 
 // Define the type for a submission
 interface Farmer {
@@ -26,6 +27,16 @@ const MilkSubmissions = () => {
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState('all');
   const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false); // State to control modal visibility
+  const [farmers, setFarmers] = useState<Farmer[]>([]); // State to store farmers
+  const [formData, setFormData] = useState({
+    milkType: 'Cow',
+    amount: 0,
+    notes: 'Fresh milk from morning milking',
+    status: 'Pending',
+    farmerId: 0
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchSubmissions = async () => {
@@ -37,7 +48,18 @@ const MilkSubmissions = () => {
       }
     };
 
+    const fetchFarmers = async () => {
+      try {
+        const response = await axiosInstance.get('/farmer');
+        console.log('Fetched farmers:', response.data);
+        setFarmers(response.data);
+      } catch (error) {
+        toast.error('Failed to fetch farmers');
+      }
+    };
+
     fetchSubmissions();
+    fetchFarmers(); // Fetch farmers when component mounts
   }, []);
 
   const handleQualityTest = (submissionId: string) => {
@@ -51,6 +73,41 @@ const MilkSubmissions = () => {
 
   const handleRejectSubmission = (submissionId: string) => {
     toast.error('Milk submission rejected');
+  };
+
+  const handleSubmit = async (submissionData: { milkType: string; amount: number; notes: string; status: string; farmerId: number }) => {
+    console.log('Submitting form with data:', submissionData);
+    try {
+      setIsSubmitting(true);
+      const response = await axiosInstance.post('/milk-sub/poc', {
+        milkType: submissionData.milkType,
+        amount: submissionData.amount,
+        notes: submissionData.notes,
+        status: submissionData.status,
+        farmerId: submissionData.farmerId
+      });
+
+      console.log('Response from server:', response);
+
+      if (response.status === 201) {
+        toast.success('Milk submitted successfully!');
+        setFormData({
+          milkType: 'Cow',
+          amount: 0,
+          notes: 'Fresh milk from morning milking',
+          status: 'Pending',
+          farmerId: 0
+        });
+        setIsModalOpen(false);
+        const newResponse = await axiosInstance.get('/milk-submissions');
+        setSubmissions(newResponse.data);
+      }
+    } catch (error) {
+      console.error('Error during submission:', error);
+      toast.error('There was an issue. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -70,6 +127,12 @@ const MilkSubmissions = () => {
               filterOpen={filterOpen}
               setFilterOpen={setFilterOpen}
             />
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Add Milk Submission
+            </button>
           </div>
         </div>
 
@@ -142,6 +205,22 @@ const MilkSubmissions = () => {
           </table>
         </div>
       </div>
+
+      {/* Modal for adding milk submission */}
+      {isModalOpen && (
+        <AddSubmitMilk
+          onClose={() => setIsModalOpen(false)}
+          onSubmit={() => handleSubmit(formData)}
+          formData={formData}
+          setFormData={(newData) => setFormData({
+            ...newData,
+            amount: parseFloat(newData.amount),
+            farmerId: parseInt(newData.farmerId, 10)
+          })}
+          isSubmitting={isSubmitting}
+          farmers={farmers}
+        />
+      )}
     </div>
   );
 };
