@@ -53,7 +53,8 @@ router.post("/", authenticateToken, checkFarmerRole, async (req, res) => {
 // Create a new milk submission using createMilkSub
 router.post("/poc", async (req, res) => {
   try {
-    const { milkType, amount, notes, farmerId } = req.body;
+    const { milkType, amount, notes } = req.body;
+    const farmerId = req.user?.id; // Ensure req.user is defined
 
     if (!farmerId) {
       return res.status(400).json({ error: 'Farmer ID is required' });

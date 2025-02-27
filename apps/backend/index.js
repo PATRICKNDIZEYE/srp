@@ -38,6 +38,8 @@ import statsRoutes from './routes/statsRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import { authenticateToken } from './middlewares/auth.js';
 import { managementLogin } from './controllers/auth.controller.js';
+import reportRoutes from './routes/reportRoutes.js';
+import dailySaleRoutes from './routes/dailySaleRoutes.js';
 dotenv.config();
 const app = express();
 const prisma = new PrismaClient();
@@ -76,6 +78,8 @@ app.use('/api/transp-derived', transpDerivedRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/payment',paymentRoutes);
 app.use('/api/login-admin', loginAdminAuth);
+app.use('/api/reports', reportRoutes);
+app.use('/api/daily-sales', dailySaleRoutes);
 // Use the registerFarmerAuth function as a route handler
 
 app.post('/api/register-farmer', async (req, res) => {

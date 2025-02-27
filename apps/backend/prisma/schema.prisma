@@ -163,6 +163,7 @@ model Diary {
   latitude      Float
 
   derivedEntries Derived[] @relation("DiaryToDerived")
+  dailySales     DailySale[]
 }
 
 model Production {
@@ -252,4 +253,18 @@ model Manager {
   password    String
   role        String   // super_admin, admin, etc.
   status      String
+}
+
+model DailySale {
+  id          Int      @id @default(autoincrement())
+  date        DateTime @default(now())
+  productType String
+  quantity    Float
+  pricePerUnit Float
+  totalAmount Float
+  status      String   @default("pending") // pending, approved, rejected
+  diaryId     Int
+  diary       Diary    @relation(fields: [diaryId], references: [id])
+
+  @@index([diaryId])
 }

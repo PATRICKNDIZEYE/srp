@@ -1,8 +1,10 @@
 import express from "express";
 import bcrypt from "bcrypt";
 import { createFarmer, getFarmers,getFarmersByPhoneNumber, getFarmerById, updateFarmer, deleteFarmer, updateFarmerStatus } from "../models/farmerModel.js";
+import { PrismaClient } from '@prisma/client';
 
 const router = express.Router();
+const prisma = new PrismaClient();
 
 // Create a new Farmer
 router.post("/", async (req, res) => {
@@ -131,6 +133,23 @@ router.patch("/:id/status", async (req, res) => {
     }
   } catch (error) {
     res.status(400).json({ error: error.message });
+  }
+});
+
+router.get('/stats', async (req, res) => {
+  try {
+    const totalFarmers = await prisma.farmer.count();
+    const activeFarmers = await prisma.farmer.count({ where: { status: 'active' } });
+    const pendingFarmers = await prisma.farmer.count({ where: { status: 'pending' } });
+
+    res.json({
+      total: totalFarmers,
+      active: activeFarmers,
+      pending: pendingFarmers,
+    });
+  } catch (error) {
+    console.error('Error fetching farmer stats:', error);
+    res.status(500).json({ error: 'Failed to fetch farmer stats' });
   }
 });
 
