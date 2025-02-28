@@ -38,6 +38,8 @@ import statsRoutes from './routes/statsRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import { authenticateToken } from './middlewares/auth.js';
 import { managementLogin } from './controllers/auth.controller.js';
+import reportRoutes from './routes/reportRoutes.js';
+import dailySaleRoutes from './routes/dailySaleRoutes.js';
 dotenv.config();
 const app = express();
 const prisma = new PrismaClient();
@@ -76,6 +78,8 @@ app.use('/api/transp-derived', transpDerivedRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/payment',paymentRoutes);
 app.use('/api/login-admin', loginAdminAuth);
+app.use('/api/reports', reportRoutes);
+app.use('/api/daily-sales', dailySaleRoutes);
 // Use the registerFarmerAuth function as a route handler
 
 app.post('/api/register-farmer', async (req, res) => {
@@ -92,6 +96,10 @@ app.use('/api/users', userRoutes);
 app.use('/api/transports', transportRoutes);
 app.use('/api/diaries', diaryRoutes);
 app.use('/api/farmer', farmerRoutes);
+
+// Add new route path for milk-sub
+app.use('/api/milk-sub', milkSubmissionRoutes);
+
 // Start Server
 const PORT = process.env.PORT || 2025;
 connection();  // You can remove this if you are using Prisma's automatic connection management

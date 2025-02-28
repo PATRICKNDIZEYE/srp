@@ -1,17 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { FiDollarSign, FiDownload, FiTrendingUp, FiPlus } from 'react-icons/fi';
+import { FiDollarSign, FiDownload, FiTrendingUp, FiCheckCircle, FiXCircle } from 'react-icons/fi';
 import axiosInstance from '../../utils/axiosInstance';
-import SaleModal from './SaleModal';
 import { Sale } from '../../types'; // Assuming you have a types file where Sale is defined
+import * as XLSX from 'xlsx'; // Import the xlsx library
 
 interface SalesHistoryProps {
   dateRange: { start: string; end: string };
 }
 
-const SalesHistory: React.FC<SalesHistoryProps> = ({ dateRange }) => {
+const ManagementSalesHistory: React.FC<SalesHistoryProps> = ({ dateRange }) => {
   const [sales, setSales] = useState<Sale[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedSale, setSelectedSale] = useState(null);
 
   useEffect(() => {
     fetchSales();
@@ -26,51 +24,12 @@ const SalesHistory: React.FC<SalesHistoryProps> = ({ dateRange }) => {
     }
   };
 
-  const handleAddOrUpdateSale = async (saleData: Sale) => {
+  const handleStatusChange = async (id: string, status: string) => {
     try {
-      // Retrieve user data from localStorage
-      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-      const diaryId = userData.id; // Assuming 'id' is the diaryId
-
-      if (!diaryId) {
-        throw new Error('Diary ID is missing');
-      }
-
-      // Convert the date to an ISO string
-      const formattedDate = new Date(saleData.date).toISOString();
-
-      // Remove id from payload if it's null or undefined
-      const { id, ...rest } = saleData;
-      const salePayload = {
-        ...rest,
-        date: formattedDate,
-        diaryId,
-        quantity: parseFloat(saleData.quantity.toString()),
-        pricePerUnit: parseFloat(saleData.pricePerUnit.toString()),
-        totalAmount: parseFloat(saleData.totalAmount.toString()),
-      };
-
-      // Log the payload to inspect the data being sent
-      console.log('Sending sale data:', salePayload);
-
-      if (id) {
-        await axiosInstance.patch(`/daily-sales/${id}`, salePayload);
-      } else {
-        await axiosInstance.post('/daily-sales', salePayload);
-      }
-      fetchSales();
-      setIsModalOpen(false);
-    } catch (error) {
-      console.error('Error saving sale:', error);
-    }
-  };
-
-  const handleDeleteSale = async (id: string) => {
-    try {
-      await axiosInstance.delete(`/daily-sales/${id}`);
+      await axiosInstance.patch(`/daily-sales/${id}/status`, { status });
       fetchSales();
     } catch (error) {
-      console.error('Error deleting sale:', error);
+      console.error('Error updating sale status:', error);
     }
   };
 
@@ -79,22 +38,25 @@ const SalesHistory: React.FC<SalesHistoryProps> = ({ dateRange }) => {
       totalSales: sales.length,
       totalRevenue: sales.reduce((acc, sale) => acc + sale.totalAmount, 0),
       totalVolume: sales.reduce((acc, sale) => acc + parseInt(sale.quantity.toString()), 0),
-      averagePrice: sales.reduce((acc, sale) => acc + sale.pricePerLiter, 0) / sales.length,
+      averagePrice: sales.reduce((acc, sale) => acc + (sale.pricePerLiter || 0), 0) / sales.length,
+      dairiesCount: new Set(sales.map(sale => sale.productType)).size, // Count unique dairies
     };
   };
 
   const totals = calculateTotals();
 
+  const exportToExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(sales);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'SalesData');
+    XLSX.writeFile(workbook, 'SalesData.xlsx');
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Sales History</h3>
-        <button onClick={() => { setSelectedSale(null); setIsModalOpen(true); }} className="flex items-center space-x-2 text-blue-600 hover:text-blue-700">
-          <FiPlus />
-          <span>Add Sale</span>
-        </button>
       </div>
-      {/* Sales summary cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-lg p-6 shadow">
           <div className="flex items-center justify-between">
@@ -134,22 +96,24 @@ const SalesHistory: React.FC<SalesHistoryProps> = ({ dateRange }) => {
         <div className="bg-white rounded-lg p-6 shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500">Average Price</p>
+              <p className="text-gray-500">Dairies</p>
               <h4 className="text-2xl font-semibold">
-                {Math.round(totals.averagePrice).toLocaleString()} RWF
+                {totals.dairiesCount.toLocaleString()}
               </h4>
-              <p className="text-sm text-gray-600">Per Liter</p>
+              <p className="text-sm text-gray-600">Unique Dairies</p>
             </div>
             <FiDollarSign className="text-purple-500 text-2xl" />
           </div>
         </div>
       </div>
 
-      {/* Sales table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
           <h3 className="text-lg font-semibold">Recent Sales</h3>
-          <button className="flex items-center space-x-2 text-blue-600 hover:text-blue-700">
+          <button
+            onClick={exportToExcel}
+            className="flex items-center space-x-2 text-blue-600 hover:text-blue-700"
+          >
             <FiDownload />
             <span>Export</span>
           </button>
@@ -200,13 +164,13 @@ const SalesHistory: React.FC<SalesHistoryProps> = ({ dateRange }) => {
                     {sale.quantity}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {sale.pricePerLiter ? sale.pricePerLiter.toLocaleString() : 'N/A'}
+                    {sale.pricePerUnit ? sale.pricePerUnit.toLocaleString() : 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {sale.totalAmount.toLocaleString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {sale.customer}
+                    {sale.diary?.phoneNumber || 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <span
@@ -226,19 +190,16 @@ const SalesHistory: React.FC<SalesHistoryProps> = ({ dateRange }) => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <button
-                      onClick={() => {
-                        setSelectedSale(sale);
-                        setIsModalOpen(true);
-                      }}
-                      className="text-blue-600 hover:text-blue-700 mr-2"
+                      onClick={() => sale.id && handleStatusChange(sale.id, 'approved')}
+                      className="text-green-600 hover:text-green-700 mr-2"
                     >
-                      Edit
+                      <FiCheckCircle />
                     </button>
                     <button
-                      onClick={() => handleDeleteSale(sale.id)}
+                      onClick={() => sale.id && handleStatusChange(sale.id, 'rejected')}
                       className="text-red-600 hover:text-red-700"
                     >
-                      Delete
+                      <FiXCircle />
                     </button>
                   </td>
                 </tr>
@@ -247,15 +208,8 @@ const SalesHistory: React.FC<SalesHistoryProps> = ({ dateRange }) => {
           </table>
         </div>
       </div>
-      {isModalOpen && (
-        <SaleModal
-          sale={selectedSale}
-          onClose={() => setIsModalOpen(false)}
-          onSave={handleAddOrUpdateSale}
-        />
-      )}
     </div>
   );
 };
 
-export default SalesHistory; 
+export default ManagementSalesHistory; 

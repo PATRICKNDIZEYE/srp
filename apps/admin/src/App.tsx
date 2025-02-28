@@ -70,6 +70,8 @@ import ProtectedProductionRoute from './components/ProtectedProductionRoute';
 import ProtectedTransportRoute from './components/ProtectedTransportRoute';
 import ProtectedDiaryRoute from './components/ProtectedDiaryRoute';
 import ProtectedPOCRoute from './components/ProtectedPOCRoute';
+import Reports from './pages/POC/Reports';
+import ManagementSalesHistory from './components/Management/ManagementSalesHistory';
 
 function App() {
   return (
@@ -102,7 +104,7 @@ function App() {
           <Route path="/poc/farmers" element={<FarmerManagement />} />
           <Route path="/poc/submissions" element={<MilkSubmissions />} />
           <Route path="/poc/deliveries" element={<DeliveryManagement />} />
-          <Route path="/poc/daily-management/:deliveryId" element={<DailyManagement />} />
+          <Route path="/poc/reports" element={<Reports />} />
           <Route path="/poc/settings" element={<Settings />} />
         </Route>
 
@@ -133,6 +135,7 @@ function App() {
           <Route path="/management/finance" element={<ManagementFinancialReports />} />
           <Route path="/management/operations" element={<OperationsManagement />} />
           <Route path="/management/analytics" element={<AnalyticsDashboard />} />
+          <Route path="/management/sales-history" element={<ManagementSalesHistory />} />
           <Route path="/management/settings" element={<SystemSettings />} />
         </Route>
 
