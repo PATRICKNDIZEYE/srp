@@ -1,20 +1,20 @@
-import axios, { AxiosError } from "axios";
+import axios from 'axios';
 import { format } from 'date-fns';
 
-export class MilkSubmissionSmsService {
-  private static AUTH_URL = "https://messaging.fdibiz.com/api/v1/auth/";
-  private static SMS_URL = "https://messaging.fdibiz.com/api/v1/mt/single";
-  private static tokenCache: { token: string; expiresAt: number } | null = null;
+class MilkSubmissionSmsService {
+  static AUTH_URL = "https://messaging.fdibiz.com/api/v1/auth/";
+  static SMS_URL = "https://messaging.fdibiz.com/api/v1/mt/single";
+  static tokenCache = null;
 
-  private static readonly SMS_TEMPLATES = {
-    SUBMISSION_ACCEPTED: (amount: number, milkType: string, price: number) => 
+  static SMS_TEMPLATES = {
+    SUBMISSION_ACCEPTED: (amount, milkType, price) => 
       `Murakoze! Amata ${amount}L (${milkType}) yemejwe. Amafaranga ${price} RWF azishyurwa mu gihe giteganyijwe.`,
     
-    SUBMISSION_REJECTED: (amount: number, milkType: string, reason: string) => 
+    SUBMISSION_REJECTED: (amount, milkType, reason) => 
       `Amata ${amount}L (${milkType}) ntiyemewe. Impamvu: ${reason}. Murakoze.`,
   };
 
-  private static formatPhoneNumber(phone: string): string {
+  static formatPhoneNumber(phone) {
     // Remove all non-digit characters
     let cleaned = phone.replace(/\D/g, '');
 
@@ -37,7 +37,7 @@ export class MilkSubmissionSmsService {
     return finalNumber;
   }
 
-  private static async getAuthToken() {
+  static async getAuthToken() {
     try {
       console.log('\nGetting Auth Token:');
       console.log('Username:', process.env.FDI_SMS_USERNAME?.substring(0, 8) + '...');
@@ -70,7 +70,7 @@ export class MilkSubmissionSmsService {
 
       throw new Error('No access token in response');
     } catch (error) {
-      console.error('\nAuth Error:', error instanceof AxiosError ? {
+      console.error('\nAuth Error:', error instanceof axios.AxiosError ? {
         status: error.response?.status,
         data: error.response?.data
       } : error);
@@ -78,7 +78,7 @@ export class MilkSubmissionSmsService {
     }
   }
 
-  private static async sendSms(phoneNumber: string, message: string) {
+  static async sendSms(phoneNumber, message) {
     try {
       const fullPhoneNumber = this.formatPhoneNumber(phoneNumber);
       console.log('\nSMS Sending Details:');
@@ -119,7 +119,7 @@ export class MilkSubmissionSmsService {
       return response.data;
     } catch (error) {
       console.error('\nSMS Sending Error:');
-      if (error instanceof AxiosError) {
+      if (error instanceof axios.AxiosError) {
         console.error('API Error Response:', {
           status: error.response?.status,
           data: error.response?.data,
@@ -139,24 +139,16 @@ export class MilkSubmissionSmsService {
     }
   }
 
-  static async notifySubmissionAccepted(
-    phoneNumber: string, 
-    amount: number, 
-    milkType: string,
-    pricePerLiter: number = 300 // Default price per liter
-  ) {
+  static async notifySubmissionAccepted(phoneNumber, amount, milkType, pricePerLiter = 300) {
     const totalPrice = amount * pricePerLiter;
     const message = this.SMS_TEMPLATES.SUBMISSION_ACCEPTED(amount, milkType, totalPrice);
     return this.sendSms(phoneNumber, message);
   }
 
-  static async notifySubmissionRejected(
-    phoneNumber: string, 
-    amount: number, 
-    milkType: string,
-    reason: string
-  ) {
+  static async notifySubmissionRejected(phoneNumber, amount, milkType, reason) {
     const message = this.SMS_TEMPLATES.SUBMISSION_REJECTED(amount, milkType, reason);
     return this.sendSms(phoneNumber, message);
   }
-} 
+}
+
+export default MilkSubmissionSmsService;

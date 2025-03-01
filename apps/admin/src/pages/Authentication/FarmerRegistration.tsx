@@ -240,6 +240,7 @@ const FarmerRegistration = () => {
                 />
               </div>
 
+  
 
               <div>
                 <label className="block text-gray-700 mb-2">Nimero y'irangamuntu</label>
