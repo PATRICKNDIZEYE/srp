@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { FiHome, FiDroplet, FiDollarSign, FiCreditCard, FiSettings, FiLogOut } from 'react-icons/fi';
+import DashboardHeader from '../components/Dashboard/DashboardHeader';
 
 const FarmerLayout = () => {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const menuItems = [
     { path: '/farmer/dashboard', icon: <FiHome />, label: 'Ahabanza' },
@@ -20,34 +22,20 @@ const FarmerLayout = () => {
     navigate('/');
   };
 
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Top Navigation */}
-      <nav className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <span className="text-xl font-bold">SRP System</span>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-gray-700">
-                {user.firstName} {user.username}
-              </span>
-              <button
-                onClick={handleLogout}
-                className="flex items-center text-gray-700 hover:text-red-600"
-              >
-                <FiLogOut className="mr-2" />
-                Sohoka
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <DashboardHeader onMenuButtonClick={toggleSidebar} role="farmer" />
 
       {/* Side Navigation and Content */}
       <div className="flex">
-        <aside className="w-64 bg-white shadow-sm h-[calc(100vh-4rem)] fixed">
+        <aside className={`w-64 bg-white shadow-sm h-[calc(100vh-4rem)] fixed lg:static transform transition-transform duration-200 ease-in-out ${
+          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        } lg:translate-x-0`}>
           <nav className="mt-8">
             {menuItems.map((item) => (
               <NavLink
@@ -66,7 +54,7 @@ const FarmerLayout = () => {
           </nav>
         </aside>
 
-        <main className="flex-1 ml-64 p-8">
+        <main className={`flex-1 ${isSidebarOpen ? 'ml-64' : ''} p-8`}>
           <Outlet />
         </main>
       </div>

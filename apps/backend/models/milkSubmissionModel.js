@@ -88,4 +88,39 @@ export const getMilkSubmissionsByFarmerId = async (farmerId) => {
     console.error('Error fetching milk submissions by farmer ID:', error);
     throw new Error('Failed to fetch milk submissions');
   }
+};
+
+// Get milk submissions by POC ID
+export const getMilkSubmissionsByPocId = async (pocId) => {
+  try {
+    return await prisma.milkSubmission.findMany({
+      where: { pocId },
+      include: {
+        farmer: true, // Include related farmer data if needed
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+  } catch (error) {
+    console.error('Error fetching milk submissions by POC ID:', error);
+    throw new Error('Failed to fetch milk submissions');
+  }
+};
+
+// Get milk submissions by farmer ID and POC ID
+export const getMilkSubmissionsByFarmerAndPocId = async (farmerId, pocId) => {
+  try {
+    return await prisma.milkSubmission.findMany({
+      where: {
+        farmerId,
+        pocId
+      },
+      include: {
+        farmer: true, // Include related farmer data if needed
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+  } catch (error) {
+    console.error('Error fetching milk submissions by farmer ID and POC ID:', error);
+    throw new Error('Failed to fetch milk submissions');
+  }
 }; 

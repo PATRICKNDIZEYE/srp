@@ -1,7 +1,7 @@
 import { prisma } from "../postgres/postgres.js";
 
 // Create a new Farmer
-export const createFarmer = async ({ firstName, lastName, birthday, nationalId, phoneNumber, longitude, latitude, username, password, farmDetails, status }) => {
+export const createFarmer = async ({ firstName, lastName, birthday, nationalId, phoneNumber, longitude, latitude, username, password, farmDetails, status, pocId }) => {
   return await prisma.farmer.create({
     data: {
       firstName,
@@ -14,7 +14,8 @@ export const createFarmer = async ({ firstName, lastName, birthday, nationalId, 
       username,
       password,
       farmDetails,
-      status
+      status,
+      pocId,
     },
   });
 };
@@ -32,7 +33,7 @@ export const getFarmerById = async (id) => {
 };
 
 // Update a Farmer by ID
-export const updateFarmer = async (id, { firstName, lastName, birthday, nationalId, phoneNumber, longitude, latitude, username, password, farmDetails, status }) => {
+export const updateFarmer = async (id, { firstName, lastName, birthday, nationalId, phoneNumber, longitude, latitude, username, password, farmDetails, status, pocId }) => {
   return await prisma.farmer.update({
     where: { id: parseInt(id) },
     data: {
@@ -47,6 +48,7 @@ export const updateFarmer = async (id, { firstName, lastName, birthday, national
       password,
       farmDetails,
       status,
+      pocId,
     },
   });
 };
@@ -68,5 +70,12 @@ export const updateFarmerStatus = async (id, status) => {
   return await prisma.farmer.update({
     where: { id: parseInt(id) },
     data: { status },
+  });
+};
+
+// Get Farmers by POC ID
+export const getFarmersByPocId = async (pocId) => {
+  return await prisma.farmer.findMany({
+    where: { pocId },
   });
 };
