@@ -3,6 +3,7 @@ import { createMilkSubmission, createMilkSub, getMilkSubmissions, getMilkSubmiss
 import { prisma } from '../postgres/postgres.js';
 import { authenticateToken, checkFarmerRole } from '../middlewares/auth.js';
 import { sendSMS } from '../utils/sms.js';
+import MilkSubmissionSmsService from '../services/smsService.js';
 
 const router = express.Router();
 
@@ -208,6 +209,73 @@ router.get('/farmer/:farmerId', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Error fetching milk submissions:', error);
     res.status(500).json({ error: 'Failed to fetch milk submissions' });
+  }
+});
+
+// Update milk submission status
+router.put("/:id/status", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, reason } = req.body;
+
+    console.log('\nProcessing milk submission status update:');
+    console.log('ID:', id);
+    console.log('New Status:', status);
+    console.log('Reason:', reason);
+
+    // Get the submission with farmer details
+    const submission = await prisma.milkSubmission.findUnique({
+      where: { id: parseInt(id) },
+      include: {
+        farmer: true
+      }
+    });
+
+    if (!submission) {
+      return res.status(404).json({ error: 'Submission not found' });
+    }
+
+    console.log('\nFound submission:', submission);
+
+    // Update the status
+    const updatedSubmission = await prisma.milkSubmission.update({
+      where: { id: parseInt(id) },
+      data: { status }
+    });
+
+    // Send SMS notification
+    if (submission.farmer.phoneNumber) {
+      console.log('\nAttempting to send SMS to:', submission.farmer.phoneNumber);
+      try {
+        if (status === 'accepted') {
+          console.log('Sending acceptance SMS...');
+          await MilkSubmissionSmsService.notifySubmissionAccepted(
+            submission.farmer.phoneNumber,
+            submission.amount,
+            submission.milkType
+          );
+        } else if (status === 'rejected') {
+          console.log('Sending rejection SMS...');
+          await MilkSubmissionSmsService.notifySubmissionRejected(
+            submission.farmer.phoneNumber,
+            submission.amount,
+            submission.milkType,
+            reason || 'No reason provided'
+          );
+        }
+        console.log('SMS notification sent successfully');
+      } catch (smsError) {
+        console.error('Failed to send SMS notification:', smsError);
+        // Don't fail the request if SMS fails
+      }
+    } else {
+      console.log('No phone number found for farmer');
+    }
+
+    res.json(updatedSubmission);
+  } catch (error) {
+    console.error('Error updating submission status:', error);
+    res.status(500).json({ error: 'Failed to update submission status' });
   }
 });
 
