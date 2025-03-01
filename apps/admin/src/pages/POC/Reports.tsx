@@ -40,8 +40,17 @@ const Reports = () => {
   useEffect(() => {
     const fetchGroupedReports = async () => {
       try {
-        const response = await axiosInstance.get('/reports/grouped');
-        setGroupedReports(response.data);
+        // Retrieve user data from local storage
+        const userData = localStorage.getItem('userData');
+        const userId = userData ? JSON.parse(userData)[0].id : null;
+
+        if (userId) {
+          // Use the userId in the API endpoint
+          const response = await axiosInstance.get(`/reports/grouped/poc/${userId}`);
+          setGroupedReports(response.data);
+        } else {
+          console.error('User ID not found in local storage');
+        }
       } catch (error) {
         console.error('Error fetching grouped reports:', error);
       }
@@ -77,57 +86,30 @@ const Reports = () => {
         Download Excel
       </button>
       <div className="overflow-x-auto">
-        {Object.values(groupedReports).map((group) => (
-          <div key={group.farmer.id} className="mb-8">
-            <h3 className="text-md font-semibold mb-2">
-              {group.farmer.firstName} {group.farmer.lastName} - {group.farmer.phoneNumber}
-            </h3>
-            <p className="text-sm mb-4">Total Milk Amount: {group.totalMilkAmount}</p>
-            <p className="text-sm mb-4">Total Loan Amount: {group.totalLoanAmount}</p>
-
-            <h4 className="text-md font-semibold mb-2">Milk Submissions</h4>
-            <table className="w-full mb-4">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {group.submissions.map((submission) => (
-                  <tr key={submission.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">{submission.createdAt}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">{submission.milkType}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">{submission.amount}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">{submission.status}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            <h4 className="text-md font-semibold mb-2">Loans</h4>
-            <table className="w-full mb-4">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {group.loans.map((loan) => (
-                  <tr key={loan.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">{loan.createdAt}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">{loan.loanAmount}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">{loan.status}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ))}
+        <table className="w-full mb-4 border-collapse border border-gray-300">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase border border-gray-300">First Name</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase border border-gray-300">Last Name</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase border border-gray-300">Phone Number</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase border border-gray-300">Type</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase border border-gray-300">Total Milk Amount</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase border border-gray-300">Total Loan Amount</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {Object.values(groupedReports).map((group) => (
+              <tr key={group.farmer.id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{group.farmer.firstName}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{group.farmer.lastName}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{group.farmer.phoneNumber}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{group.submissions.length > 0 ? group.submissions[0].milkType : 'N/A'}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{group.totalMilkAmount}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{group.totalLoanAmount}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );

@@ -18,6 +18,18 @@ interface Farmer {
   status: 'active' | 'inactive'; // Ensure status is consistent
 }
 
+// Define a type for the new farmer
+interface NewFarmer {
+  id: string;
+  birthday: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  latitude: number;
+  longitude: number;
+  status: 'active' | 'inactive';
+}
+
 const FarmerManagement = () => {
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
   const [filterOpen, setFilterOpen] = useState(false);
@@ -27,7 +39,9 @@ const FarmerManagement = () => {
 
   const fetchFarmers = async () => {
     try {
-      const response = await axiosInstance.get('/farmer');
+      const userData = JSON.parse(localStorage.getItem('userData') || '[]');
+      const userId = userData[0]?.id || 1; // Default to 1 if not found
+      const response = await axiosInstance.get(`/farmer/poc/${userId}`);
       setPendingFarmers(response.data);
     } catch (error) {
       console.error('Error fetching farmers:', error);
@@ -161,7 +175,7 @@ const FarmerManagement = () => {
         <AddFarmerModal
           isOpen={showAddFarmerModal}
           onClose={() => setShowAddFarmerModal(false)}
-          onSubmit={(newFarmer) => {
+          onSubmit={(newFarmer: NewFarmer) => {
             // Logic to add the new farmer
             setPendingFarmers([...pendingFarmers, newFarmer]);
             setShowAddFarmerModal(false);

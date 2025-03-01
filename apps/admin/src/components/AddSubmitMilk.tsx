@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import axiosInstance from '../utils/axiosInstance'; // Update the path to your axiosInstance
 
 // Define the Farmer type if not already defined
 interface Farmer {
@@ -35,6 +36,23 @@ const AddSubmitMilk: React.FC<AddSubmitMilkProps> = ({
   isSubmitting,
   farmers
 }) => {
+  const [farmerData, setFarmerData] = useState<Farmer[]>([]);
+
+  useEffect(() => {
+    const fetchFarmerData = async () => {
+      try {
+        const userData = JSON.parse(localStorage.getItem('userData') || '[]');
+        const pocId = userData[0]?.id; // Assuming the first item has the ID you need
+        const response = await axiosInstance.get(`/farmer/poc/${pocId}`);
+        setFarmerData(response.data);
+      } catch (error) {
+        console.error('Error fetching farmer data:', error);
+      }
+    };
+
+    fetchFarmerData();
+  }, []);
+
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault(); // Prevent the default form submission
     onSubmit(e);
@@ -51,12 +69,12 @@ const AddSubmitMilk: React.FC<AddSubmitMilkProps> = ({
           </label>
           <select
             value={formData.farmerId}
-            onChange={(e) => setFormData({ ...formData, farmerId: parseInt(e.target.value, 10) })}
+            onChange={(e) => setFormData({ ...formData, farmerId: e.target.value })}
             className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           >
             <option value="">Select a farmer</option>
-            {farmers.map((farmer) => (
+            {farmerData.map((farmer) => (
               <option key={farmer.id} value={farmer.id}>
                 {farmer.firstName} {farmer.lastName}
               </option>
@@ -75,7 +93,6 @@ const AddSubmitMilk: React.FC<AddSubmitMilkProps> = ({
             required
           >
             <option value="inshushyu">Inshushyu</option>
-            <option value="umuhondo">Umuhondo</option>
           </select>
         </div>
 
@@ -87,7 +104,7 @@ const AddSubmitMilk: React.FC<AddSubmitMilkProps> = ({
             type="number"
             step="0.1"
             value={formData.amount}
-            onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) })}
+            onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
             className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
             placeholder="e.g., 5.5"

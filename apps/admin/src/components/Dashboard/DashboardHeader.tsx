@@ -23,7 +23,6 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuButtonClick, ro
   }, []);
 
   const handleLogout = () => {
-    // Add logout logic here
     sessionStorage.clear();
     localStorage.clear();
     toast.success('Logged out successfully');
