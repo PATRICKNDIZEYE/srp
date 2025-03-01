@@ -15,9 +15,10 @@ type POC = {
 interface AddFarmerModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSubmit: (newFarmer: NewFarmer) => void;
 }
 
-const AddFarmerModal: React.FC<AddFarmerModalProps> = ({ isOpen, onClose }) => {
+const AddFarmerModal: React.FC<AddFarmerModalProps> = ({ isOpen, onClose, onSubmit }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [locationError, setLocationError] = useState('');
@@ -170,6 +171,7 @@ const AddFarmerModal: React.FC<AddFarmerModalProps> = ({ isOpen, onClose }) => {
       const response = await axiosInstance.post('/register-farmer', registrationData);
       if (response.status === 201) {
         toast.success('Registration successful!');
+        onSubmit(response.data);
         onClose();
       }
     } catch (error) {

@@ -1,6 +1,6 @@
 import express from "express";
 import bcrypt from "bcrypt";
-import { createFarmer, getFarmers,getFarmersByPhoneNumber, getFarmerById, updateFarmer, deleteFarmer, updateFarmerStatus } from "../models/farmerModel.js";
+import { createFarmer, getFarmers,getFarmersByPhoneNumber, getFarmerById, updateFarmer, deleteFarmer, updateFarmerStatus, getFarmersByPocId } from "../models/farmerModel.js";
 import { PrismaClient } from '@prisma/client';
 
 const router = express.Router();
@@ -9,7 +9,7 @@ const prisma = new PrismaClient();
 // Create a new Farmer
 router.post("/", async (req, res) => {
   try {
-    const { firstName, lastName, birthday, nationalId, phoneNumber, longitude, latitude, username, password, farmDetails, status } = req.body;
+    const { firstName, lastName, birthday, nationalId, phoneNumber, longitude, latitude, username, password, farmDetails, status, pocId } = req.body;
 
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -27,6 +27,7 @@ router.post("/", async (req, res) => {
       password: hashedPassword,
       farmDetails,
       status,
+      pocId: parseInt(pocId, 10),
     });
 
     res.status(201).json(farmer);
@@ -62,7 +63,7 @@ router.get("/:id", async (req, res) => {
 // Update a Farmer by ID
 router.put("/:id", async (req, res) => {
   try {
-    const { firstName, lastName, birthday, nationalId, phoneNumber, longitude, latitude, username, password, farmDetails, status } = req.body;
+    const { firstName, lastName, birthday, nationalId, phoneNumber, longitude, latitude, username, password, farmDetails, status, pocId } = req.body;
 
     let hashedPassword = password;
     if (password) {
@@ -81,6 +82,7 @@ router.put("/:id", async (req, res) => {
       password: hashedPassword,
       farmDetails,
       status,
+      pocId: parseInt(pocId, 10),
     });
 
     if (farmer) {
@@ -133,6 +135,28 @@ router.patch("/:id/status", async (req, res) => {
     }
   } catch (error) {
     res.status(400).json({ error: error.message });
+  }
+});
+
+// Get farmer entries by POC ID
+router.get("/poc/:pocId", async (req, res) => {
+  try {
+    const pocId = parseInt(req.params.pocId, 10);
+    console.log("POC ID:", pocId); // Debugging line
+    if (isNaN(pocId)) {
+      return res.status(400).json({ message: "Invalid POC ID" });
+    }
+
+    const farmers = await getFarmersByPocId(pocId);
+    console.log("Farmers found:", farmers); // Debugging line
+    if (farmers.length > 0) {
+      res.status(200).json(farmers);
+    } else {
+      res.status(404).json({ message: "No farmer entries found for this POC ID" });
+    }
+  } catch (error) {
+    console.error("Error fetching farmers by POC ID:", error); // Debugging line
+    res.status(500).json({ error: error.message });
   }
 });
 
