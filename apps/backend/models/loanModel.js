@@ -59,4 +59,12 @@ export const getLoansByFarmerId = async (farmerId) => {
       farmer: true,
     },
   });
+};
+
+// Update loan status by ID
+export const updateLoanStatus = async (id, status) => {
+  return await prisma.loan.update({
+    where: { id: parseInt(id) },
+    data: { status },
+  });
 }; 

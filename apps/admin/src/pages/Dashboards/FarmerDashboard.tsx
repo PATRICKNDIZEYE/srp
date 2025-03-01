@@ -60,10 +60,18 @@ const FarmerDashboard = () => {
         console.log('Milk submissions:', milkResponse.data);
         
         if (milkResponse.data) {
+          const totalMilk = milkResponse.data.totalAmount || 0;
           setMilkSubmissions(milkResponse.data.submissions || []);
           setPaymentData(prev => ({
             ...prev,
-            totalMilk: milkResponse.data.totalAmount || 0
+            totalMilk: totalMilk
+          }));
+
+          // Calculate Amafaranga Ategerejwe as a multiple of 400
+          const pendingPayment = totalMilk * 400;
+          setPaymentData(prev => ({
+            ...prev,
+            pendingPayment: pendingPayment
           }));
         }
 
@@ -78,7 +86,6 @@ const FarmerDashboard = () => {
         if (paymentResponse.data) {
           setPaymentData(prev => ({
             ...prev,
-            pendingPayment: paymentResponse.data.pendingPayment || 0,
             daysUntilNextPayment: paymentResponse.data.daysUntilNextPayment || 0
           }));
         }

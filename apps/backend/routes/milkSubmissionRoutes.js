@@ -54,8 +54,7 @@ router.post("/", authenticateToken, checkFarmerRole, async (req, res) => {
 // Create a new milk submission using createMilkSub
 router.post("/poc", async (req, res) => {
   try {
-    const { milkType, amount, notes } = req.body;
-    const farmerId = req.user?.id; // Ensure req.user is defined
+    const { milkType, amount, notes, farmerId } = req.body;
 
     if (!farmerId) {
       return res.status(400).json({ error: 'Farmer ID is required' });
@@ -162,14 +161,9 @@ router.delete("/:id", async (req, res) => {
 });
 
 // Get farmer's milk submissions
-router.get('/farmer/:farmerId', authenticateToken, async (req, res) => {
+router.get('/farmer/:farmerId', async (req, res) => {
   try {
     const farmerId = parseInt(req.params.farmerId);
-    
-    // Verify the farmer is accessing their own data
-    if (req.user.id !== farmerId) {
-      return res.status(403).json({ error: 'You can only access your own submissions' });
-    }
 
     console.log('Fetching submissions for farmer:', farmerId);
 
@@ -187,9 +181,22 @@ router.get('/farmer/:farmerId', authenticateToken, async (req, res) => {
         amount: true,
         status: true,
         createdAt: true,
-        notes: true
+        notes: true,
+        farmer: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            phoneNumber: true,
+            pocId: true
+          }
+        }
       }
     });
+
+    if (!submissions || submissions.length === 0) {
+      return res.status(404).json({ error: 'No submissions found for this farmer' });
+    }
 
     const totalAmount = await prisma.milkSubmission.aggregate({
       where: {
@@ -208,7 +215,7 @@ router.get('/farmer/:farmerId', authenticateToken, async (req, res) => {
 
   } catch (error) {
     console.error('Error fetching milk submissions:', error);
-    res.status(500).json({ error: 'Failed to fetch milk submissions' });
+    res.status(500).json({ error: 'Failed to fetch milk submissions', details: error.message });
   }
 });
 

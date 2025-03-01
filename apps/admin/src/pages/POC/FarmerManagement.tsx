@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { FiEdit2, FiTrash2, FiRefreshCw } from 'react-icons/fi';
+import { FiEdit2, FiTrash2, FiRefreshCw, FiEye, FiDollarSign } from 'react-icons/fi';
 import Breadcrumb from '../../components/Breadcrumb';
 import DateRangeFilter from '../../components/Filters/DateRangeFilter';
 import { toast } from 'react-toastify';
 import axiosInstance from '../../utils/axiosInstance';
 import AddFarmerModal from '../../components/Management/AddFarmerModal';
+import { useNavigate } from 'react-router-dom';
+import ChangePasswordForm from '../../components/Management/ChangePasswordForm';
 
 // Define a type for the farmer objects
 interface Farmer {
@@ -36,6 +38,9 @@ const FarmerManagement = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('all');
   const [pendingFarmers, setPendingFarmers] = useState<Farmer[]>([]);
   const [showAddFarmerModal, setShowAddFarmerModal] = useState(false);
+  const [showChangePasswordForm, setShowChangePasswordForm] = useState(false);
+  const [selectedFarmerId, setSelectedFarmerId] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const fetchFarmers = async () => {
     try {
@@ -66,6 +71,54 @@ const FarmerManagement = () => {
       fetchFarmers();
     } catch (error) {
       toast.error('Failed to change status');
+    }
+  };
+
+  const handleFarmerClick = (farmerId: string) => {
+    navigate(`/poc/milk-submissions/${farmerId}`);
+  };
+
+  const handleInguzanyoClick = (farmer: Farmer) => {
+    navigate(`/poc/inguzanyo/${farmer.id}`, { state: { farmer } });
+  };
+
+  const handleSubmit = async (formData) => {
+    try {
+      const response = await fetch('/api/farmers', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formData,
+          pocId: selectedPocId, // Ensure this is set correctly
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to register farmer');
+      }
+
+      const result = await response.json();
+      // Handle success...
+    } catch (error) {
+      console.error('Error registering farmer:', error);
+      // Handle error...
+    }
+  };
+
+  const handleEditClick = (farmerId: string) => {
+    setSelectedFarmerId(farmerId);
+    setShowChangePasswordForm(true);
+  };
+
+  const handlePasswordChangeSubmit = async (newPassword: string) => {
+    try {
+      await axiosInstance.patch(`/farmer/${selectedFarmerId}/password`, { newPassword });
+      toast.success('Password updated successfully');
+      setShowChangePasswordForm(false);
+    } catch (error) {
+      toast.error('Failed to update password');
     }
   };
 
@@ -128,7 +181,7 @@ const FarmerManagement = () => {
             </thead>
             <tbody className="divide-y divide-gray-200">
               {pendingFarmers.map((farmer) => (
-                <tr key={farmer.id} className="hover:bg-gray-50">
+                <tr key={farmer.id} className="hover:bg-gray-50" onClick={() => handleFarmerClick(farmer.id)}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     {farmer.birthday}
                   </td>
@@ -151,16 +204,28 @@ const FarmerManagement = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <div className="flex gap-2">
                       <button 
-                        onClick={() => handleConfirmRegistration(farmer.id)}
+                        onClick={(e) => { e.stopPropagation(); handleFarmerClick(farmer.id); }}
+                        className="text-blue-600 hover:text-blue-800"
+                      >
+                        <FiEye />
+                      </button>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); handleEditClick(farmer.id); }}
                         className="text-blue-600 hover:text-blue-800"
                       >
                         <FiEdit2 />
                       </button>
                       <button 
-                        onClick={() => handleChangeStatus(farmer.id, farmer.status)}
+                        onClick={(e) => { e.stopPropagation(); handleChangeStatus(farmer.id, farmer.status); }}
                         className="text-yellow-600 hover:text-yellow-800"
                       >
                         <FiRefreshCw />
+                      </button>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); handleInguzanyoClick(farmer); }}
+                        className="text-green-600 hover:text-green-800"
+                      >
+                        <FiDollarSign />
                       </button>
                     </div>
                   </td>
@@ -181,6 +246,13 @@ const FarmerManagement = () => {
             setShowAddFarmerModal(false);
             fetchFarmers(); // Fetch the updated list of farmers
           }}
+        />
+      )}
+
+      {showChangePasswordForm && (
+        <ChangePasswordForm
+          onSubmit={handlePasswordChangeSubmit}
+          onClose={() => setShowChangePasswordForm(false)}
         />
       )}
     </div>

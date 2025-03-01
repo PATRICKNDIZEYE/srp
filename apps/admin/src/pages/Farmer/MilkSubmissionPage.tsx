@@ -87,6 +87,19 @@ const MilkSubmissionPage = () => {
     }
   };
 
+  // Calculate totals for each status
+  const totalAccepted = submissions
+    .filter(submission => submission.status === 'accepted')
+    .reduce((total, submission) => total + submission.amount, 0);
+
+  const totalPending = submissions
+    .filter(submission => submission.status === 'pending')
+    .reduce((total, submission) => total + submission.amount, 0);
+
+  const totalRejected = submissions
+    .filter(submission => submission.status === 'rejected')
+    .reduce((total, submission) => total + submission.amount, 0);
+
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
       <Breadcrumb pageName="Gutanga Amata" />
@@ -107,7 +120,7 @@ const MilkSubmissionPage = () => {
                 required
               >
                 <option value="inshushyu">Inshushyu</option>
-                <option value="umuhondo">Umuhondo</option>
+                {/* <option value="umuhondo">Umuhondo</option> */}
               </select>
             </div>
 
@@ -151,6 +164,22 @@ const MilkSubmissionPage = () => {
               </button>
             </div>
           </form>
+        </div>
+
+        {/* Total Amounts Card */}
+        <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="bg-white rounded-lg shadow-lg p-4">
+            <h3 className="text-lg font-semibold text-gray-800">Yemewe</h3>
+            <p className="text-2xl font-bold text-green-600">{formatNumber(totalAccepted)}L</p>
+          </div>
+          <div className="bg-white rounded-lg shadow-lg p-4">
+            <h3 className="text-lg font-semibold text-gray-800">Itegerejwe</h3>
+            <p className="text-2xl font-bold text-yellow-600">{formatNumber(totalPending)}L</p>
+          </div>
+          <div className="bg-white rounded-lg shadow-lg p-4">
+            <h3 className="text-lg font-semibold text-gray-800">Yanzwe</h3>
+            <p className="text-2xl font-bold text-red-600">{formatNumber(totalRejected)}L</p>
+          </div>
         </div>
 
         {/* Recent Submissions */}

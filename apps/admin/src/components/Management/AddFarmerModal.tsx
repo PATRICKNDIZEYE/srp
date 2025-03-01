@@ -24,6 +24,13 @@ const AddFarmerModal: React.FC<AddFarmerModalProps> = ({ isOpen, onClose, onSubm
   const [locationError, setLocationError] = useState('');
   const [pocs, setPocs] = useState<POC[]>([]);
 
+  // Retrieve user data from localStorage
+  const userData = JSON.parse(localStorage.getItem('userData') || '[]');
+  const initialUser = userData[0] || {};
+
+  // Set a default POC ID if initialUser.id is not available
+  const defaultPocId = pocs.length > 0 ? pocs[0].id : '';
+
   const [formData, setFormData] = useState({
     fullName: '',
     phone: '',
@@ -41,7 +48,7 @@ const AddFarmerModal: React.FC<AddFarmerModalProps> = ({ isOpen, onClose, onSubm
     sector: '',
     cell: '',
     copyField: '',
-    pocId: ''
+    pocId: initialUser.id || defaultPocId
   });
 
   const [errors, setErrors] = useState({
@@ -211,24 +218,6 @@ const AddFarmerModal: React.FC<AddFarmerModalProps> = ({ isOpen, onClose, onSubm
           </div>
 
           <div>
-            <label className="block text-gray-700 mb-2">Copy Field</label>
-            <input
-              type="text"
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={formData.copyField}
-              onChange={(e) => setFormData({ ...formData, copyField: e.target.value })}
-              placeholder="Enter text to copy"
-            />
-            <button
-              type="button"
-              onClick={handleCopy}
-              className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Copy to Full Name
-            </button>
-          </div>
-
-          <div>
             <label className="block text-gray-700 mb-2">National ID</label>
             <input
               type="text"
@@ -272,7 +261,6 @@ const AddFarmerModal: React.FC<AddFarmerModalProps> = ({ isOpen, onClose, onSubm
               onChange={(e) => setFormData({ ...formData, pocId: e.target.value })}
               required
             >
-              <option value="">Select POC</option>
               {pocs.map((poc) => (
                 <option key={poc.id} value={poc.id}>
                   {poc.firstName} {poc.lastName}

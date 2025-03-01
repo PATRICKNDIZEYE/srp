@@ -89,23 +89,29 @@ const Reports = () => {
         <table className="w-full mb-4 border-collapse border border-gray-300">
           <thead className="bg-gray-100">
             <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase border border-gray-300">ID</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase border border-gray-300">First Name</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase border border-gray-300">Last Name</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase border border-gray-300">Phone Number</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase border border-gray-300">Type</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase border border-gray-300">Total Milk Amount</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase border border-gray-300">Total Loan Amount</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase border border-gray-300">Quality</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase border border-gray-300">Quantity</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase border border-gray-300">Amafaranga y'Amata</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase border border-gray-300">Ideni Afite</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase border border-gray-300">Balance</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
             {Object.values(groupedReports).map((group) => (
               <tr key={group.farmer.id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{group.farmer.id}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{group.farmer.firstName}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{group.farmer.lastName}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{group.farmer.phoneNumber}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{group.submissions.length > 0 ? group.submissions[0].milkType : 'N/A'}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{group.totalMilkAmount}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{group.totalMilkAmount * 400}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{group.totalLoanAmount}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{(group.totalMilkAmount * 400) - group.totalLoanAmount}</td>
               </tr>
             ))}
           </tbody>
