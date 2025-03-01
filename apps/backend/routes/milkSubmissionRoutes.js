@@ -301,7 +301,47 @@ router.put("/:id/status", async (req, res) => {
 
 
 });
+
+// Get all milk submissions and filter by farmer's POC ID
+router.get('/poc/:pocId', async (req, res) => {
+  try {
+    const pocId = parseInt(req.params.pocId); // Ensure pocId is an integer
+
+    console.log('Fetching all submissions and filtering by POC ID:', pocId);
+
+    // Fetch all milk submissions and include farmer data
+    const submissions = await prisma.milkSubmission.findMany({
+      include: {
+        farmer: true, // Include related farmer data
+      },
+    });
+
+    // Filter submissions where the farmer's pocId matches the provided pocId
+    const filteredSubmissions = submissions.filter(submission => submission.farmer.pocId === pocId);
+
+    res.status(200).json(filteredSubmissions);
+  } catch (error) {
+    console.error('Error fetching milk submissions by POC ID:', error);
+    res.status(500).json({ error: 'Failed to fetch milk submissions' });
+  }
+});
+
 // Get milk submissions by farmer ID and POC ID
+router.get('/farmer/:farmerId/poc/:pocId', authenticateToken, async (req, res) => {
+  try {
+    const farmerId = parseInt(req.params.farmerId);
+    const pocId = req.params.pocId;
+
+    console.log('Fetching submissions for farmer ID:', farmerId, 'and POC ID:', pocId);
+
+    const submissions = await getMilkSubmissionsByFarmerAndPocId(farmerId, pocId);
+
+    res.status(200).json(submissions);
+  } catch (error) {
+    console.error('Error fetching milk submissions by farmer ID and POC ID:', error);
+    res.status(500).json({ error: 'Failed to fetch milk submissions' });
+  }
+});
 
 
 export default router; 
