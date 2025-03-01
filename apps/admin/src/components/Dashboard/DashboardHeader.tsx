@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { FiMenu, FiBell, FiUser, FiLogOut } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -11,13 +11,27 @@ interface DashboardHeaderProps {
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuButtonClick, role }) => {
   const navigate = useNavigate();
-  const { user } = useUserContext();
+  const [user, setUser] = useState<any>(null);
+  const [showLogout, setShowLogout] = useState(false);
+
+  useEffect(() => {
+    const userData = localStorage.getItem('userData');
+    if (userData) {
+      const parsedUserData = JSON.parse(userData);
+      setUser(parsedUserData[0]); // Assuming the user data is an array and we need the first user
+    }
+  }, []);
 
   const handleLogout = () => {
     // Add logout logic here
     sessionStorage.clear();
+    localStorage.clear();
     toast.success('Logged out successfully');
     navigate('/');
+  };
+
+  const toggleLogoutVisibility = () => {
+    setShowLogout(!showLogout);
   };
 
   return (
@@ -43,23 +57,30 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuButtonClick, ro
             </span>
           </button>
 
-          <div className="relative group">
-            <button className="flex items-center space-x-2 text-gray-700 hover:text-gray-900">
+          <div className="relative">
+            <button
+              onClick={toggleLogoutVisibility}
+              className="flex items-center space-x-2 text-gray-700 hover:text-gray-900"
+            >
               <FiUser size={20} />
               <span className="hidden md:inline">
-                {user ? `${(user.firstName === null ? user.lastName : user.firstName) }` : 'Loading...'}
+                {user ? 
+                  (user.firstName || user.lastName ? `${user.firstName || user.lastName}` : user.phoneNumber) 
+                  : 'Loading...'}
               </span>
             </button>
 
-            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 hidden group-hover:block">
-              <button
-                onClick={handleLogout}
-                className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
-              >
-                <FiLogOut size={16} />
-                <span>Sohoka</span>
-              </button>
-            </div>
+            {showLogout && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1">
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
+                >
+                  <FiLogOut size={16} />
+                  <span>Sohoka</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
