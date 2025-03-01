@@ -70,6 +70,8 @@ export const updateMilkSubmission = async (id, { milkType, amount, notes, status
   });
 };
 
+
+
 // Delete a milk submission by ID
 export const deleteMilkSubmission = async (id) => {
   return await prisma.milkSubmission.delete({

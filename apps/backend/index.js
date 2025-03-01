@@ -2,6 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
 // Import PrismaClient
 import { PrismaClient } from '@prisma/client';
@@ -40,7 +41,19 @@ import { authenticateToken } from './middlewares/auth.js';
 import { managementLogin } from './controllers/auth.controller.js';
 import reportRoutes from './routes/reportRoutes.js';
 import dailySaleRoutes from './routes/dailySaleRoutes.js';
-dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load environment variables
+dotenv.config({ path: path.join(__dirname, '.env') });
+
+// Log environment variables (without sensitive data)
+console.log('\nEnvironment Configuration:');
+console.log('SMS_USERNAME exists:', !!process.env.FDI_SMS_USERNAME);
+console.log('SMS_PASSWORD exists:', !!process.env.FDI_SMS_PASSWORD);
+console.log('SMS_SENDER_ID:', process.env.FDI_SMS_SENDER_ID);
+
 const app = express();
 const prisma = new PrismaClient();
 const router = express.Router();
@@ -107,3 +120,4 @@ connection();  // You can remove this if you are using Prisma's automatic connec
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
