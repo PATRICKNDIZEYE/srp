@@ -16,7 +16,10 @@ import {
   FiActivity,
   FiUser,
   FiDroplet,
-  FiCreditCard
+  FiCreditCard,
+  FiMenu,
+  FiBell,
+  FiLogOut
 } from 'react-icons/fi';
 
 interface SidebarProps {
@@ -40,20 +43,20 @@ const DashboardSidebar: React.FC<SidebarProps> = ({ role, isOpen, onClose }) => 
       { name: 'Milk Submissions', icon: FiDroplet, path: '/poc/submissions' },
       { name: 'Delivery Management', icon: FiTruck, path: '/poc/deliveries' },
       { name: 'Reports', icon: FiFileText, path: '/poc/reports' },
-      { name: 'Settings', icon: FiSettings, path: '/poc/settings' },
+      // { name: 'Settings', icon: FiSettings, path: '/poc/settings' },
     ],
     transport: [
       { name: 'Dashboard', icon: FiHome, path: '/transport/dashboard' },
       { name: 'Assigned Deliveries', icon: FiTruck, path: '/transport/deliveries' },
       { name: 'Transportation Management', icon: FiTruck, path: '/transport/assigned-transportations'},
-      { name: 'Settings', icon: FiSettings, path: '/transport/settings' },
+      // { name: 'Settings', icon: FiSettings, path: '/transport/settings' },
     ],
     production: [
       { name: 'Dashboard', icon: FiHome, path: '/production/dashboard' },
       { name: 'Deliveries', icon: FiTruck, path: '/production/deliveries' },
       { name: 'Sales', icon: FiFileText, path: '/production/sales' },
       { name: 'Delivery Management', icon: FiTruck, path: '/production/delivery-management' },
-      { name: 'Settings', icon: FiSettings, path: '/production/settings' },
+      // { name: 'Settings', icon: FiSettings, path: '/production/settings' },
     ],
     diary: [
       { name: 'Dashboard', icon: FiHome, path: '/diary/dashboard' },
@@ -62,7 +65,7 @@ const DashboardSidebar: React.FC<SidebarProps> = ({ role, isOpen, onClose }) => 
       { name: 'Sales', icon: FiDollarSign, path: '/diary/sales' },
       { name: 'Daily Sale Management', icon: FiFileText, path: '/diary/daily-sales' },
       { name: 'Financial Reports', icon: FiBarChart2, path: '/diary/finances' },
-      { name: 'Settings', icon: FiSettings, path: '/diary/settings' },
+      // { name: 'Settings', icon: FiSettings, path: '/diary/settings' },
     ],
     management: [
       { name: 'Dashboard', icon: FiHome, path: '/management/dashboard' },
@@ -71,7 +74,7 @@ const DashboardSidebar: React.FC<SidebarProps> = ({ role, isOpen, onClose }) => 
       { name: 'Operations', icon: FiActivity, path: '/management/operations' },
       { name: 'Analytics', icon: FiBarChart2, path: '/management/analytics' },
       { name: 'Sales History', icon: FiFileText, path: '/management/sales-history' },
-      { name: 'Settings', icon: FiSettings, path: '/management/settings' },
+      // { name: 'Settings', icon: FiSettings, path: '/management/settings' },
     ],
   };
 
@@ -89,9 +92,9 @@ const DashboardSidebar: React.FC<SidebarProps> = ({ role, isOpen, onClose }) => 
 
       {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 w-64 bg-white shadow-lg transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
+        className={`fixed inset-y-0 left-0 w-64 bg-white shadow-lg transform transition-transform duration-200 ease-in-out ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        } lg:translate-x-0 lg:static lg:inset-0`}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}

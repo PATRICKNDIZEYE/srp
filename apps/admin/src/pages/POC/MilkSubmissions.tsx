@@ -41,8 +41,16 @@ const MilkSubmissions = () => {
   useEffect(() => {
     const fetchSubmissions = async () => {
       try {
-        const response = await axiosInstance.get('/milk-submissions');
-        setSubmissions(response.data);
+        // Retrieve user data from localStorage
+        const userData = JSON.parse(localStorage.getItem('userData') || '[]');
+        const userId = userData[0]?.id; // Get the first user's id
+
+        if (userId) {
+          const response = await axiosInstance.get(`/milk-sub/poc/${userId}`);
+          setSubmissions(response.data);
+        } else {
+          toast.error('User ID not found in localStorage');
+        }
       } catch (error) {
         toast.error('Failed to fetch milk submissions');
       }

@@ -1,5 +1,5 @@
 import express from "express";
-import { createMilkSubmission, createMilkSub, getMilkSubmissions, getMilkSubmissionById, updateMilkSubmission, deleteMilkSubmission, getMilkSubmissionsByFarmerId } from "../models/milkSubmissionModel.js";
+import { createMilkSubmission, createMilkSub, getMilkSubmissions, getMilkSubmissionById, updateMilkSubmission, deleteMilkSubmission, getMilkSubmissionsByFarmerId, getMilkSubmissionsByPocId, getMilkSubmissionsByFarmerAndPocId } from "../models/milkSubmissionModel.js";
 import { prisma } from '../postgres/postgres.js';
 import { authenticateToken, checkFarmerRole } from '../middlewares/auth.js';
 import { sendSMS } from '../utils/sms.js';

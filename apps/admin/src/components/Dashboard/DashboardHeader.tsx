@@ -11,6 +11,7 @@ interface DashboardHeaderProps {
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuButtonClick, role }) => {
   const navigate = useNavigate();
+  const { user: contextUser } = useUserContext();
   const [user, setUser] = useState<any>(null);
   const [showLogout, setShowLogout] = useState(false);
 
@@ -19,11 +20,12 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuButtonClick, ro
     if (userData) {
       const parsedUserData = JSON.parse(userData);
       setUser(parsedUserData[0]); // Assuming the user data is an array and we need the first user
+    } else {
+      setUser(contextUser); // Fallback to context user if localStorage is empty
     }
-  }, []);
+  }, [contextUser]);
 
   const handleLogout = () => {
-    // Add logout logic here
     sessionStorage.clear();
     localStorage.clear();
     toast.success('Logged out successfully');

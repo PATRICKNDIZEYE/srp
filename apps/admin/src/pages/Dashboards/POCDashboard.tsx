@@ -75,22 +75,28 @@ const POCDashboard = () => {
   const [totalFarmers, setTotalFarmers] = useState(0);
   const [pendingFarmersCount, setPendingFarmersCount] = useState(0);
 
+  // Retrieve the ID from local storage
+  const userData = JSON.parse(localStorage.getItem('userData') || '[]');
+  const userId = userData.length > 0 ? userData[0].id : null;
+
   // Fetch data from API
   useEffect(() => {
     const fetchMilkSubmissions = async () => {
       try {
-        const response = await axiosInstance.get('/milk-submissions');
-        setApiMilkSubmissions(response.data);
+        if (userId) {
+          const response = await axiosInstance.get(`/milk-sub/poc/${userId}`);
+          setApiMilkSubmissions(response.data);
 
-        // Calculate the total amount of milk collected
-        const totalAmount = response.data.reduce((sum, submission) => sum + submission.amount, 0);
-        setTotalMilkCollection(totalAmount);
+          // Calculate the total amount of milk collected
+          const totalAmount = response.data.reduce((sum: number, submission: MilkSubmission) => sum + submission.amount, 0);
+          setTotalMilkCollection(totalAmount);
 
-        // Calculate the total amount of pending milk
-        const pendingAmount = response.data
-          .filter(submission => submission.status === 'Pending')
-          .reduce((sum, submission) => sum + submission.amount, 0);
-        setPendingMilkCollection(pendingAmount);
+          // Calculate the total amount of pending milk
+          const pendingAmount = response.data
+            .filter((submission: MilkSubmission) => submission.status === 'Pending')
+            .reduce((sum: number, submission: MilkSubmission) => sum + submission.amount, 0);
+          setPendingMilkCollection(pendingAmount);
+        }
       } catch (error) {
         console.error('Error fetching milk submissions:', error);
       }
@@ -98,8 +104,10 @@ const POCDashboard = () => {
 
     const fetchPendingFarmers = async () => {
       try {
-        const response = await axiosInstance.get('/farmer');
-        setApiPendingFarmers(response.data);
+        if (userId) {
+          const response = await axiosInstance.get(`/farmer/poc/${userId}`);
+          setApiPendingFarmers(response.data);
+        }
       } catch (error) {
         console.error('Error fetching pending farmers:', error);
       }
@@ -125,15 +133,17 @@ const POCDashboard = () => {
 
     const fetchFarmers = async () => {
       try {
-        const response = await axiosInstance.get('/farmer');
-        const farmers: Farmer[] = response.data;
+        if (userId) {
+          const response = await axiosInstance.get(`/farmer/poc/${userId}`);
+          const farmers: Farmer[] = response.data;
 
-        // Count total farmers
-        setTotalFarmers(farmers.length);
+          // Count total farmers
+          setTotalFarmers(farmers.length);
 
-        // Count farmers with "Pending" status
-        const pendingCount = farmers.filter(farmer => farmer.status.toLowerCase() === 'pending').length;
-        setPendingFarmersCount(pendingCount);
+          // Count farmers with "Pending" status
+          const pendingCount = farmers.filter(farmer => farmer.status.toLowerCase() === 'pending').length;
+          setPendingFarmersCount(pendingCount);
+        }
       } catch (error) {
         console.error('Error fetching farmers:', error);
       }
@@ -144,7 +154,7 @@ const POCDashboard = () => {
     fetchStats();
     fetchFarmerStats();
     fetchFarmers();
-  }, []);
+  }, [userId]);
 
   const handleConfirmMilk = (submissionId: string) => {
     toast.success('Milk submission confirmed successfully');
