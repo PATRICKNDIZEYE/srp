@@ -3,7 +3,7 @@ import { createMilkSubmission, createMilkSub, getMilkSubmissions, getMilkSubmiss
 import { prisma } from '../postgres/postgres.js';
 import { authenticateToken, checkFarmerRole } from '../middlewares/auth.js';
 import { sendSMS } from '../utils/sms.js';
-const MilkSubmissionSmsService = require('../services/smsService.js');
+import MilkSubmissionSmsService from '../services/smsService.js';
 
 const router = express.Router();
 

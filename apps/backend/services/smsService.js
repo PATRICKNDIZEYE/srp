@@ -1,5 +1,5 @@
-const axios = require('axios');
-const { format } = require('date-fns');
+import axios from 'axios';
+import { format } from 'date-fns';
 
 class MilkSubmissionSmsService {
   static AUTH_URL = "https://messaging.fdibiz.com/api/v1/auth/";
@@ -151,4 +151,4 @@ class MilkSubmissionSmsService {
   }
 }
 
-module.exports = MilkSubmissionSmsService;
+export default MilkSubmissionSmsService;
