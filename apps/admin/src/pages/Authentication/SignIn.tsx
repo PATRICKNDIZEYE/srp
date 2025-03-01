@@ -38,39 +38,10 @@ const SignIn = () => {
       });
 
       if (response.status === 200) {
-        setShowOtpInput(true);
-        toast.success(response.data.message || 'OTP sent to your email');
-      } else {
-        throw new Error('Login failed');
-      }
-    } catch (error: any) {
-      handleError(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-
-
-  const handleOtpSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setErrorMessage(null);
-
-    try {
-      const response = await axiosInstance.post('/verify-otp-foradmin', {
-        email: formData.email,
-        otp: otpData.otp
-      });
-
-      if (response.data.token) {
-        localStorage.setItem('adminToken', response.data.token);
-        localStorage.setItem('adminData', JSON.stringify(response.data.admin));
-        axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
-        toast.success('Login successful!');
+        toast.success(response.data.message || 'Login successful');
         navigate('/admin/dashboard');
       } else {
-        throw new Error('OTP verification failed');
+        throw new Error('Login failed');
       }
     } catch (error: any) {
       handleError(error);
@@ -143,41 +114,10 @@ const SignIn = () => {
             </button>
           </form>
         ) : (
-          <form onSubmit={handleOtpSubmit} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                Enter OTP
-              </label>
-              <input
-                type="text"
-                required
-                value={otpData.otp}
-                onChange={(e) => setOtpData({ otp: e.target.value })}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none dark:border-gray-700 dark:bg-gray-800"
-                placeholder="Enter OTP sent to your email"
-              />
-            </div>
-            <button
-            onClick={()=> handleResendOtp()}
-            type="button"
-              disabled={loading}
-            >
-              Resend OTP
-            </button>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none disabled:opacity-50"
-            >
-              {loading ? 'Verifying...' : 'Verify OTP'}
-            </button>
-          </form>
+          <div className='mt-4 text-center text-sm text-gray-500 dark:text-gray-400'>
+            You don't have an account? please talk to Administration
+          </div>
         )}
-
-        <div className='mt-4 text-center text-sm text-gray-500 dark:text-gray-400'>
-          You don't have an account? please talk to Administration
-        </div>
       </div>
     </div>
   );

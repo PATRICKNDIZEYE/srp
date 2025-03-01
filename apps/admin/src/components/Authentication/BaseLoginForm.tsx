@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { toast } from 'react-toastify';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
@@ -14,6 +15,7 @@ interface BaseLoginFormProps {
 
 const BaseLoginForm: React.FC<BaseLoginFormProps> = ({ role, onSuccess }) => {
   const { setUser } = useUserContext();
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     phone: '',
@@ -76,6 +78,9 @@ const BaseLoginForm: React.FC<BaseLoginFormProps> = ({ role, onSuccess }) => {
 
         toast.success('Login successful!');
         onSuccess(formData.phone);
+
+        // Directly navigate to the dashboard after successful login
+        navigate(`/${role}/dashboard`);
 
         // Store token and role in local storage
         localStorage.setItem('authToken', response.data.token);
