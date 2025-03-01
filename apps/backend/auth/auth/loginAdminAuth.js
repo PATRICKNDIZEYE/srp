@@ -50,23 +50,8 @@ export const loginAdminAuth = async (req, res) => {
       return res.status(401).json({ message: 'Invalid password' });
     }
 
-    const otp = generateOtp();
-    const otpExpiry = new Date(Date.now() + 5 * 60 * 1000);  // OTP expiry in 5 minutes
-
-    await prisma.user.update({
-      where: { email: user.email },
-      data: {
-        otp: otp,
-        otpExpiry: otpExpiry,  // Use Date object here
-      },
-    });
-
-    // Send OTP to the user's email
-    await sendOtpEmail(user.email, otp);
-
     res.status(200).json({
-      message: 'OTP sent to email. Please verify to complete login.',
-      otpExpiry,
+      message: 'Login successful',
     });
   } catch (error) {
     console.error(error);

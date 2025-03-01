@@ -19,6 +19,7 @@ interface Submission {
   amount: number;
   createdAt: string;
   farmer: Farmer;
+  status: string;
   // Add other submission properties if needed
 }
 
@@ -29,12 +30,18 @@ const MilkSubmissions = () => {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false); // State to control modal visibility
   const [farmers, setFarmers] = useState<Farmer[]>([]); // State to store farmers
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    milkType: string;
+    amount: string;
+    notes: string;
+    status: string;
+    farmerId: string;
+  }>({
     milkType: 'Cow',
-    amount: 0,
+    amount: '0',
     notes: 'Fresh milk from morning milking',
     status: 'Pending',
-    farmerId: 0
+    farmerId: '0'
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -75,12 +82,37 @@ const MilkSubmissions = () => {
     toast.info('Opening quality test form...');
   };
 
-  const handleConfirmSubmission = (submissionId: string) => {
-    toast.success('Milk submission confirmed');
+  const handleConfirmSubmission = async (submissionId: string) => {
+    try {
+      const response = await axiosInstance.put(`/milk-submissions/${submissionId}/status`, {
+        status: 'accepted'
+      });
+      if (response.status === 200) {
+        toast.success('Milk submission confirmed');
+        // Optionally, refresh the submissions list
+        const newResponse = await axiosInstance.get('/milk-submissions');
+        setSubmissions(newResponse.data);
+      }
+    } catch (error) {
+      toast.error('Failed to confirm milk submission');
+    }
   };
 
-  const handleRejectSubmission = (submissionId: string) => {
-    toast.error('Milk submission rejected');
+  const handleRejectSubmission = async (submissionId: string) => {
+    try {
+      const response = await axiosInstance.put(`/milk-submissions/${submissionId}/status`, {
+        status: 'rejected',
+        reason: 'Quality standards not met' // Example reason
+      });
+      if (response.status === 200) {
+        toast.success('Milk submission rejected');
+        // Optionally, refresh the submissions list
+        const newResponse = await axiosInstance.get('/milk-submissions');
+        setSubmissions(newResponse.data);
+      }
+    } catch (error) {
+      toast.error('Failed to reject milk submission');
+    }
   };
 
   const handleSubmit = async (submissionData: { milkType: string; amount: number; notes: string; status: string; farmerId: number }) => {
@@ -101,10 +133,10 @@ const MilkSubmissions = () => {
         toast.success('Milk submitted successfully!');
         setFormData({
           milkType: 'Cow',
-          amount: 0,
+          amount: '0',
           notes: 'Fresh milk from morning milking',
           status: 'Pending',
-          farmerId: 0
+          farmerId: '0'
         });
         setIsModalOpen(false);
         const newResponse = await axiosInstance.get('/milk-submissions');
@@ -161,6 +193,9 @@ const MilkSubmissions = () => {
                   Quantity
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Quality Test
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
@@ -184,6 +219,9 @@ const MilkSubmissions = () => {
                     {submission.amount}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    {submission.status}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <button
                       onClick={() => handleQualityTest(submission.id.toString())}
                       className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200"
@@ -192,20 +230,22 @@ const MilkSubmissions = () => {
                     </button>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleConfirmSubmission(submission.id.toString())}
-                        className="px-3 py-1 bg-green-100 text-green-700 rounded-lg hover:bg-green-200"
-                      >
-                        Confirm
-                      </button>
-                      <button
-                        onClick={() => handleRejectSubmission(submission.id.toString())}
-                        className="px-3 py-1 bg-red-100 text-red-700 rounded-lg hover:bg-red-200"
-                      >
-                        Reject
-                      </button>
-                    </div>
+                    {submission.status !== 'accepted' && submission.status !== 'rejected' && (
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleConfirmSubmission(submission.id.toString())}
+                          className="px-3 py-1 bg-green-100 text-green-700 rounded-lg hover:bg-green-200"
+                        >
+                          Confirm
+                        </button>
+                        <button
+                          onClick={() => handleRejectSubmission(submission.id.toString())}
+                          className="px-3 py-1 bg-red-100 text-red-700 rounded-lg hover:bg-red-200"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -222,8 +262,8 @@ const MilkSubmissions = () => {
           formData={formData}
           setFormData={(newData) => setFormData({
             ...newData,
-            amount: parseFloat(newData.amount),
-            farmerId: parseInt(newData.farmerId, 10)
+            amount: newData.amount,
+            farmerId: newData.farmerId
           })}
           isSubmitting={isSubmitting}
           farmers={farmers}

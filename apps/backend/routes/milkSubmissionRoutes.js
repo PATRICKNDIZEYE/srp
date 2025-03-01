@@ -212,18 +212,30 @@ router.get('/farmer/:farmerId', authenticateToken, async (req, res) => {
   }
 });
 
+
+router.get('/farmer/:farmerId/poc/:pocId', authenticateToken, async (req, res) => {
+  try {
+    const farmerId = parseInt(req.params.farmerId);
+    const pocId = req.params.pocId;
+
+    console.log('Fetching submissions for farmer ID:', farmerId, 'and POC ID:', pocId);
+
+    const submissions = await getMilkSubmissionsByFarmerAndPocId(farmerId, pocId);
+
+    res.status(200).json(submissions);
+  } catch (error) {
+    console.error('Error fetching milk submissions by farmer ID and POC ID:', error);
+    res.status(500).json({ error: 'Failed to fetch milk submissions' });
+  }
+});
+
+
 // Update milk submission status
 router.put("/:id/status", async (req, res) => {
   try {
     const { id } = req.params;
     const { status, reason } = req.body;
 
-    console.log('\nProcessing milk submission status update:');
-    console.log('ID:', id);
-    console.log('New Status:', status);
-    console.log('Reason:', reason);
-
-    // Get the submission with farmer details
     const submission = await prisma.milkSubmission.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -235,27 +247,20 @@ router.put("/:id/status", async (req, res) => {
       return res.status(404).json({ error: 'Submission not found' });
     }
 
-    console.log('\nFound submission:', submission);
-
-    // Update the status
     const updatedSubmission = await prisma.milkSubmission.update({
       where: { id: parseInt(id) },
       data: { status }
     });
 
-    // Send SMS notification
     if (submission.farmer.phoneNumber) {
-      console.log('\nAttempting to send SMS to:', submission.farmer.phoneNumber);
       try {
         if (status === 'accepted') {
-          console.log('Sending acceptance SMS...');
           await MilkSubmissionSmsService.notifySubmissionAccepted(
             submission.farmer.phoneNumber,
             submission.amount,
             submission.milkType
           );
         } else if (status === 'rejected') {
-          console.log('Sending rejection SMS...');
           await MilkSubmissionSmsService.notifySubmissionRejected(
             submission.farmer.phoneNumber,
             submission.amount,
@@ -263,13 +268,9 @@ router.put("/:id/status", async (req, res) => {
             reason || 'No reason provided'
           );
         }
-        console.log('SMS notification sent successfully');
       } catch (smsError) {
         console.error('Failed to send SMS notification:', smsError);
-        // Don't fail the request if SMS fails
       }
-    } else {
-      console.log('No phone number found for farmer');
     }
 
     res.json(updatedSubmission);
@@ -278,5 +279,47 @@ router.put("/:id/status", async (req, res) => {
     res.status(500).json({ error: 'Failed to update submission status' });
   }
 });
+
+// Get all milk submissions and filter by farmer's POC ID
+router.get('/poc/:pocId', async (req, res) => {
+  try {
+    const pocId = parseInt(req.params.pocId); // Ensure pocId is an integer
+
+    console.log('Fetching all submissions and filtering by POC ID:', pocId);
+
+    // Fetch all milk submissions and include farmer data
+    const submissions = await prisma.milkSubmission.findMany({
+      include: {
+        farmer: true, // Include related farmer data
+      },
+    });
+
+    // Filter submissions where the farmer's pocId matches the provided pocId
+    const filteredSubmissions = submissions.filter(submission => submission.farmer.pocId === pocId);
+
+    res.status(200).json(filteredSubmissions);
+  } catch (error) {
+    console.error('Error fetching milk submissions by POC ID:', error);
+    res.status(500).json({ error: 'Failed to fetch milk submissions' });
+  }
+});
+
+// Get milk submissions by farmer ID and POC ID
+router.get('/farmer/:farmerId/poc/:pocId', authenticateToken, async (req, res) => {
+  try {
+    const farmerId = parseInt(req.params.farmerId);
+    const pocId = req.params.pocId;
+
+    console.log('Fetching submissions for farmer ID:', farmerId, 'and POC ID:', pocId);
+
+    const submissions = await getMilkSubmissionsByFarmerAndPocId(farmerId, pocId);
+
+    res.status(200).json(submissions);
+  } catch (error) {
+    console.error('Error fetching milk submissions by farmer ID and POC ID:', error);
+    res.status(500).json({ error: 'Failed to fetch milk submissions' });
+  }
+});
+
 
 export default router; 
