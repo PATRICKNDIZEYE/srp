@@ -212,6 +212,24 @@ router.get('/farmer/:farmerId', authenticateToken, async (req, res) => {
   }
 });
 
+
+router.get('/farmer/:farmerId/poc/:pocId', authenticateToken, async (req, res) => {
+  try {
+    const farmerId = parseInt(req.params.farmerId);
+    const pocId = req.params.pocId;
+
+    console.log('Fetching submissions for farmer ID:', farmerId, 'and POC ID:', pocId);
+
+    const submissions = await getMilkSubmissionsByFarmerAndPocId(farmerId, pocId);
+
+    res.status(200).json(submissions);
+  } catch (error) {
+    console.error('Error fetching milk submissions by farmer ID and POC ID:', error);
+    res.status(500).json({ error: 'Failed to fetch milk submissions' });
+  }
+});
+
+
 // Update milk submission status
 router.put("/:id/status", async (req, res) => {
   try {
@@ -230,6 +248,9 @@ router.put("/:id/status", async (req, res) => {
         farmer: true
       }
     });
+
+
+
 
     if (!submission) {
       return res.status(404).json({ error: 'Submission not found' });
@@ -277,6 +298,10 @@ router.put("/:id/status", async (req, res) => {
     console.error('Error updating submission status:', error);
     res.status(500).json({ error: 'Failed to update submission status' });
   }
+
+
 });
+// Get milk submissions by farmer ID and POC ID
+
 
 export default router; 
