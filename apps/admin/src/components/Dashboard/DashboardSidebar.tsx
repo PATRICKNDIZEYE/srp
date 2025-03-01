@@ -16,7 +16,10 @@ import {
   FiActivity,
   FiUser,
   FiDroplet,
-  FiCreditCard
+  FiCreditCard,
+  FiMenu,
+  FiBell,
+  FiLogOut
 } from 'react-icons/fi';
 
 interface SidebarProps {
@@ -89,9 +92,9 @@ const DashboardSidebar: React.FC<SidebarProps> = ({ role, isOpen, onClose }) => 
 
       {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 w-64 bg-white shadow-lg transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
+        className={`fixed inset-y-0 left-0 w-64 bg-white shadow-lg transform transition-transform duration-200 ease-in-out ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
-        } ${isOpen ? 'block' : 'hidden'} lg:block`}
+        } lg:translate-x-0 lg:static lg:inset-0`}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
