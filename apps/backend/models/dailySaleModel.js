@@ -16,9 +16,9 @@ export const getAllDailySales = async (req, res) => {
 
 export const createDailySale = async (req, res) => {
   try {
-    const { date, productType, quantity, pricePerUnit, totalAmount, diaryId } = req.body;
+    const { date, productType, quantity, pricePerUnit, totalAmount, diaryId, depance, description } = req.body;
     const newSale = await prisma.dailySale.create({
-      data: { date, productType, quantity, pricePerUnit, totalAmount, diaryId },
+      data: { date, productType, quantity, pricePerUnit, totalAmount, diaryId, depance, description },
     });
     res.status(201).json(newSale);
   } catch (error) {
@@ -29,7 +29,7 @@ export const createDailySale = async (req, res) => {
 export const updateDailySale = async (req, res) => {
   try {
     const { id } = req.params;
-    const { date, productType, quantity, pricePerUnit, totalAmount, status } = req.body;
+    const { date, productType, quantity, pricePerUnit, totalAmount, status, depance, description } = req.body;
 
     // Check if id is provided
     if (!id) {
@@ -38,7 +38,7 @@ export const updateDailySale = async (req, res) => {
 
     const updatedSale = await prisma.dailySale.update({
       where: { id: parseInt(id) },
-      data: { date, productType, quantity, pricePerUnit, totalAmount, status },
+      data: { date, productType, quantity, pricePerUnit, totalAmount, status, depance, description },
     });
 
     res.json(updatedSale);
@@ -75,5 +75,19 @@ export const deleteDailySale = async (req, res) => {
     res.status(204).send();
   } catch (error) {
     res.status(400).json({ error: error.message });
+  }
+};
+
+export const getDailySalesByDiaryId = async (req, res) => {
+  try {
+    const { diaryId } = req.params;
+    const dailySales = await prisma.dailySale.findMany({
+      where: { diaryId: parseInt(diaryId) },
+      include: { diary: true }
+    });
+    res.json(dailySales);
+  } catch (error) {
+    console.error('Error fetching daily sales by diaryId:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 }; 

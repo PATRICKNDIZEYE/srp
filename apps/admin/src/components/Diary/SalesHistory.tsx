@@ -19,7 +19,14 @@ const SalesHistory: React.FC<SalesHistoryProps> = ({ dateRange }) => {
 
   const fetchSales = async () => {
     try {
-      const response = await axiosInstance.get('/daily-sales');
+      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+      const diaryId = userData.id;
+
+      if (!diaryId) {
+        throw new Error('Diary ID is missing');
+      }
+
+      const response = await axiosInstance.get(`/daily-sales/diary/${diaryId}`);
       setSales(response.data);
     } catch (error) {
       console.error('Error fetching sales:', error);
@@ -48,6 +55,8 @@ const SalesHistory: React.FC<SalesHistoryProps> = ({ dateRange }) => {
         quantity: parseFloat(saleData.quantity.toString()),
         pricePerUnit: parseFloat(saleData.pricePerUnit.toString()),
         totalAmount: parseFloat(saleData.totalAmount.toString()),
+        depance: parseFloat(saleData.depance.toString()),
+        description: saleData.description,
       };
 
       // Log the payload to inspect the data being sent
@@ -79,7 +88,7 @@ const SalesHistory: React.FC<SalesHistoryProps> = ({ dateRange }) => {
       totalSales: sales.length,
       totalRevenue: sales.reduce((acc, sale) => acc + sale.totalAmount, 0),
       totalVolume: sales.reduce((acc, sale) => acc + parseInt(sale.quantity.toString()), 0),
-      averagePrice: sales.reduce((acc, sale) => acc + sale.pricePerLiter, 0) / sales.length,
+      averagePrice: sales.reduce((acc, sale) => acc + (sale.pricePerLiter || 0), 0) / sales.length,
     };
   };
 
@@ -174,13 +183,13 @@ const SalesHistory: React.FC<SalesHistoryProps> = ({ dateRange }) => {
                   Total (RWF)
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Customer
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Payment
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Depance (RWF)
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Description
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
@@ -200,29 +209,19 @@ const SalesHistory: React.FC<SalesHistoryProps> = ({ dateRange }) => {
                     {sale.quantity}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {sale.pricePerLiter ? sale.pricePerLiter.toLocaleString() : 'N/A'}
+                    {sale.pricePerUnit ? sale.pricePerUnit.toLocaleString() : 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {sale.totalAmount.toLocaleString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {sale.customer}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <span
-                      className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                        sale.paymentMethod === 'Mobile Money'
-                          ? 'bg-green-100 text-green-800'
-                          : sale.paymentMethod === 'Cash'
-                          ? 'bg-blue-100 text-blue-800'
-                          : 'bg-purple-100 text-purple-800'
-                      }`}
-                    >
-                      {sale.paymentMethod}
-                    </span>
+                    {sale.status}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {sale.status}
+                    {sale.depance.toLocaleString()} RWF
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {sale.description || 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <button
@@ -235,7 +234,7 @@ const SalesHistory: React.FC<SalesHistoryProps> = ({ dateRange }) => {
                       Edit
                     </button>
                     <button
-                      onClick={() => handleDeleteSale(sale.id)}
+                      onClick={() => handleDeleteSale(sale.id || '')}
                       className="text-red-600 hover:text-red-700"
                     >
                       Delete

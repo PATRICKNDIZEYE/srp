@@ -17,6 +17,7 @@ interface Submission {
   milkType: string;
   amount: number;
   status: string;
+  quality: string;
 }
 
 interface Loan {
@@ -93,7 +94,7 @@ const Reports = () => {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase border border-gray-300">First Name</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase border border-gray-300">Last Name</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase border border-gray-300">Phone Number</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase border border-gray-300">Quality</th>
+              {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase border border-gray-300">Quality</th> */}
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase border border-gray-300">Quantity</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase border border-gray-300">Amafaranga y'Amata</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase border border-gray-300">Ideni Afite</th>
@@ -107,7 +108,9 @@ const Reports = () => {
                 <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{group.farmer.firstName}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{group.farmer.lastName}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{group.farmer.phoneNumber}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{group.submissions.length > 0 ? group.submissions[0].milkType : 'N/A'}</td>
+                {/* <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">
+                  {group.submissions.length > 0 ? group.submissions[0].quality : 'N/A'}
+                </td> */}
                 <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{group.totalMilkAmount}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{group.totalMilkAmount * 400}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{group.totalLoanAmount}</td>

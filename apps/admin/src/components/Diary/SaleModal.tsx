@@ -15,6 +15,8 @@ const SaleModal: React.FC<SaleModalProps> = ({ sale, onClose, onSave }) => {
     pricePerUnit: sale?.pricePerUnit || '',
     totalAmount: sale?.totalAmount || '',
     status: sale?.status || 'pending',
+    depance: sale?.depance || 0,
+    description: sale?.description || '',
   });
 
   useEffect(() => {
@@ -60,6 +62,8 @@ const SaleModal: React.FC<SaleModalProps> = ({ sale, onClose, onSave }) => {
             <option value="approved">Approved</option>
             <option value="rejected">Rejected</option>
           </select>
+          <input type="number" name="depance" value={formData.depance} onChange={handleChange} placeholder="Depance" required />
+          <input type="text" name="description" value={formData.description} onChange={handleChange} placeholder="Description" />
           <div className="flex justify-end space-x-2">
             <button type="button" onClick={onClose}>Cancel</button>
             <button type="submit">Save</button>

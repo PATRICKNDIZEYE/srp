@@ -158,19 +158,23 @@ const AddFarmerModal: React.FC<AddFarmerModalProps> = ({ isOpen, onClose, onSubm
         ? new Date(formData.birthday).toISOString()
         : '1990-01-01T00:00:00.000Z';
 
+      // Sanitize firstName and username
+      const sanitizedFirstName = formData.fullName.split(' ')[0].replace(/[^a-zA-Z]/g, '') || '';
+      const sanitizedUsername = sanitizedFirstName.toLowerCase() + Math.floor(Math.random() * 1000);
+
       const registrationData = {
-        firstName: formData.fullName.split(' ')[0] || '',
+        firstName: sanitizedFirstName,
         lastName: formData.fullName.split(' ').slice(1).join(' ') || '',
         birthday: formattedBirthday,
         nationalId: formData.nationalId,
         phoneNumber: formData.phone,
-        longitude: parseFloat(formData.longitude) || 30.123456,
-        latitude: parseFloat(formData.latitude) || -1.987654,
-        username: formData.fullName.split(' ')[0].toLowerCase() + Math.floor(Math.random() * 1000),
+        longitude: parseFloat(formData.longitude) || 30.12345,
+        latitude: parseFloat(formData.latitude) || -1.98765,
+        username: sanitizedUsername,
         password: formData.password,
-        farmDetails: formData.location || 'Farm in Kigali',
-        status: 'Active',
-        pocId: formData.pocId
+        farmDetails: formData.location || 'Large farm with maize and beans',
+        status: 'active',
+        pocId: parseInt(formData.pocId)
       };
 
       console.log('Registration Data:', registrationData);

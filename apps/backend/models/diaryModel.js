@@ -2,7 +2,7 @@ import { prisma } from "../postgres/postgres.js";
 import bcrypt from 'bcrypt';
 
 // Create a new diary entry
-export const createDiary = async ({ status, approveStatus, phoneNumber, password, longitude, latitude }) => {
+export const createDiary = async ({ status, approveStatus, phoneNumber, password, longitude, latitude, firstName, lastName, nationalId }) => {
   const hashedPassword = await bcrypt.hash(password, 10);
   return await prisma.diary.create({
     data: {
@@ -12,6 +12,9 @@ export const createDiary = async ({ status, approveStatus, phoneNumber, password
       password: hashedPassword,
       longitude,
       latitude,
+      firstName,
+      lastName,
+      nationalId
     },
   });
 };
@@ -29,7 +32,7 @@ export const getDiaryById = async (id) => {
 };
 
 // Update a diary entry by ID
-export const updateDiary = async (id, { status, approveStatus, phoneNumber, password, longitude, latitude }) => {
+export const updateDiary = async (id, { status, approveStatus, phoneNumber, password, longitude, latitude, firstName, lastName, nationalId }) => {
   const hashedPassword = await bcrypt.hash(password, 10);
   return await prisma.diary.update({
     where: { id: parseInt(id) },
@@ -40,6 +43,9 @@ export const updateDiary = async (id, { status, approveStatus, phoneNumber, pass
       password: hashedPassword,
       longitude,
       latitude,
+      firstName,
+      lastName,
+      nationalId
     },
   });
 };

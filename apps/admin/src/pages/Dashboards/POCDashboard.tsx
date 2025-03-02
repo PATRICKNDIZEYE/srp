@@ -75,6 +75,9 @@ const POCDashboard = () => {
   const [totalFarmers, setTotalFarmers] = useState(0);
   const [pendingFarmersCount, setPendingFarmersCount] = useState(0);
 
+  // Update the state to store pending quantity check total as a string
+  const [pendingQuantityCheckTotal, setPendingQuantityCheckTotal] = useState('0');
+
   // Retrieve the ID from local storage
   const userData = JSON.parse(localStorage.getItem('userData') || '[]');
   const userId = userData.length > 0 ? userData[0].id : null;
@@ -91,11 +94,11 @@ const POCDashboard = () => {
           const totalAmount = response.data.reduce((sum: number, submission: MilkSubmission) => sum + submission.amount, 0);
           setTotalMilkCollection(totalAmount);
 
-          // Calculate the total amount of pending milk
-          const pendingAmount = response.data
-            .filter((submission: MilkSubmission) => submission.status === 'Pending')
+          // Calculate the total for pending quantity check
+          const pendingQuantityCheck = response.data
+            .filter((submission: MilkSubmission) => submission.status.toLowerCase() === 'pending')
             .reduce((sum: number, submission: MilkSubmission) => sum + submission.amount, 0);
-          setPendingMilkCollection(pendingAmount);
+          setPendingQuantityCheckTotal(pendingQuantityCheck.toString());
         }
       } catch (error) {
         console.error('Error fetching milk submissions:', error);
@@ -190,8 +193,8 @@ const POCDashboard = () => {
           </CardDataStats>
 
           <CardDataStats
-            title="Pending Quality Check"
-            total={pendingMilkCollection}
+            title="Pending Quantity Check"
+            total={pendingQuantityCheckTotal}
             rate="Needs verification"
             levelUp={false}
           >

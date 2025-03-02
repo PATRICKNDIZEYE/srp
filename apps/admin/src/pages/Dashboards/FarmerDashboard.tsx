@@ -25,6 +25,7 @@ interface MilkSubmission {
   milkType: string;
   status: string;
   createdAt: string;
+  quality?: string;
 }
 
 const FarmerDashboard = () => {
@@ -197,6 +198,7 @@ const FarmerDashboard = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Itariki</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Ubwoko</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Ingano</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Quality</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Imiterere</th>
               </tr>
             </thead>
@@ -209,6 +211,7 @@ const FarmerDashboard = () => {
                     </td>
                     <td className="px-6 py-4">{submission.milkType}</td>
                     <td className="px-6 py-4">{submission.amount} L</td>
+                    <td className="px-6 py-4">{submission.quality || 'N/A'}</td>
                     <td className="px-6 py-4">
                       <span className={`px-2 py-1 rounded-full text-xs ${
                         submission.status === 'accepted' ? 'bg-green-100 text-green-800' :
@@ -224,7 +227,7 @@ const FarmerDashboard = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={4} className="px-6 py-4 text-center text-gray-500">
+                  <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
                     Nta mata watanze ubu
                   </td>
                 </tr>
