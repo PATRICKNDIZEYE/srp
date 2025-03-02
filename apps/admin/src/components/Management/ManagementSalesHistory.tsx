@@ -8,6 +8,22 @@ interface SalesHistoryProps {
   dateRange: { start: string; end: string };
 }
 
+const groupSalesData = (sales: Sale[]) => {
+  return sales.reduce((acc, sale) => {
+    const key = `${sale.date}-${sale.productType}-${sale.pricePerUnit}-${sale.dairyId}`;
+    if (!acc[key]) {
+      acc[key] = {
+        ...sale,
+        quantity: 0,
+        totalAmount: 0,
+      };
+    }
+    acc[key].quantity += sale.quantity;
+    acc[key].totalAmount += sale.totalAmount;
+    return acc;
+  }, {} as Record<string, Sale>);
+};
+
 const ManagementSalesHistory: React.FC<SalesHistoryProps> = ({ dateRange }) => {
   const [sales, setSales] = useState<Sale[]>([]);
 
@@ -18,7 +34,8 @@ const ManagementSalesHistory: React.FC<SalesHistoryProps> = ({ dateRange }) => {
   const fetchSales = async () => {
     try {
       const response = await axiosInstance.get('/daily-sales');
-      setSales(response.data);
+      const groupedSales = groupSalesData(response.data);
+      setSales(Object.values(groupedSales));
     } catch (error) {
       console.error('Error fetching sales:', error);
     }
@@ -138,13 +155,16 @@ const ManagementSalesHistory: React.FC<SalesHistoryProps> = ({ dateRange }) => {
                   Total (RWF)
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Customer
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Payment
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Depance (RWF)
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Money Cash (RWF)
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Description
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
@@ -170,23 +190,16 @@ const ManagementSalesHistory: React.FC<SalesHistoryProps> = ({ dateRange }) => {
                     {sale.totalAmount.toLocaleString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {sale.diary?.phoneNumber || 'N/A'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <span
-                      className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                        sale.paymentMethod === 'Mobile Money'
-                          ? 'bg-green-100 text-green-800'
-                          : sale.paymentMethod === 'Cash'
-                          ? 'bg-blue-100 text-blue-800'
-                          : 'bg-purple-100 text-purple-800'
-                      }`}
-                    >
-                      {sale.paymentMethod}
-                    </span>
+                    {sale.status}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {sale.status}
+                    {sale.depance.toLocaleString()} RWF
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {(sale.totalAmount - sale.depance).toLocaleString()} RWF
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {sale.description || 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <button

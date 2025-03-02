@@ -11,13 +11,32 @@ import {
 
 const router = express.Router();
 
+// Ensure JSON parsing is enabled
+router.use(express.json());
+
 // Créer une nouvelle entrée de journal
 router.post("/", async (req, res) => {
   try {
-    const { status, approveStatus, phoneNumber, password, longitude, latitude } = req.body;
+    // Log the incoming request body
+    console.log("Request Body:", req.body);
 
-    if (!status || !approveStatus || !phoneNumber || !password || !longitude || !latitude) {
-      return res.status(400).json({ error: "Tous les champs sont requis." });
+    const { status, approveStatus, phoneNumber, password, longitude, latitude, firstName, lastName, nationalId } = req.body;
+
+    // Check for missing fields
+    const missingFields = [];
+    if (!status) missingFields.push("status");
+    if (!approveStatus) missingFields.push("approveStatus");
+    if (!phoneNumber) missingFields.push("phoneNumber");
+    if (!password) missingFields.push("password");
+    if (!longitude) missingFields.push("longitude");
+    if (!latitude) missingFields.push("latitude");
+    if (!firstName) missingFields.push("firstName");
+    if (!lastName) missingFields.push("lastName");
+    if (!nationalId) missingFields.push("nationalId");
+
+    if (missingFields.length > 0) {
+      console.log("Missing Fields:", missingFields); // Log missing fields
+      return res.status(400).json({ error: `Tous les champs sont requis. Missing: ${missingFields.join(", ")}` });
     }
 
     const diary = await createDiary({
@@ -25,8 +44,11 @@ router.post("/", async (req, res) => {
       approveStatus,
       phoneNumber,
       password,
-      longitude,
-      latitude,
+      longitude: parseFloat(longitude), // Ensure these are numbers
+      latitude: parseFloat(latitude),   // Ensure these are numbers
+      firstName,
+      lastName,
+      nationalId,
     });
 
     res.status(201).json(diary);
@@ -62,9 +84,9 @@ router.get("/:id", async (req, res) => {
 // Mettre à jour une entrée par ID
 router.put("/:id", async (req, res) => {
   try {
-    const { status, approveStatus, phoneNumber, password, longitude, latitude } = req.body;
+    const { status, approveStatus, phoneNumber, password, longitude, latitude, firstName, lastName, nationalId } = req.body;
 
-    if (!status || !approveStatus || !phoneNumber || !password || !longitude || !latitude) {
+    if (!status || !approveStatus || !phoneNumber || !password || !longitude || !latitude || !firstName || !lastName || !nationalId) {
       return res.status(400).json({ error: "Tous les champs sont requis." });
     }
 
@@ -75,6 +97,9 @@ router.put("/:id", async (req, res) => {
       password,
       longitude,
       latitude,
+      firstName,
+      lastName,
+      nationalId,
     });
 
     if (diary) {

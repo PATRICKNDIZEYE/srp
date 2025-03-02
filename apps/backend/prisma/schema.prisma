@@ -160,6 +160,9 @@ model Diary {
   password      String
   longitude     Float
   latitude      Float
+  firstName     String
+  lastName      String
+  nationalId    String @unique
 
   derivedEntries Derived[] @relation("DiaryToDerived")
   dailySales     DailySale[]
@@ -264,6 +267,8 @@ model DailySale {
   status      String   @default("pending") // pending, approved, rejected
   diaryId     Int
   diary       Diary    @relation(fields: [diaryId], references: [id])
+  depance     Float    @default(0)
+  description String?
 
   @@index([diaryId])
 }

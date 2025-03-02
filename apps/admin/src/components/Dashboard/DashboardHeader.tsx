@@ -19,7 +19,11 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuButtonClick, ro
     const userData = localStorage.getItem('userData');
     if (userData) {
       const parsedUserData = JSON.parse(userData);
-      setUser(parsedUserData[0]); // Assuming the user data is an array and we need the first user
+      if (Array.isArray(parsedUserData)) {
+        setUser(parsedUserData[0]); // Access the first element if it's an array
+      } else {
+        setUser(parsedUserData); // Use the object directly if it's not an array
+      }
     } else {
       setUser(contextUser); // Fallback to context user if localStorage is empty
     }
@@ -79,7 +83,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuButtonClick, ro
                   className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
                 >
                   <FiLogOut size={16} />
-                  <span>Sohoka</span>
+                  <span>Logout</span>
                 </button>
               </div>
             )}
