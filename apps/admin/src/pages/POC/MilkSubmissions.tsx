@@ -4,6 +4,7 @@ import Breadcrumb from '../../components/Breadcrumb';
 import DateRangeFilter from '../../components/Filters/DateRangeFilter';
 import { toast } from 'react-toastify';
 import AddSubmitMilk from '../../components/AddSubmitMilk';
+import { useParams } from 'react-router-dom';
 
 // Define the type for a submission
 interface Farmer {
@@ -23,40 +24,40 @@ interface Submission {
   // Add other submission properties if needed
 }
 
+// Define the type for form data
+interface FormData {
+  milkType: string;
+  amount: string;
+  notes: string;
+  status: string;
+  farmerId: string;
+}
+
 const MilkSubmissions = () => {
+  const { farmerId } = useParams<{ farmerId: string }>(); // Get farmerId from URL
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState('all');
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false); // State to control modal visibility
   const [farmers, setFarmers] = useState<Farmer[]>([]); // State to store farmers
-  const [formData, setFormData] = useState<{
-    milkType: string;
-    amount: string;
-    notes: string;
-    status: string;
-    farmerId: string;
-  }>({
-    milkType: 'Cow',
+  const [formData, setFormData] = useState<FormData>({
+    milkType: '',
     amount: '0',
     notes: 'Fresh milk from morning milking',
     status: 'Pending',
-    farmerId: '0'
+    farmerId: farmerId ? farmerId : '0'
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchSubmissions = async () => {
       try {
-        // Retrieve user data from localStorage
-        const userData = JSON.parse(localStorage.getItem('userData') || '[]');
-        const userId = userData[0]?.id; // Get the first user's id
-
-        if (userId) {
-          const response = await axiosInstance.get(`/milk-sub/poc/${userId}`);
-          setSubmissions(response.data);
+        if (farmerId) {
+          const response = await axiosInstance.get(`/milk-sub/farmer/${farmerId}`);
+          setSubmissions(Array.isArray(response.data.submissions) ? response.data.submissions : []);
         } else {
-          toast.error('User ID not found in localStorage');
+          toast.error('Farmer ID not found');
         }
       } catch (error) {
         toast.error('Failed to fetch milk submissions');
@@ -75,7 +76,7 @@ const MilkSubmissions = () => {
 
     fetchSubmissions();
     fetchFarmers(); // Fetch farmers when component mounts
-  }, []);
+  }, [farmerId]);
 
   const handleQualityTest = (submissionId: string) => {
     // Open quality test modal/form
@@ -115,16 +116,31 @@ const MilkSubmissions = () => {
     }
   };
 
-  const handleSubmit = async (submissionData: { milkType: string; amount: number; notes: string; status: string; farmerId: number }) => {
-    console.log('Submitting form with data:', submissionData);
+  const handleSubmit = async (submissionData: { milkType: string; amount: string; notes: string; status: string; farmerId: string }) => {
+    // Ensure milkType is always "inshyushyu"
+    submissionData.milkType = 'inshyushyu';
+
+    // Convert amount and farmerId to numbers
+    const amount = parseFloat(submissionData.amount);
+    const farmerId = parseInt(submissionData.farmerId);
+
+    // Log the converted data
+    console.log('Submitting form with data:', {
+      milkType: submissionData.milkType,
+      amount,
+      notes: submissionData.notes,
+      status: submissionData.status,
+      farmerId
+    });
+
     try {
       setIsSubmitting(true);
       const response = await axiosInstance.post('/milk-sub/poc', {
         milkType: submissionData.milkType,
-        amount: submissionData.amount,
+        amount, // Use the converted number
         notes: submissionData.notes,
         status: submissionData.status,
-        farmerId: submissionData.farmerId
+        farmerId // Use the converted number
       });
 
       console.log('Response from server:', response);
@@ -132,11 +148,11 @@ const MilkSubmissions = () => {
       if (response.status === 201) {
         toast.success('Milk submitted successfully!');
         setFormData({
-          milkType: 'Cow',
+          milkType: '',
           amount: '0',
           notes: 'Fresh milk from morning milking',
           status: 'Pending',
-          farmerId: '0'
+          farmerId: farmerId ? farmerId.toString() : '0'
         });
         setIsModalOpen(false);
         const newResponse = await axiosInstance.get('/milk-submissions');
@@ -260,10 +276,12 @@ const MilkSubmissions = () => {
           onClose={() => setIsModalOpen(false)}
           onSubmit={() => handleSubmit(formData)}
           formData={formData}
-          setFormData={(newData) => setFormData({
+          setFormData={(newData: Partial<FormData>) => setFormData({
+            ...formData,
             ...newData,
-            amount: newData.amount,
-            farmerId: newData.farmerId
+            milkType: newData.milkType || formData.milkType,
+            amount: newData.amount || formData.amount,
+            farmerId: newData.farmerId || formData.farmerId
           })}
           isSubmitting={isSubmitting}
           farmers={farmers}

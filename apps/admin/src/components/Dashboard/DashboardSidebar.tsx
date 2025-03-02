@@ -40,9 +40,10 @@ const DashboardSidebar: React.FC<SidebarProps> = ({ role, isOpen, onClose }) => 
     poc: [
       { name: 'Dashboard', icon: FiHome, path: '/poc/dashboard' },
       { name: 'Farmer Management', icon: FiUsers, path: '/poc/farmers' },
-      { name: 'Milk Submissions', icon: FiDroplet, path: '/poc/submissions' },
+      // { name: 'Milk Submissions', icon: FiDroplet, path: '/poc/submissions' },
       { name: 'Delivery Management', icon: FiTruck, path: '/poc/deliveries' },
       { name: 'Reports', icon: FiFileText, path: '/poc/reports' },
+      // { name: 'Inguzanyo', icon: FiCreditCard, path: '/poc/inguzanyo' },
       // { name: 'Settings', icon: FiSettings, path: '/poc/settings' },
     ],
     transport: [

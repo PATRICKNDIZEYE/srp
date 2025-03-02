@@ -1,6 +1,6 @@
 import express from "express";
 import bcrypt from "bcrypt";
-import { createFarmer, getFarmers,getFarmersByPhoneNumber, getFarmerById, updateFarmer, deleteFarmer, updateFarmerStatus, getFarmersByPocId } from "../models/farmerModel.js";
+import { createFarmer, getFarmers,getFarmersByPhoneNumber, getFarmerById, updateFarmer, deleteFarmer, updateFarmerStatus, getFarmersByPocId, updateFarmerPassword } from "../models/farmerModel.js";
 import { PrismaClient } from '@prisma/client';
 
 const router = express.Router();
@@ -9,6 +9,8 @@ const prisma = new PrismaClient();
 // Create a new Farmer
 router.post("/", async (req, res) => {
   try {
+    console.log("Request Body:", req.body); // Log the request body for debugging
+
     const { firstName, lastName, birthday, nationalId, phoneNumber, longitude, latitude, username, password, farmDetails, status, pocId } = req.body;
 
     // Hash the password
@@ -32,6 +34,7 @@ router.post("/", async (req, res) => {
 
     res.status(201).json(farmer);
   } catch (error) {
+    console.error("Error creating farmer:", error); // Log the error for debugging
     res.status(400).json({ error: error.message });
   }
 });
@@ -174,6 +177,22 @@ router.get('/stats', async (req, res) => {
   } catch (error) {
     console.error('Error fetching farmer stats:', error);
     res.status(500).json({ error: 'Failed to fetch farmer stats' });
+  }
+});
+
+// Update Farmer Password by ID
+router.patch("/:id/password", async (req, res) => {
+  try {
+    const { newPassword } = req.body;
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const farmer = await updateFarmerPassword(req.params.id, hashedPassword);
+    if (farmer) {
+      res.status(200).json({ message: "Password updated successfully" });
+    } else {
+      res.status(404).json({ message: "Farmer not found" });
+    }
+  } catch (error) {
+    res.status(400).json({ error: error.message });
   }
 });
 

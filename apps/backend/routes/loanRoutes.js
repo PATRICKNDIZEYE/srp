@@ -1,13 +1,12 @@
 import express from "express";
-import { createLoan, getLoans, getLoanById, updateLoan, deleteLoan, getLoansByFarmerId } from "../models/loanModel.js";
-import { authenticateToken } from "../middleware/auth.js";
+import { createLoan, getLoans, getLoanById, updateLoan, deleteLoan, getLoansByFarmerId, updateLoanStatus } from "../models/loanModel.js";
 import { PrismaClient } from "@prisma/client";
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
 // Create a new loan
-router.post("/", authenticateToken, async (req, res) => {
+router.post("/",async (req, res) => {
   try {
     const { loanAmount, purpose, farmerId } = req.body;
 
@@ -99,7 +98,7 @@ router.get("/farmer/:farmerId", async (req, res) => {
 });
 
 // Get farmer's loans
-router.get('/farmer/:farmerId', authenticateToken, async (req, res) => {
+router.get('/farmer/:farmerId', async (req, res) => {
   try {
     const loans = await prisma.loan.findMany({
       where: {
@@ -117,7 +116,7 @@ router.get('/farmer/:farmerId', authenticateToken, async (req, res) => {
 });
 
 // Get farmer's loan summary
-router.get('/farmer/:farmerId/summary', authenticateToken, async (req, res) => {
+router.get('/farmer/:farmerId/summary', async (req, res) => {
   try {
     const farmerId = Number(req.params.farmerId);
     
@@ -163,6 +162,21 @@ router.get('/farmer/:farmerId/summary', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Error in loan summary:', error);
     res.status(500).json({ error: error.message });
+  }
+});
+
+// Update loan status by ID
+router.patch("/:id/status", async (req, res) => {
+  try {
+    const { status } = req.body;
+    const loan = await updateLoanStatus(req.params.id, status);
+    if (loan) {
+      res.status(200).json(loan);
+    } else {
+      res.status(404).json({ message: "Loan not found" });
+    }
+  } catch (error) {
+    res.status(400).json({ error: error.message });
   }
 });
 

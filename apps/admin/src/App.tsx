@@ -72,6 +72,7 @@ import ProtectedDiaryRoute from './components/ProtectedDiaryRoute';
 import ProtectedPOCRoute from './components/ProtectedPOCRoute';
 import Reports from './pages/POC/Reports';
 import ManagementSalesHistory from './components/Management/ManagementSalesHistory';
+import InguzanyoPage from './pages/POC/Inguzanyo';
 
 function App() {
   return (
@@ -106,6 +107,8 @@ function App() {
           <Route path="/poc/deliveries" element={<DeliveryManagement />} />
           <Route path="/poc/reports" element={<Reports />} />
           <Route path="/poc/settings" element={<Settings />} />
+          <Route path="/poc/milk-submissions/:farmerId" element={<MilkSubmissions />} />
+          <Route path="/poc/inguzanyo/:farmerId" element={<InguzanyoPage />} />
         </Route>
 
         {/* Transport Routes */}

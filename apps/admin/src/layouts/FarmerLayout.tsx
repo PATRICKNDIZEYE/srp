@@ -13,7 +13,7 @@ const FarmerLayout = () => {
     { path: '/farmer/submit-milk', icon: <FiDroplet />, label: 'Gutanga Amata' },
     { path: '/farmer/payments', icon: <FiDollarSign />, label: 'Kwishyurwa' },
     { path: '/farmer/loan', icon: <FiCreditCard />, label: 'Inguzanyo' },
-    { path: '/farmer/settings', icon: <FiSettings />, label: 'Igenamiterere' }
+    // { path: '/farmer/settings', icon: <FiSettings />, label: 'Igenamiterere' }
   ];
 
   const handleLogout = () => {

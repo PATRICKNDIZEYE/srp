@@ -79,3 +79,11 @@ export const getFarmersByPocId = async (pocId) => {
     where: { pocId },
   });
 };
+
+// Update Farmer Password by ID
+export const updateFarmerPassword = async (id, newPassword) => {
+  return await prisma.farmer.update({
+    where: { id: parseInt(id) },
+    data: { password: newPassword },
+  });
+};

@@ -161,24 +161,17 @@ const PaymentsPage = () => {
         {/* Status Tabs */}
         <div className="px-6 border-t">
           <div className="flex space-x-4 -mb-px">
-            {[
-              { key: 'all', label: 'Yose' },
-              { key: 'accepted', label: 'Yemewe' },
-              { key: 'pending', label: 'Itegerejwe' },
-              { key: 'rejected', label: 'Yanzwe' }
-            ].map(({ key, label }) => (
-              <button
-                key={key}
-                onClick={() => setSelectedStatus(key)}
-                className={`py-4 px-4 border-b-2 ${
-                  key === selectedStatus
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                {label}
-              </button>
-            ))}
+            <button
+              key="accepted"
+              onClick={() => setSelectedStatus('accepted')}
+              className={`py-4 px-4 border-b-2 ${
+                selectedStatus === 'accepted'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Yemewe
+            </button>
           </div>
         </div>
 
