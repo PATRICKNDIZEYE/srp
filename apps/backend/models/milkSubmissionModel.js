@@ -70,7 +70,18 @@ export const updateMilkSubmission = async (id, { milkType, amount, notes, status
   });
 };
 
-
+// Update milk submission quality by ID
+export const updateMilkSubmissionQuality = async (id, quality) => {
+  try {
+    return await prisma.milkSubmission.update({
+      where: { id: parseInt(id) },
+      data: { quality },
+    });
+  } catch (error) {
+    console.error('Error updating milk submission quality:', error);
+    throw new Error('Failed to update milk submission quality');
+  }
+};
 
 // Delete a milk submission by ID
 export const deleteMilkSubmission = async (id) => {

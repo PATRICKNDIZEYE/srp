@@ -1,5 +1,5 @@
 import express from "express";
-import { createMilkSubmission, createMilkSub, getMilkSubmissions, getMilkSubmissionById, updateMilkSubmission, deleteMilkSubmission, getMilkSubmissionsByFarmerId, getMilkSubmissionsByPocId, getMilkSubmissionsByFarmerAndPocId } from "../models/milkSubmissionModel.js";
+import { createMilkSubmission, createMilkSub, getMilkSubmissions, getMilkSubmissionById, updateMilkSubmission, deleteMilkSubmission, getMilkSubmissionsByFarmerId, getMilkSubmissionsByPocId, getMilkSubmissionsByFarmerAndPocId, updateMilkSubmissionQuality } from "../models/milkSubmissionModel.js";
 import { prisma } from '../postgres/postgres.js';
 import { authenticateToken, checkFarmerRole } from '../middlewares/auth.js';
 import { sendSMS } from '../utils/sms.js';
@@ -328,5 +328,19 @@ router.get('/farmer/:farmerId/poc/:pocId', authenticateToken, async (req, res) =
   }
 });
 
+// Update milk submission quality
+router.put("/:id/quality", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { quality } = req.body;
+
+    const updatedSubmission = await updateMilkSubmissionQuality(id, quality);
+
+    res.json(updatedSubmission);
+  } catch (error) {
+    console.error('Error updating submission quality:', error);
+    res.status(500).json({ error: 'Failed to update submission quality' });
+  }
+});
 
 export default router; 
