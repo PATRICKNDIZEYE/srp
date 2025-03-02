@@ -5,6 +5,7 @@ import DateRangeFilter from '../../components/Filters/DateRangeFilter';
 import { toast } from 'react-toastify';
 import AddSubmitMilk from '../../components/AddSubmitMilk';
 import { useParams } from 'react-router-dom';
+import { FaEdit } from 'react-icons/fa'; // Import an edit icon
 
 // Define the type for a submission
 interface Farmer {
@@ -21,6 +22,7 @@ interface Submission {
   createdAt: string;
   farmer: Farmer;
   status: string;
+  quality?: string;
   // Add other submission properties if needed
 }
 
@@ -32,6 +34,25 @@ interface FormData {
   status: string;
   farmerId: string;
 }
+
+// Simple Modal Component
+const Modal: React.FC<{ onClose: () => void; children: React.ReactNode }> = ({ onClose, children }) => {
+  return (
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full" id="my-modal">
+      <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="mt-3 text-center">
+          {children}
+          <button
+            onClick={onClose}
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const MilkSubmissions = () => {
   const { farmerId } = useParams<{ farmerId: string }>(); // Get farmerId from URL
@@ -49,6 +70,9 @@ const MilkSubmissions = () => {
     farmerId: farmerId ? farmerId : '0'
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isQualityModalOpen, setIsQualityModalOpen] = useState(false);
+  const [selectedSubmissionId, setSelectedSubmissionId] = useState<number | null>(null);
+  const [quality, setQuality] = useState<string>('');
 
   useEffect(() => {
     const fetchSubmissions = async () => {
@@ -77,11 +101,6 @@ const MilkSubmissions = () => {
     fetchSubmissions();
     fetchFarmers(); // Fetch farmers when component mounts
   }, [farmerId]);
-
-  const handleQualityTest = (submissionId: string) => {
-    // Open quality test modal/form
-    toast.info('Opening quality test form...');
-  };
 
   const handleConfirmSubmission = async (submissionId: string) => {
     try {
@@ -113,6 +132,24 @@ const MilkSubmissions = () => {
       }
     } catch (error) {
       toast.error('Failed to reject milk submission');
+    }
+  };
+
+  const handleQualityChange = async () => {
+    if (selectedSubmissionId !== null) {
+      try {
+        const response = await axiosInstance.put(`/milk-submissions/${selectedSubmissionId}/quality`, {
+          quality,
+        });
+        if (response.status === 200) {
+          toast.success('Quality updated successfully');
+          setIsQualityModalOpen(false);
+          const newResponse = await axiosInstance.get('/milk-submissions');
+          setSubmissions(newResponse.data);
+        }
+      } catch (error) {
+        toast.error('Failed to update quality');
+      }
     }
   };
 
@@ -212,7 +249,7 @@ const MilkSubmissions = () => {
                   Status
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Quality Test
+                  Quality
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Actions
@@ -238,14 +275,16 @@ const MilkSubmissions = () => {
                     {submission.status}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <button
-                      onClick={() => handleQualityTest(submission.id.toString())}
-                      className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200"
-                    >
-                      Conduct Test
-                    </button>
+                    {submission.quality || 'Not set'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    <FaEdit
+                      className="cursor-pointer text-blue-500"
+                      onClick={() => {
+                        setSelectedSubmissionId(submission.id);
+                        setIsQualityModalOpen(true);
+                      }}
+                    />
                     {submission.status !== 'accepted' && submission.status !== 'rejected' && (
                       <div className="flex space-x-2">
                         <button
@@ -269,6 +308,28 @@ const MilkSubmissions = () => {
           </table>
         </div>
       </div>
+
+      {/* Modal for changing quality */}
+      {isQualityModalOpen && (
+        <Modal onClose={() => setIsQualityModalOpen(false)}>
+          <div className="p-4">
+            <h2 className="text-lg font-semibold">Change Quality</h2>
+            <input
+              type="text"
+              value={quality}
+              onChange={(e) => setQuality(e.target.value)}
+              className="mt-2 p-2 border rounded w-full"
+              placeholder="Enter new quality"
+            />
+            <button
+              onClick={handleQualityChange}
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Update Quality
+            </button>
+          </div>
+        </Modal>
+      )}
 
       {/* Modal for adding milk submission */}
       {isModalOpen && (

@@ -13,6 +13,7 @@ model MilkSubmission {
   amount    Float
   notes     String?
   status    String
+  quality   String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   farmerId  Int
