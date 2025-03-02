@@ -144,6 +144,7 @@ const MilkSubmissions = () => {
         if (response.status === 200) {
           toast.success('Quality updated successfully');
           setIsQualityModalOpen(false);
+          // Refresh the submissions list to reflect the updated quality
           const newResponse = await axiosInstance.get('/milk-submissions');
           setSubmissions(newResponse.data);
         }
