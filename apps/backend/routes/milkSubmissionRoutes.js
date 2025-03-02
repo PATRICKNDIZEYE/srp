@@ -175,24 +175,10 @@ router.get('/farmer/:farmerId', async (req, res) => {
         createdAt: 'desc'
       },
       take: 10,
-      select: {
-        id: true,
-        milkType: true,
-        amount: true,
-        status: true,
-        createdAt: true,
-        notes: true,
-        quality: true,
-        farmer: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            phoneNumber: true,
-            pocId: true
-          }
-        }
+      include: {
+        farmer: true // Include related farmer data
       }
+      // Removed select to avoid conflict with include
     });
 
     if (!submissions || submissions.length === 0) {
@@ -298,18 +284,9 @@ router.get('/poc/:pocId', async (req, res) => {
     // Fetch all milk submissions and include farmer data
     const submissions = await prisma.milkSubmission.findMany({
       include: {
-        farmer: true, // Include related farmer data
-      },
-      select: {
-        id: true,
-        milkType: true,
-        amount: true,
-        status: true,
-        createdAt: true,
-        notes: true,
-        quality: true, // Add quality field
-        farmer: true
+        farmer: true // Include related farmer data
       }
+      // Removed select to avoid conflict with include
     });
 
     // Filter submissions where the farmer's pocId matches the provided pocId
