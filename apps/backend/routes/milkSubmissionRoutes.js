@@ -182,6 +182,7 @@ router.get('/farmer/:farmerId', async (req, res) => {
         status: true,
         createdAt: true,
         notes: true,
+        quality: true,
         farmer: {
           select: {
             id: true,
@@ -299,6 +300,16 @@ router.get('/poc/:pocId', async (req, res) => {
       include: {
         farmer: true, // Include related farmer data
       },
+      select: {
+        id: true,
+        milkType: true,
+        amount: true,
+        status: true,
+        createdAt: true,
+        notes: true,
+        quality: true, // Add quality field
+        farmer: true
+      }
     });
 
     // Filter submissions where the farmer's pocId matches the provided pocId
