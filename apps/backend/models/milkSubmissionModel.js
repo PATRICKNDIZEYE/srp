@@ -42,16 +42,6 @@ export const getMilkSubmissions = async () => {
   return await prisma.milkSubmission.findMany({
     include: {
       farmer: true, // Include related farmer data
-    },
-    select: {
-      id: true,
-      milkType: true,
-      amount: true,
-      status: true,
-      createdAt: true,
-      notes: true,
-      quality: true, // Add quality field
-      farmer: true
     }
   });
 };
@@ -62,16 +52,6 @@ export const getMilkSubmissionById = async (id) => {
     where: { id: parseInt(id) },
     include: {
       farmer: true,
-    },
-    select: {
-      id: true,
-      milkType: true,
-      amount: true,
-      status: true,
-      createdAt: true,
-      notes: true,
-      quality: true, // Add quality field
-      farmer: true
     }
   });
 };
@@ -116,15 +96,8 @@ export const getMilkSubmissionsByFarmerId = async (farmerId) => {
     return await prisma.milkSubmission.findMany({
       where: { farmerId },
       orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        milkType: true,
-        amount: true,
-        status: true,
-        createdAt: true,
-        notes: true,
-        quality: true, // Add quality field
-        farmer: true
+      include: {
+        farmer: true // Include related farmer data
       }
     });
   } catch (error) {
@@ -141,17 +114,7 @@ export const getMilkSubmissionsByPocId = async (pocId) => {
       include: {
         farmer: true, // Include related farmer data if needed
       },
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        milkType: true,
-        amount: true,
-        status: true,
-        createdAt: true,
-        notes: true,
-        quality: true, // Add quality field
-        farmer: true
-      }
+      orderBy: { createdAt: 'desc' }
     });
   } catch (error) {
     console.error('Error fetching milk submissions by POC ID:', error);
@@ -170,17 +133,7 @@ export const getMilkSubmissionsByFarmerAndPocId = async (farmerId, pocId) => {
       include: {
         farmer: true, // Include related farmer data if needed
       },
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        milkType: true,
-        amount: true,
-        status: true,
-        createdAt: true,
-        notes: true,
-        quality: true, // Add quality field
-        farmer: true
-      }
+      orderBy: { createdAt: 'desc' }
     });
   } catch (error) {
     console.error('Error fetching milk submissions by farmer ID and POC ID:', error);
