@@ -29,6 +29,8 @@ interface SidebarProps {
 }
 
 const DashboardSidebar: React.FC<SidebarProps> = ({ role, isOpen, onClose }) => {
+  const [dropdownOpen, setDropdownOpen] = React.useState(false);
+
   const menuItems = {
     farmer: [
       { name: 'AHABANZA', icon: FiHome, path: '/farmer/dashboard' },
@@ -55,25 +57,25 @@ const DashboardSidebar: React.FC<SidebarProps> = ({ role, isOpen, onClose }) => 
     production: [
       { name: 'Dashboard', icon: FiHome, path: '/production/dashboard' },
       { name: 'Deliveries', icon: FiTruck, path: '/production/deliveries' },
-      { name: 'Sales', icon: FiFileText, path: '/production/sales' },
+      // { name: 'Sales', icon: FiFileText, path: '/production/sales' },
       { name: 'Delivery Management', icon: FiTruck, path: '/production/delivery-management' },
       // { name: 'Settings', icon: FiSettings, path: '/production/settings' },
     ],
     diary: [
       { name: 'Dashboard', icon: FiHome, path: '/diary/dashboard' },
-      { name: 'Operations', icon: FiActivity, path: '/diary/operations' },
+      // { name: 'Operations', icon: FiActivity, path: '/diary/operations' },
       { name: 'Receive Milk', icon: FiDroplet, path: '/diary/receiving' },
       { name: 'Sales', icon: FiDollarSign, path: '/diary/sales' },
-      { name: 'Daily Sale Management', icon: FiFileText, path: '/diary/daily-sales' },
-      { name: 'Financial Reports', icon: FiBarChart2, path: '/diary/finances' },
+      // { name: 'Daily Sale Management', icon: FiFileText, path: '/diary/daily-sales' },
+      // { name: 'Financial Reports', icon: FiBarChart2, path: '/diary/finances' },
       // { name: 'Settings', icon: FiSettings, path: '/diary/settings' },
     ],
     management: [
       { name: 'Dashboard', icon: FiHome, path: '/management/dashboard' },
       { name: 'User Management', icon: FiUsers, path: '/management/users' },
-      { name: 'Financial Reports', icon: FiDollarSign, path: '/management/finance' },
-      { name: 'Operations', icon: FiActivity, path: '/management/operations' },
-      { name: 'Analytics', icon: FiBarChart2, path: '/management/analytics' },
+      // { name: 'Financial Reports', icon: FiDollarSign, path: '/management/finance' },
+      // { name: 'Operations', icon: FiActivity, path: '/management/operations' },
+      // { name: 'Analytics', icon: FiBarChart2, path: '/management/analytics' },
       { name: 'Sales History', icon: FiFileText, path: '/management/sales-history' },
       // { name: 'Settings', icon: FiSettings, path: '/management/settings' },
     ],
@@ -122,8 +124,11 @@ const DashboardSidebar: React.FC<SidebarProps> = ({ role, isOpen, onClose }) => 
           </nav>
 
           {/* User Info */}
-          <div className="p-4 border-t">
-            <div className="flex items-center space-x-3">
+          <div className="p-4 border-t relative">
+            <div
+              className="flex items-center space-x-3 cursor-pointer"
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+            >
               <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
                 <FiUser size={20} />
               </div>
@@ -132,6 +137,17 @@ const DashboardSidebar: React.FC<SidebarProps> = ({ role, isOpen, onClose }) => 
                 <div className="text-sm text-gray-500">{role}</div>
               </div>
             </div>
+
+            {/* Dropdown Menu */}
+            {dropdownOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 shadow-lg z-50">
+                <ul>
+                  <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">Profile</li>
+                  <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">Settings</li>
+                  <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">Logout</li>
+                </ul>
+              </div>
+            )}
           </div>
         </div>
       </div>

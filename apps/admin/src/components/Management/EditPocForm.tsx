@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './AddPocForm.css'; // Import the CSS file for styling
+import './EditPocForm.css'; // Import the CSS file for styling
 
 interface Address {
   street: string;
@@ -21,13 +21,13 @@ interface PocData {
   status: string;
 }
 
-interface AddPocFormProps {
+interface EditPocFormProps {
   onSubmit: (data: PocData) => void;
   onClose: () => void;
-  initialData?: PocData; // Allow initial data for editing
+  initialData: PocData | null; // Allow initialData to be null
 }
 
-const AddPocForm: React.FC<AddPocFormProps> = ({ onSubmit, onClose, initialData }) => {
+const EditPocForm: React.FC<EditPocFormProps> = ({ onSubmit, onClose, initialData }) => {
   const [formData, setFormData] = useState<PocData>(initialData || {
     firstName: '',
     lastName: '',
@@ -97,10 +97,14 @@ const AddPocForm: React.FC<AddPocFormProps> = ({ onSubmit, onClose, initialData 
     onSubmit(formData);
   };
 
+  if (!initialData) {
+    return null; // Render nothing if initialData is not available
+  }
+
   return (
     <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex justify-center items-center z-50">
       <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-lg overflow-y-auto max-h-full">
-        <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">{initialData ? 'Edit POC' : 'Add POC'}</h2>
+        <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Edit POC</h2>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="flex gap-4">
             <label className="w-full">
@@ -261,7 +265,7 @@ const AddPocForm: React.FC<AddPocFormProps> = ({ onSubmit, onClose, initialData 
               type="submit"
               className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg shadow-md"
             >
-              {initialData ? 'Update POC' : 'Add POC'}
+              Update POC
             </button>
           </div>
         </form>
@@ -270,4 +274,4 @@ const AddPocForm: React.FC<AddPocFormProps> = ({ onSubmit, onClose, initialData 
   );
 };
 
-export default AddPocForm; 
+export default EditPocForm; 
