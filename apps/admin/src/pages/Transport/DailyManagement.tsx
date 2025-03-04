@@ -27,6 +27,7 @@ const DailyManagement: React.FC = () => {
   const [dailyData, setDailyData] = useState<DailyData[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTransportId, setSelectedTransportId] = useState<string | null>(null);
+  const [isAddDailyModalOpen, setIsAddDailyModalOpen] = useState(false);
 
   // New state variables for counts and amounts
   const [completedCount, setCompletedCount] = useState(0);
@@ -37,7 +38,7 @@ const DailyManagement: React.FC = () => {
   useEffect(() => {
     const fetchDailyData = async () => {
       try {
-        const response = await axiosInstance.get(`/derived/derivery/${deliveryId}`);
+        const response = await axiosInstance.get(`/derived/transport/${deliveryId}`);
         const data = response.data.map((item: any) => ({
           id: item.id,
           date: item.date,
@@ -100,7 +101,7 @@ const DailyManagement: React.FC = () => {
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-      <Breadcrumb pageName={`Production Management for Delivery ${deliveryId}`} />
+      <Breadcrumb pageName={`Daily Management for Delivery ${deliveryId}`} />
 
       {/* New Cards for Completed and Pending Data */}
       <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -141,10 +142,18 @@ const DailyManagement: React.FC = () => {
         </CardDataStats>
       </div>
 
+      <div className="flex justify-end mb-4">
+        <button
+          className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+          onClick={() => setIsAddDailyModalOpen(true)}
+        >
+          Add Daily
+        </button>
+      </div>
+
       <div className="bg-white rounded-lg shadow-lg">
         <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-          <h2 className="text-xl font-semibold">Production Management for Delivery {deliveryId}</h2>
-          
+          <h2 className="text-xl font-semibold">Daily Management for Delivery {deliveryId}</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -165,7 +174,6 @@ const DailyManagement: React.FC = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Diary Phone Number
                 </th>
-              
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -186,20 +194,25 @@ const DailyManagement: React.FC = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     {data.diaryPhoneNumber}
                   </td>
-               
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       </div>
-      <div className="flex justify-end mt-4">
-        <button
-          className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
-        >
-          Close
-        </button>
-      </div>
+
+      {isAddDailyModalOpen && (
+        <AddDailyModal
+          onClose={() => setIsAddDailyModalOpen(false)}
+          onAdd={() => {
+            setIsAddDailyModalOpen(false);
+            fetchDailyData();
+          }}
+          initialTransportId={selectedTransportId}
+          deriveryId={deliveryId || ''}
+        />
+      )}
+
       {isModalOpen && (
         <AddDailyModal
           onClose={() => setIsModalOpen(false)}

@@ -265,16 +265,7 @@ const DeliveryManagement = () => {
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-      <Breadcrumb pageName="Delivery Management" />
-
-      <div className="flex justify-end mb-4">
-        <button
-          onClick={handleAddDelivery}
-          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-        >
-          Add Delivery
-        </button>
-      </div>
+      <Breadcrumb pageName="Incoming Deliveries Management" />
 
       {/* Filters & Table */}
       <div className="bg-white rounded-lg shadow-lg">
@@ -347,12 +338,12 @@ const DeliveryManagement = () => {
                         >
                           Reject
                         </button>
-                        <button
+                        {/* <button
                           onClick={() => handleAddDaily(milk.id)}
                           className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200"
                         >
                           Add Daily
-                        </button>
+                        </button> */}
                       </div>
                     )}
                   </td>

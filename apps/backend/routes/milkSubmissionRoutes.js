@@ -1,5 +1,5 @@
 import express from "express";
-import { createMilkSubmission, createMilkSub, getMilkSubmissions, getMilkSubmissionById, updateMilkSubmission, deleteMilkSubmission, getMilkSubmissionsByFarmerId, getMilkSubmissionsByPocId, getMilkSubmissionsByFarmerAndPocId, updateMilkSubmissionQuality } from "../models/milkSubmissionModel.js";
+import { createMilkSubmission, createMilkSub, getMilkSubmissions, getMilkSubmissionById, updateMilkSubmission, deleteMilkSubmission, getMilkSubmissionsByFarmerId, getMilkSubmissionsByPocId, getMilkSubmissionsByFarmerAndPocId, updateMilkSubmissionQuality, updateMilkSubmissionDates } from "../models/milkSubmissionModel.js";
 import { prisma } from '../postgres/postgres.js';
 import { authenticateToken, checkFarmerRole } from '../middlewares/auth.js';
 import { sendSMS } from '../utils/sms.js';
@@ -328,6 +328,21 @@ router.put("/:id/quality", async (req, res) => {
   } catch (error) {
     console.error('Error updating submission quality:', error);
     res.status(500).json({ error: 'Failed to update submission quality' });
+  }
+});
+
+// Update milk submission dates by ID
+router.put("/:id/dates", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { createdAt, updatedAt } = req.body;
+
+    const updatedSubmission = await updateMilkSubmissionDates(id, { createdAt, updatedAt });
+
+    res.json(updatedSubmission);
+  } catch (error) {
+    console.error('Error updating submission dates:', error);
+    res.status(500).json({ error: 'Failed to update submission dates' });
   }
 });
 

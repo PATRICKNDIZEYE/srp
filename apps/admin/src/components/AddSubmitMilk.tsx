@@ -26,6 +26,7 @@ interface AddSubmitMilkProps {
   }>>;
   isSubmitting: boolean;
   farmers: Farmer[]; // Add farmers to the props
+  updatedAt?: string; // Add updatedAt to the props if needed
 }
 
 const AddSubmitMilk: React.FC<AddSubmitMilkProps> = ({
@@ -34,7 +35,8 @@ const AddSubmitMilk: React.FC<AddSubmitMilkProps> = ({
   formData,
   setFormData,
   isSubmitting,
-  farmers
+  farmers,
+  updatedAt
 }) => {
   const [farmerData, setFarmerData] = useState<Farmer[]>([]);
 
@@ -55,12 +57,26 @@ const AddSubmitMilk: React.FC<AddSubmitMilkProps> = ({
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault(); // Prevent the default form submission
-    onSubmit(e);
+
+    const submissionData = {
+      ...formData,
+      // Only include updatedAt if it's explicitly set
+      ...(updatedAt ? { updatedAt } : {}),
+    };
+
+    onSubmit(submissionData);
   };
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">
       <h2 className="text-2xl font-semibold text-gray-800 mb-6">Add Milk Submission</h2>
+
+      {/* Display updatedAt if needed */}
+      {updatedAt && (
+        <div className="text-sm text-gray-500 mb-4">
+          Last updated at: {new Date(updatedAt).toLocaleString()}
+        </div>
+      )}
 
       <form onSubmit={handleFormSubmit} className="space-y-6">
         <div>

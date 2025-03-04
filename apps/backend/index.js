@@ -41,6 +41,7 @@ import { authenticateToken } from './middlewares/auth.js';
 import { managementLogin } from './controllers/auth.controller.js';
 import reportRoutes from './routes/reportRoutes.js';
 import dailySaleRoutes from './routes/dailySaleRoutes.js';
+import requestMilkRoutes from './routes/requestMilkRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -93,6 +94,7 @@ app.use('/api/payment',paymentRoutes);
 app.use('/api/login-admin', loginAdminAuth);
 app.use('/api/reports', reportRoutes);
 app.use('/api/daily-sales', dailySaleRoutes);
+app.use('/api/request-milk', requestMilkRoutes);
 // Use the registerFarmerAuth function as a route handler
 
 app.post('/api/register-farmer', async (req, res) => {

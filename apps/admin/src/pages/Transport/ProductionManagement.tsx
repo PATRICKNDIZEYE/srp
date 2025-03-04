@@ -3,7 +3,7 @@ import { toast } from 'react-toastify';
 import axiosInstance from '../../utils/axiosInstance';
 import Breadcrumb from '../../components/Breadcrumb';
 import { useParams } from 'react-router-dom';
-import AddDailyModal from '../POC/AddDailyModal';
+import AddProductionModal from '../Production/AddProductionModal';
 import CardDataStats from '../../components/CardDataStats';
 import { FiCheckCircle, FiAlertCircle, FiDroplet, FiTruck } from 'react-icons/fi';
 
@@ -33,52 +33,53 @@ const ProductionManagement: React.FC = () => {
   const [pendingCount, setPendingCount] = useState(0);
   const [completedAmount, setCompletedAmount] = useState(0);
   const [pendingAmount, setPendingAmount] = useState(0);
- 
-  useEffect(() => {
-    const fetchDailyData = async () => {
-      if (!deliveryId) return; // Ensure deliveryId is defined before making the request
-  
-      try {
-        const response = await axiosInstance.get(`/transp-derived/transportation/${deliveryId}`);
-  
-        // Ensure response.data is an array before using map
-        const data = Array.isArray(response.data)
-          ? response.data.map((item: any) => ({
-              id: item.id,
-              date: item.date,
-              status: item.status?.toLowerCase() || 'unknown', // Normalize status
-              amount: item.amount || 0, // Ensure amount is valid
-              transportName: `${item.transport?.firstName || ''} ${item.transport?.lastName || ''}`.trim(),
-              diaryPhoneNumber: item.transport?.phoneNumber || 'N/A',
-              transportId: item.transport?.id || null,
-              transportationId: item.transportations?.id || null, // Correctly extract transportationId
-            }))
-          : [];
-  
-        setDailyData(data);
-  
-        // Set the transport ID from the first item (assuming all items have the same transport ID)
-        if (data.length > 0 && data[0].transportId) {
-          setSelectedTransportId(data[0].transportId);
-        }
-  
-        // Calculate counts and amounts
-        const completedData = data.filter((item: DailyData) => item.status === 'completed');
-        const pendingData = data.filter((item: DailyData) => item.status === 'pending');
-  
-        setCompletedCount(completedData.length);
-        setPendingCount(pendingData.length);
-        setCompletedAmount(completedData.reduce((sum: number, item: DailyData) => sum + item.amount, 0));
-        setPendingAmount(pendingData.reduce((sum: number, item: DailyData) => sum + item.amount, 0));
-      } catch (error) {
-        console.error('Error fetching daily data:', error);
-        toast.error('Failed to load daily data');
+
+  // Move fetchDailyData outside of useEffect
+  const fetchDailyData = async () => {
+    if (!deliveryId) return; // Ensure deliveryId is defined before making the request
+
+    try {
+      const response = await axiosInstance.get(`/delivery/transport/${deliveryId}`);
+
+      // Ensure response.data is an array before using map
+      const data = Array.isArray(response.data)
+        ? response.data.map((item: any) => ({
+            id: item.id,
+            date: item.date,
+            status: item.transportStatus?.toLowerCase() || 'unknown', // Use transportStatus instead of status
+            amount: item.amount || 0, // Ensure amount is valid
+            transportName: `${item.transport?.firstName || ''} ${item.transport?.lastName || ''}`.trim(),
+            diaryPhoneNumber: item.transport?.phoneNumber || 'N/A',
+            transportId: item.transport?.id || null,
+            transportationId: item.transportations?.id || null, // Correctly extract transportationId
+          }))
+        : [];
+
+      setDailyData(data);
+
+      // Set the transport ID from the first item (assuming all items have the same transport ID)
+      if (data.length > 0 && data[0].transportId) {
+        setSelectedTransportId(data[0].transportId);
       }
-    };
-  
+
+      // Calculate counts and amounts
+      const completedData = data.filter((item: DailyData) => item.status === 'completed');
+      const pendingData = data.filter((item: DailyData) => item.status === 'pending');
+
+      setCompletedCount(completedData.length);
+      setPendingCount(pendingData.length);
+      setCompletedAmount(completedData.reduce((sum: number, item: DailyData) => sum + item.amount, 0));
+      setPendingAmount(pendingData.reduce((sum: number, item: DailyData) => sum + item.amount, 0));
+    } catch (error) {
+      console.error('Error fetching daily data:', error);
+      toast.error('Failed to load daily data');
+    }
+  };
+
+  useEffect(() => {
     fetchDailyData();
   }, [deliveryId]);
-  
+
   const handleApprove = async (id: number) => {
     try {
       // Update the status using the new endpoint
@@ -117,7 +118,7 @@ const ProductionManagement: React.FC = () => {
           title="Completed Count"
           total={completedCount.toString()}
           rate="Total completed"
-          levelUp={true}
+          levelUp={true} 
         >
           <FiCheckCircle className="text-green-500" />
         </CardDataStats>
@@ -153,7 +154,12 @@ const ProductionManagement: React.FC = () => {
       <div className="bg-white rounded-lg shadow-lg">
         <div className="p-6 border-b border-gray-200 flex justify-between items-center">
           <h2 className="text-xl font-semibold">Production Management for Delivery {deliveryId}</h2>
-          
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Add Transportation
+          </button>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -210,14 +216,14 @@ const ProductionManagement: React.FC = () => {
         </button>
       </div>
       {isModalOpen && (
-        <AddDailyModal
+        <AddProductionModal
           onClose={() => setIsModalOpen(false)}
           onAdd={() => {
             setIsModalOpen(false);
             fetchDailyData();
           }}
           initialTransportId={selectedTransportId}
-          deriveryId={deliveryId || ''}
+          deliveryId={deliveryId || ''}
         />
       )}
     </div>

@@ -60,6 +60,7 @@ export const deleteTransport = async (id) => {
     where: { id: parseInt(id) },
   });
 };
+
 // Function to get a transport by phone number
 export const getTransportByPhoneNumber = async (phoneNumber) => {
   try {
@@ -71,4 +72,12 @@ export const getTransportByPhoneNumber = async (phoneNumber) => {
   } catch (error) {
     throw new Error("Error fetching transport by phone number: " + error.message);
   }
+};
+
+// Update transport status by ID
+export const updateTransportStatus = async (id, status) => {
+  return await prisma.transport.update({
+    where: { id: parseInt(id) },
+    data: { status },
+  });
 };

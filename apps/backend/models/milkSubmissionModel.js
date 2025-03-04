@@ -139,4 +139,20 @@ export const getMilkSubmissionsByFarmerAndPocId = async (farmerId, pocId) => {
     console.error('Error fetching milk submissions by farmer ID and POC ID:', error);
     throw new Error('Failed to fetch milk submissions');
   }
+};
+
+// Update milk submission dates by ID
+export const updateMilkSubmissionDates = async (id, { createdAt, updatedAt }) => {
+  try {
+    return await prisma.milkSubmission.update({
+      where: { id: parseInt(id) },
+      data: {
+        createdAt: new Date(createdAt),
+        updatedAt: new Date(updatedAt),
+      },
+    });
+  } catch (error) {
+    console.error('Error updating milk submission dates:', error);
+    throw new Error('Failed to update milk submission dates');
+  }
 }; 

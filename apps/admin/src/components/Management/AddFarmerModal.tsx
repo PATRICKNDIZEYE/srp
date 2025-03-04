@@ -12,6 +12,22 @@ type POC = {
   lastName: string;
 };
 
+// Define a type for NewFarmer
+type NewFarmer = {
+  firstName: string;
+  lastName: string;
+  birthday: string;
+  nationalId?: string; // Make nationalId optional
+  phoneNumber: string;
+  longitude: number;
+  latitude: number;
+  username: string;
+  password: string;
+  farmDetails: string;
+  status: string;
+  pocId: number;
+};
+
 interface AddFarmerModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -148,7 +164,7 @@ const AddFarmerModal: React.FC<AddFarmerModalProps> = ({ isOpen, onClose, onSubm
     }
 
     // Validate nationalId
-    if (!formData.nationalId || formData.nationalId.length !== 16) {
+    if (formData.nationalId && formData.nationalId.length !== 16) {
       toast.error('Please enter a valid national ID');
       return;
     }
@@ -162,11 +178,14 @@ const AddFarmerModal: React.FC<AddFarmerModalProps> = ({ isOpen, onClose, onSubm
       const sanitizedFirstName = formData.fullName.split(' ')[0].replace(/[^a-zA-Z]/g, '') || '';
       const sanitizedUsername = sanitizedFirstName.toLowerCase() + Math.floor(Math.random() * 1000);
 
-      const registrationData = {
+      // Generate dummy nationalId if not provided
+      const generatedNationalId = formData.nationalId || `DUMMY${Math.floor(Math.random() * 1000000000000)}`;
+
+      const registrationData: NewFarmer = {
         firstName: sanitizedFirstName,
         lastName: formData.fullName.split(' ').slice(1).join(' ') || '',
         birthday: formattedBirthday,
-        nationalId: formData.nationalId,
+        nationalId: generatedNationalId, // Use generated nationalId
         phoneNumber: formData.phone,
         longitude: parseFloat(formData.longitude) || 30.12345,
         latitude: parseFloat(formData.latitude) || -1.98765,
@@ -228,7 +247,6 @@ const AddFarmerModal: React.FC<AddFarmerModalProps> = ({ isOpen, onClose, onSubm
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={formData.nationalId}
               onChange={(e) => setFormData({ ...formData, nationalId: e.target.value })}
-              required
               placeholder="National ID"
             />
           </div>
