@@ -10,6 +10,7 @@ import AddFarmerModal from '../../components/Management/AddFarmerModal';
 import AddTransportModal from '../../components/Management/AddTransportModal';
 import AddUserModal from '../../components/Management/AddUserModal';
 import AddEditFarmerModal from '../../components/Management/AddEditFarmerModal';
+import EditPocForm from '../../components/Management/EditPocForm';
 
 interface User {
   id: number;
@@ -49,6 +50,25 @@ interface Dairy {
   latitude: string;
 }
 
+interface PocData {
+  id: number;
+  firstName: string;
+  lastName: string;
+  birthday: string;
+  nationalId: string;
+  phoneNumber: string;
+  longitude: number | string;
+  latitude: number | string;
+  username: string;
+  password: string;
+  address: {
+    street: string;
+    city: string;
+    postalCode: string;
+  };
+  status: string;
+}
+
 const UserManagement = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [activeTab, setActiveTab] = useState('users');
@@ -68,6 +88,9 @@ const UserManagement = () => {
 
   const [showAddDairyModal, setShowAddDairyModal] = useState(false);
   const [selectedDairy, setSelectedDairy] = useState<Dairy | null>(null);
+
+  const [showEditPocModal, setShowEditPocModal] = useState(false);
+  const [selectedPoc, setSelectedPoc] = useState<PocData | null>(null);
 
   const fetchData = async () => {
     try {
@@ -155,23 +178,7 @@ const UserManagement = () => {
     }
   };
 
-  const handleAddPoc = async (pocData: {
-    firstName: string;
-    lastName: string;
-    birthday: string;
-    nationalId: string;
-    phoneNumber: string;
-    longitude: number | string;
-    latitude: number | string;
-    username: string;
-    password: string;
-    address: {
-      street: string;
-      city: string;
-      postalCode: string;
-    };
-    status: string;
-  }) => {
+  const handleAddPoc = async (pocData: PocData) => {
     try {
       const formattedBirthday = new Date(pocData.birthday).toISOString().split('T')[0] + 'T00:00:00Z';
       const formattedPocData = {
@@ -269,6 +276,22 @@ const UserManagement = () => {
   const handleEditDairy = (dairyData: Dairy) => {
     setSelectedDairy(dairyData);
     setShowAddDairyModal(true);
+  };
+
+  const handleEditButtonClick = (entity: any) => {
+    if (activeTab === 'farmers') {
+      setSelectedFarmer(entity);
+      setShowAddFarmerModal(true);
+    } else if (activeTab === 'dairies') {
+      setSelectedDairy(entity);
+      setShowAddDairyModal(true);
+    } else if (activeTab === 'pocs') {
+      setSelectedPoc(entity);
+      setShowEditPocModal(true);
+    } else {
+      setSelectedUser(entity);
+      setShowAddModal(true);
+    }
   };
 
   const AddUserForm = ({ onClose, onSubmit, initialData }: { onClose: () => void; onSubmit: (data: any) => void; initialData?: User }) => (
@@ -567,10 +590,7 @@ const UserManagement = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex gap-2">
                         <button 
-                          onClick={() => {
-                            setSelectedUser(user);
-                            setShowAddModal(true);
-                          }}
+                          onClick={() => handleEditButtonClick(user)}
                           className="text-blue-600 hover:text-blue-800"
                         >
                           <FiEdit2 />
@@ -632,18 +652,7 @@ const UserManagement = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex gap-2">
                         <button 
-                          onClick={() => {
-                            if (activeTab === 'farmers') {
-                              setSelectedFarmer(entity);
-                              setShowAddFarmerModal(true);
-                            } else if (activeTab === 'dairies') {
-                              setSelectedDairy(entity);
-                              setShowAddDairyModal(true);
-                            } else {
-                              setSelectedUser(entity);
-                              setShowAddModal(true);
-                            }
-                          }}
+                          onClick={() => handleEditButtonClick(entity)}
                           className="text-blue-600 hover:text-blue-800"
                         >
                           <FiEdit2 />
@@ -743,11 +752,39 @@ const UserManagement = () => {
         />
       )}
 
-      {selectedDairy && (
-        <AddEditDairyForm
-          initialData={selectedDairy}
-          onClose={() => setSelectedDairy(null)}
-          onSubmit={handleEditDairy}
+      {showEditPocModal && selectedPoc && (
+        <EditPocForm
+          onClose={() => {
+            setShowEditPocModal(false);
+            setSelectedPoc(null);
+          }}
+          onSubmit={async (updatedPocData) => {
+            try {
+              // Format the birthday to ISO-8601
+              const formattedBirthday = new Date(updatedPocData.birthday).toISOString();
+
+              // Create a new object excluding the 'id' field and with formatted birthday
+              const { id, ...dataWithoutId } = updatedPocData;
+              const dataToSend = { ...dataWithoutId, birthday: formattedBirthday };
+
+              // Log the data being sent to the server
+              console.log('Updating POC with data:', dataToSend);
+
+              // Use the id for the PUT request
+              await axiosInstance.put(`/pocs/${updatedPocData.id}`, dataToSend, {
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+              });
+              toast.success('POC updated successfully!');
+              fetchData(); // Refresh data after editing
+            } catch (error) {
+              console.error('Error updating POC:', error.response?.data || error.message);
+              toast.error('Error updating POC');
+            }
+            setShowEditPocModal(false);
+          }}
+          initialData={selectedPoc}
         />
       )}
     </div>

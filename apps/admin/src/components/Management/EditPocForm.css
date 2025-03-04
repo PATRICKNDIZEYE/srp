@@ -1,0 +1,5 @@
+/* Add styles for the scrollable form */
+.bg-white {
+  max-height: 90vh; /* Adjust the height as needed */
+  overflow-y: auto;
+} 
