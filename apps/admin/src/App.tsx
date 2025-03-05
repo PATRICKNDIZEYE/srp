@@ -73,6 +73,7 @@ import ProtectedPOCRoute from './components/ProtectedPOCRoute';
 import Reports from './pages/POC/Reports';
 import ManagementSalesHistory from './components/Management/ManagementSalesHistory';
 import InguzanyoPage from './pages/POC/Inguzanyo';
+import RequestMilkPage from './pages/Diary/RequestMilkPage';
 
 function App() {
   return (
@@ -150,6 +151,7 @@ function App() {
           <Route path="/diary/sales" element={<SalesHistory dateRange={{ start: '', end: '' }} />} />
           <Route path="/diary/finances" element={<AdminFinancialReports period="daily" />} />
           <Route path="/diary/settings" element={<Settings />} />
+          <Route path="/diary/requests" element={<RequestMilkPage />} />
         </Route>
 
         {/* Error Pages */}

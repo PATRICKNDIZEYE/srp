@@ -2,7 +2,7 @@ import { prisma } from "../postgres/postgres.js";
 import bcrypt from 'bcrypt';
 
 // Create a new production entry
-export const createProduction = async ({ status, approveStatus, phoneNumber, password, longitude, latitude }) => {
+export const createProduction = async ({ status, approveStatus, phoneNumber, password, longitude, latitude, username }) => {
   const hashedPassword = await bcrypt.hash(password, 10);
   return await prisma.production.create({
     data: {
@@ -12,6 +12,7 @@ export const createProduction = async ({ status, approveStatus, phoneNumber, pas
       password: hashedPassword,
       longitude: parseFloat(longitude),
       latitude: parseFloat(latitude),
+      username,
     },
   });
 };
@@ -29,7 +30,7 @@ export const getProductionById = async (id) => {
 };
 
 // Update a production entry by ID
-export const updateProduction = async (id, { status, approveStatus, phoneNumber, password, longitude, latitude }) => {
+export const updateProduction = async (id, { status, approveStatus, phoneNumber, password, longitude, latitude, username }) => {
   const hashedPassword = await bcrypt.hash(password, 10);
   return await prisma.production.update({
     where: { id: parseInt(id) },
@@ -40,6 +41,7 @@ export const updateProduction = async (id, { status, approveStatus, phoneNumber,
       password: hashedPassword,
       longitude: parseFloat(longitude),
       latitude: parseFloat(latitude),
+      username,
     },
   });
 };

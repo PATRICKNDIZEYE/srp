@@ -11,6 +11,8 @@ import AddTransportModal from '../../components/Management/AddTransportModal';
 import AddUserModal from '../../components/Management/AddUserModal';
 import AddEditFarmerModal from '../../components/Management/AddEditFarmerModal';
 import EditPocForm from '../../components/Management/EditPocForm';
+import AddProductionModal from '../../components/Management/AddProductionModal';
+import EditProductionModal from '../../components/Management/EditProductionModal';
 
 interface User {
   id: number;
@@ -77,6 +79,7 @@ const UserManagement = () => {
   const [pocs, setPocs] = useState<User[]>([]);
   const [transports, setTransports] = useState<User[]>([]);
   const [dairies, setDairies] = useState<User[]>([]);
+  const [productions, setProductions] = useState<User[]>([]);
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -91,6 +94,9 @@ const UserManagement = () => {
 
   const [showEditPocModal, setShowEditPocModal] = useState(false);
   const [selectedPoc, setSelectedPoc] = useState<PocData | null>(null);
+
+  const [showAddProductionModal, setShowAddProductionModal] = useState(false);
+  const [selectedProduction, setSelectedProduction] = useState<any>(null);
 
   const fetchData = async () => {
     try {
@@ -109,6 +115,9 @@ const UserManagement = () => {
       } else if (activeTab === 'dairies') {
         const response = await axiosInstance.get('/diary');
         setDairies(response.data);
+      } else if (activeTab === 'productions') {
+        const response = await axiosInstance.get('/production');
+        setProductions(response.data);
       }
     } catch (error) {
       toast.error('Failed to fetch data');
@@ -292,6 +301,15 @@ const UserManagement = () => {
       setSelectedUser(entity);
       setShowAddModal(true);
     }
+  };
+
+  const handleAddProduction = () => {
+    setShowAddProductionModal(true);
+  };
+
+  const handleEditProduction = (production: any) => {
+    setSelectedProduction(production);
+    setShowEditModal(true);
   };
 
   const AddUserForm = ({ onClose, onSubmit, initialData }: { onClose: () => void; onSubmit: (data: any) => void; initialData?: User }) => (
@@ -535,6 +553,14 @@ const UserManagement = () => {
         >
           Dairies
         </button>
+        <button
+          onClick={() => setActiveTab('productions')}
+          className={`px-4 py-2 rounded-lg font-semibold transition-colors duration-300 ${
+            activeTab === 'productions' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+        >
+          Productions
+        </button>
       </div>
 
       <div className="bg-white rounded-lg shadow-lg overflow-hidden">
@@ -562,6 +588,15 @@ const UserManagement = () => {
             >
               <FiUserPlus />
               Add Dairy
+            </button>
+          )}
+          {activeTab === 'productions' && (
+            <button 
+              onClick={() => setShowAddProductionModal(true)}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700"
+            >
+              <FiUserPlus />
+              Add Production
             </button>
           )}
         </div>
@@ -603,6 +638,57 @@ const UserManagement = () => {
                           className="text-red-600 hover:text-red-800"
                         >
                           <FiTrash2 />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : activeTab === 'productions' ? (
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone Number</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Username</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Approve Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Coordinates</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {productions.map((production) => (
+                  <tr key={production.id}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">{production.phoneNumber}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">{production.username}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">{production.status}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">{production.approveStatus}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      {production.longitude && production.latitude ? `${production.longitude}, ${production.latitude}` : 'No coordinates'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => handleEditProduction(production)}
+                          className="text-blue-600 hover:text-blue-800"
+                        >
+                          <FiEdit2 />
+                        </button>
+                        <button 
+                          onClick={() => {
+                            setSelectedUser(production);
+                            setShowDeleteModal(true);
+                          }}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          <FiTrash2 />
+                        </button>
+                        <button 
+                          onClick={() => handleChangeStatus(production.id, production.status)}
+                          className="text-yellow-600 hover:text-yellow-800"
+                        >
+                          <FiRefreshCw />
                         </button>
                       </div>
                     </td>
@@ -785,6 +871,24 @@ const UserManagement = () => {
             setShowEditPocModal(false);
           }}
           initialData={selectedPoc}
+        />
+      )}
+
+      {showAddProductionModal && (
+        <AddProductionModal
+          onClose={() => setShowAddProductionModal(false)}
+          onAdd={fetchData}
+        />
+      )}
+
+      {showEditModal && selectedProduction && (
+        <EditProductionModal
+          production={selectedProduction}
+          onClose={() => {
+            setShowEditModal(false);
+            setSelectedProduction(null);
+          }}
+          onEdit={fetchData}
         />
       )}
     </div>

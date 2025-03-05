@@ -301,9 +301,9 @@ const AssignedTransportations = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Date
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   POC Name
-                </th>
+                </th> */}
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Amount
                 </th>
@@ -321,9 +321,9 @@ const AssignedTransportations = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     {new Date(delivery.date).toLocaleDateString()}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  {/* <td className="px-6 py-4 whitespace-nowrap text-sm"> */}
                     {/* {delivery.poc.firstName} {delivery.poc.lastName} */}
-                  </td>
+                  {/* </td> */}
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     {delivery.amount}L
                   </td>

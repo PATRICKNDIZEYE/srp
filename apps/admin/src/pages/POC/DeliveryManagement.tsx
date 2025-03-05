@@ -170,6 +170,7 @@ const DeliveryManagement = () => {
   const [selectedTransportId, setSelectedTransportId] = useState<string | null>(null);
   const [showDailyManagement, setShowDailyManagement] = useState(false);
   const [selectedDeliveryId, setSelectedDeliveryId] = useState<string | null>(null);
+  const [showAddTransportationModal, setShowAddTransportationModal] = useState(false);
 
   useEffect(() => {
     const fetchConfirmedMilk = async () => {
@@ -225,6 +226,10 @@ const DeliveryManagement = () => {
     navigate(`/poc/daily-management/${deliveryId}`);
   };
 
+  const handleAddTransportation = () => {
+    setShowAddTransportationModal(true);
+  };
+
   const refreshDeliveries = async () => {
     try {
       const response = await axiosInstance.get('/transportations');
@@ -244,6 +249,12 @@ const DeliveryManagement = () => {
           className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
         >
           Add Delivery
+        </button>
+        <button
+          onClick={handleAddTransportation}
+          className="ml-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        >
+          Add Transportation
         </button>
       </div>
 
@@ -317,12 +328,6 @@ const DeliveryManagement = () => {
                           className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200"
                         >
                           Reject
-                        </button>
-                        <button
-                          onClick={() => handleAddDaily(milk.id)}
-                          className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200"
-                        >
-                          Add Production
                         </button>
                       </div>
                     )}

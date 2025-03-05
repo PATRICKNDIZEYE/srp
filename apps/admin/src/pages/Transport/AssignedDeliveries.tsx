@@ -126,7 +126,7 @@ const AssignedDeliveries = () => {
       }
       try {
         console.log('Fetching deliveries for userId:', userId);
-        const response = await axiosInstance.get(`/delivery/transport/${userId}`);
+        const response = await axiosInstance.get(`/transportations/transport/${userId}`);
         console.log('API response:', response);
         setAssignedDeliveries(response.data);
         console.log('Fetched Deliveries:', response.data);
@@ -232,7 +232,7 @@ const AssignedDeliveries = () => {
           <button
             onClick={() => handleApproveDelivery(delivery.id)}
             className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200"
-          >
+          > 
             Approve
           </button>
         ) : (
@@ -307,9 +307,9 @@ const AssignedDeliveries = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Date
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   POC Name
-                </th>
+                </th> */}
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Amount
                 </th>
@@ -327,9 +327,9 @@ const AssignedDeliveries = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     {new Date(delivery.date).toLocaleDateString()}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  {/* <td className="px-6 py-4 whitespace-nowrap text-sm"> */}
                     {/* {delivery.poc.firstName} {delivery.poc.lastName} */}
-                  </td>
+                  {/* </td> */}
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     {delivery.amount}L
                   </td>

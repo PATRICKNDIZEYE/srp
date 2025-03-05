@@ -5,7 +5,7 @@ import DateRangeFilter from '../../components/Filters/DateRangeFilter';
 import { toast } from 'react-toastify';
 import AddSubmitMilk from '../../components/AddSubmitMilk';
 import { useParams } from 'react-router-dom';
-import { FaEdit } from 'react-icons/fa'; // Import an edit icon
+import { FaEdit, FaCalendarAlt } from 'react-icons/fa'; // Import edit and calendar icons
 
 // Define the type for a submission
 interface Farmer {
@@ -73,6 +73,8 @@ const MilkSubmissions = () => {
   const [isQualityModalOpen, setIsQualityModalOpen] = useState(false);
   const [selectedSubmissionId, setSelectedSubmissionId] = useState<number | null>(null);
   const [quality, setQuality] = useState<string>('');
+  const [isDateModalOpen, setIsDateModalOpen] = useState(false);
+  const [dateFormData, setDateFormData] = useState({ createdAt: '', updatedAt: '' });
 
   useEffect(() => {
     const fetchSubmissions = async () => {
@@ -150,6 +152,26 @@ const MilkSubmissions = () => {
         }
       } catch (error) {
         toast.error('Failed to update quality');
+      }
+    }
+  };
+
+  const handleDateUpdate = async () => {
+    if (selectedSubmissionId !== null) {
+      try {
+        const response = await axiosInstance.put(`/milk-submissions/${selectedSubmissionId}/dates`, {
+          createdAt: dateFormData.createdAt,
+          updatedAt: dateFormData.updatedAt,
+        });
+        if (response.status === 200) {
+          toast.success('Dates updated successfully');
+          setIsDateModalOpen(false);
+          // Refresh the submissions list to reflect the updated dates
+          const newResponse = await axiosInstance.get('/milk-submissions');
+          setSubmissions(newResponse.data);
+        }
+      } catch (error) {
+        toast.error('Failed to update dates');
       }
     }
   };
@@ -286,6 +308,17 @@ const MilkSubmissions = () => {
                         setIsQualityModalOpen(true);
                       }}
                     />
+                    <FaCalendarAlt
+                      className="cursor-pointer text-green-500 ml-2"
+                      onClick={() => {
+                        setSelectedSubmissionId(submission.id);
+                        setIsDateModalOpen(true);
+                        setDateFormData({
+                          createdAt: submission.createdAt,
+                          updatedAt: submission.updatedAt || new Date().toISOString(),
+                        });
+                      }}
+                    />
                     {submission.status !== 'accepted' && submission.status !== 'rejected' && (
                       <div className="flex space-x-2">
                         <button
@@ -348,6 +381,35 @@ const MilkSubmissions = () => {
           isSubmitting={isSubmitting}
           farmers={farmers}
         />
+      )}
+
+      {/* Modal for updating dates */}
+      {isDateModalOpen && (
+        <Modal onClose={() => setIsDateModalOpen(false)}>
+          <div className="p-4">
+            <h2 className="text-lg font-semibold">Update Dates</h2>
+            <input
+              type="datetime-local"
+              value={dateFormData.createdAt}
+              onChange={(e) => setDateFormData({ ...dateFormData, createdAt: e.target.value })}
+              className="mt-2 p-2 border rounded w-full"
+              placeholder="Enter new createdAt"
+            />
+            <input
+              type="datetime-local"
+              value={dateFormData.updatedAt}
+              onChange={(e) => setDateFormData({ ...dateFormData, updatedAt: e.target.value })}
+              className="mt-2 p-2 border rounded w-full"
+              placeholder="Enter new updatedAt"
+            />
+            <button
+              onClick={handleDateUpdate}
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Update Dates
+            </button>
+          </div>
+        </Modal>
       )}
     </div>
   );

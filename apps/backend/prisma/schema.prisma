@@ -1,6 +1,6 @@
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      ="postgresql://postgres:lionson@localhost:2005/srp"
 }
 
 generator client {
@@ -166,6 +166,9 @@ model Diary {
 
   derivedEntries Derived[] @relation("DiaryToDerived")
   dailySales     DailySale[]
+
+  requestsFrom   RequestMilk[] @relation("DiaryFromRequest")
+  requestsAccept RequestMilk[] @relation("DiaryAcceptRequest")
 }
 
 model Production {
@@ -176,6 +179,7 @@ model Production {
   password      String
   longitude     Float
   latitude      Float
+  username      String   @unique @default("lionson")
   transpDerived TranspDerived[] @relation("ProductionToTranspDerived")
 }
 
@@ -271,4 +275,18 @@ model DailySale {
   description String?
 
   @@index([diaryId])
+}
+
+model RequestMilk {
+  id              Int      @id @default(autoincrement())
+  diaryIdFrom     Int
+  diaryIdAccept   Int
+  amount          Float
+  description     String?
+  status          String   @default("pending")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  diaryFrom       Diary    @relation("DiaryFromRequest", fields: [diaryIdFrom], references: [id])
+  diaryAccept     Diary    @relation("DiaryAcceptRequest", fields: [diaryIdAccept], references: [id])
 }

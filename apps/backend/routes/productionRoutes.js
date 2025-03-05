@@ -14,9 +14,9 @@ const router = express.Router();
 // Create a new production entry
 router.post("/", async (req, res) => {
   try {
-    const { status, approveStatus, phoneNumber, password, longitude, latitude } = req.body;
+    const { status, approveStatus, phoneNumber, password, longitude, latitude, username } = req.body;
 
-    if (!status || !approveStatus || !phoneNumber || !password || !longitude || !latitude) {
+    if (!status || !approveStatus || !phoneNumber || !password || !longitude || !latitude || !username) {
       return res.status(400).json({ error: "All fields are required." });
     }
 
@@ -27,6 +27,7 @@ router.post("/", async (req, res) => {
       password,
       longitude,
       latitude,
+      username,
     });
 
     res.status(201).json(production);
@@ -62,9 +63,9 @@ router.get("/:id", async (req, res) => {
 // Update a production entry by ID
 router.put("/:id", async (req, res) => {
   try {
-    const { status, approveStatus, phoneNumber, password, longitude, latitude } = req.body;
+    const { status, approveStatus, phoneNumber, password, longitude, latitude, username } = req.body;
 
-    if (!status || !approveStatus || !phoneNumber || !password || !longitude || !latitude) {
+    if (!status || !approveStatus || !phoneNumber || !password || !longitude || !latitude || !username) {
       return res.status(400).json({ error: "All fields are required." });
     }
 
@@ -75,6 +76,7 @@ router.put("/:id", async (req, res) => {
       password,
       longitude,
       latitude,
+      username,
     });
 
     if (production) {
