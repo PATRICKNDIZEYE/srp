@@ -6,6 +6,7 @@ import L from 'leaflet';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 import axiosInstance from '../../utils/axiosInstance';
+import { toast } from 'react-hot-toast';
 
 
 
@@ -43,22 +44,25 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ onClose, onSubmit }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const userData = {
-      username: formData.username,
-      email: formData.email,
-      password: formData.password,
-      role: formData.role,
-      name: formData.name,
-      phone: formData.phone
-    };
-    console.log('Submitting user data:', userData);
-
     try {
+      const userData = {
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role || 'ADMIN',
+        name: formData.name,
+        phone: formData.phone
+      };
+
+      console.log('Submitting user data:', userData);
+
       const response = await axiosInstance.post('/users', userData);
       console.log('User added successfully:', response.data);
+      toast.success('User added successfully!');
       onSubmit(userData);
     } catch (error) {
       console.error('Error adding user:', error);
+      toast.error('Failed to add user');
     }
   };
 

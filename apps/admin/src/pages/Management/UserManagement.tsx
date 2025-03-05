@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiUserPlus, FiEdit2, FiTrash2, FiMapPin, FiRefreshCw } from 'react-icons/fi';
+import { FiUserPlus, FiEdit2, FiTrash2, FiMapPin, FiRefreshCw, FiEye, FiEyeOff, FiLoader } from 'react-icons/fi';
 import Breadcrumb from '../../components/Breadcrumb';
 import { toast } from 'react-toastify';
 import DeleteUserModal from '../../components/Management/DeleteUserModal';
@@ -98,6 +98,9 @@ const UserManagement = () => {
   const [showAddProductionModal, setShowAddProductionModal] = useState(false);
   const [selectedProduction, setSelectedProduction] = useState<any>(null);
 
+  const [selectedTransport, setSelectedTransport] = useState<any>(null);
+  const [showEditTransportModal, setShowEditTransportModal] = useState(false);
+
   const fetchData = async () => {
     try {
       if (activeTab === 'users') {
@@ -142,6 +145,7 @@ const UserManagement = () => {
       if (endpoint) {
         const formattedUserData = {
           ...userData,
+          role: userData.role || 'ADMIN',
           birthday: new Date(userData.birthday).toISOString().split('T')[0] + 'T00:00:00Z',
         };
 
@@ -158,7 +162,7 @@ const UserManagement = () => {
   const handleEditUser = (userId: number, userData: Omit<User, 'id' | 'lastActive'>) => {
     // Use the same form for editing
     setSelectedUser({ ...userData, id: userId });
-    setShowAddModal(true);
+    setShowEditModal(true);
   };
 
   const handleDeleteUser = async (userId: number) => {
@@ -212,15 +216,44 @@ const UserManagement = () => {
   };
 
   const handleAddFarmer = (farmerData: any) => {
-    // Logic to handle adding a farmer
-    console.log('Farmer Data:', farmerData);
+    // Destructure to remove 'id' from the data
+    const { id, ...dataWithoutId } = farmerData;
+
+    // Log the data without 'id'
+    console.log('Farmer Data to be sent:', dataWithoutId);
+
+    // Assuming you have a POST request here
+    // await axiosInstance.post('/farmer', dataWithoutId, { headers: { 'Content-Type': 'application/json' } });
+
     setShowAddFarmerModal(false);
     fetchData(); // Refresh data after adding
   };
 
-  const handleEditFarmer = (farmerData: any) => {
-    setSelectedFarmer(farmerData);
-    setShowAddFarmerModal(true);
+  const handleEditFarmer = async (farmerData: any) => {
+    try {
+      // Destructure to remove 'id' from the data
+      const { id, ...dataWithoutId } = farmerData;
+
+      // Format the birthday to ISO-8601
+      const formattedBirthday = new Date(dataWithoutId.birthday).toISOString();
+
+      // Log the data without 'id'
+      console.log('Farmer Data to be updated:', { ...dataWithoutId, birthday: formattedBirthday });
+
+      // Assuming you have an endpoint to update a farmer
+      const endpoint = `/farmer/${farmerData.id}`;
+      await axiosInstance.put(endpoint, { ...dataWithoutId, birthday: formattedBirthday }, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      toast.success('Farmer updated successfully!');
+      fetchData(); // Refresh data after updating
+    } catch (error) {
+      console.error('Error updating farmer:', error);
+      toast.error('Failed to update farmer');
+    }
+    setShowAddFarmerModal(false);
   };
 
   const handleChangeStatus = async (userId: number, currentStatus: string) => {
@@ -287,20 +320,9 @@ const UserManagement = () => {
     setShowAddDairyModal(true);
   };
 
-  const handleEditButtonClick = (entity: any) => {
-    if (activeTab === 'farmers') {
-      setSelectedFarmer(entity);
-      setShowAddFarmerModal(true);
-    } else if (activeTab === 'dairies') {
-      setSelectedDairy(entity);
-      setShowAddDairyModal(true);
-    } else if (activeTab === 'pocs') {
-      setSelectedPoc(entity);
-      setShowEditPocModal(true);
-    } else {
-      setSelectedUser(entity);
-      setShowAddModal(true);
-    }
+  const handleEditButtonClick = (user: User) => {
+    setSelectedUser(user);
+    setShowEditModal(true);
   };
 
   const handleAddProduction = () => {
@@ -310,6 +332,11 @@ const UserManagement = () => {
   const handleEditProduction = (production: any) => {
     setSelectedProduction(production);
     setShowEditModal(true);
+  };
+
+  const handleEditTransport = (transportData: any) => {
+    setSelectedTransport(transportData);
+    setShowEditTransportModal(true);
   };
 
   const AddUserForm = ({ onClose, onSubmit, initialData }: { onClose: () => void; onSubmit: (data: any) => void; initialData?: User }) => (
@@ -497,6 +524,307 @@ const UserManagement = () => {
             </div>
             <div className="mb-4">
               <button type="button" onClick={handleGenerateLocation} className="bg-blue-600 text-white px-4 py-2 rounded-lg">Generate Location</button>
+            </div>
+            <div className="flex justify-end gap-2">
+              <button type="button" onClick={onClose} className="bg-gray-500 text-white px-4 py-2 rounded-lg">Close</button>
+              <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-lg">Submit</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  };
+
+  const AddEditFarmerModal = ({ isOpen, onClose, onSubmit, initialData }: { isOpen: boolean; onClose: () => void; onSubmit: (data: NewFarmer) => void; initialData?: NewFarmer }) => {
+    const [formData, setFormData] = useState<NewFarmer>(initialData || {
+      firstName: '',
+      lastName: '',
+      birthday: '',
+      nationalId: '',
+      phoneNumber: '',
+      longitude: 0,
+      latitude: 0,
+      username: '',
+      password: '',
+      farmDetails: '',
+      status: 'active',
+      pocId: 0,
+    });
+
+    const [showPassword, setShowPassword] = useState(false);
+    const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+    const [locationError, setLocationError] = useState('');
+    const [pocs, setPocs] = useState<POC[]>([]);
+
+    useEffect(() => {
+      const fetchPocs = async () => {
+        try {
+          const response = await axiosInstance.get('/pocs');
+          setPocs(response.data);
+        } catch (error) {
+          console.error('Error fetching POCs:', error);
+        }
+      };
+
+      fetchPocs();
+    }, []);
+
+    const getCurrentLocation = () => {
+      setIsLoadingLocation(true);
+      setLocationError('');
+
+      if (!navigator.geolocation) {
+        setLocationError('Geolocation is not supported by your browser');
+        setIsLoadingLocation(false);
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setFormData(prev => ({
+            ...prev,
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          }));
+          setIsLoadingLocation(false);
+        },
+        (error) => {
+          setLocationError('Failed to get location');
+          setIsLoadingLocation(false);
+        }
+      );
+    };
+
+    const handleSubmit = (e: React.FormEvent) => {
+      e.preventDefault();
+      onSubmit(formData);
+    };
+
+    if (!isOpen) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+        <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg mx-4 my-8">
+          <h2 className="text-2xl font-bold mb-4">{initialData ? 'Edit Farmer' : 'Add New Farmer'}</h2>
+          <form onSubmit={handleSubmit} className="space-y-4 max-h-[80vh] overflow-y-auto">
+            <div>
+              <label className="block text-gray-700 mb-2">Full Name</label>
+              <input
+                type="text"
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={formData.firstName + ' ' + formData.lastName}
+                onChange={(e) => {
+                  const [firstName, ...lastName] = e.target.value.split(' ');
+                  setFormData({ ...formData, firstName, lastName: lastName.join(' ') });
+                }}
+                required
+                placeholder="Full Name"
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700 mb-2">National ID</label>
+              <input
+                type="text"
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={formData.nationalId}
+                onChange={(e) => setFormData({ ...formData, nationalId: e.target.value })}
+                placeholder="National ID"
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700 mb-2">Birthday</label>
+              <input
+                type="date"
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={formData.birthday}
+                onChange={(e) => setFormData({ ...formData, birthday: e.target.value })}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700 mb-2">Phone</label>
+              <input
+                type="tel"
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={formData.phoneNumber}
+                onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                required
+                placeholder="Phone Number"
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700 mb-2">Point of Contact (POC)</label>
+              <select
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={formData.pocId}
+                onChange={(e) => setFormData({ ...formData, pocId: parseInt(e.target.value) })}
+                required
+              >
+                {pocs.map((poc) => (
+                  <option key={poc.id} value={poc.id}>
+                    {poc.firstName} {poc.lastName}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-gray-700 mb-2">Location</label>
+              <div className="flex gap-4 mb-4">
+                <button
+                  type="button"
+                  onClick={getCurrentLocation}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  disabled={isLoadingLocation}
+                >
+                  {isLoadingLocation ? (
+                    <FiLoader className="animate-spin" />
+                  ) : (
+                    <FiMapPin />
+                  )}
+                  Use GPS
+                </button>
+              </div>
+              {locationError && (
+                <p className="text-red-500 text-sm mb-4">{locationError}</p>
+              )}
+              <div className="grid grid-cols-3 gap-4">
+                <input
+                  type="text"
+                  placeholder="Longitude"
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={formData.longitude}
+                  onChange={(e) => setFormData({ ...formData, longitude: parseFloat(e.target.value) })}
+                  required
+                />
+                <input
+                  type="text"
+                  placeholder="Latitude"
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={formData.latitude}
+                  onChange={(e) => setFormData({ ...formData, latitude: parseFloat(e.target.value) })}
+                  required
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-gray-700 mb-2">Password</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  required
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
+                </button>
+              </div>
+            </div>
+            <div className="flex justify-end space-x-4">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                {initialData ? 'Update Farmer' : 'Add Farmer'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  };
+
+  const EditTransportForm = ({ transport, onClose, onSubmit }: { transport: any; onClose: () => void; onSubmit: (data: any) => void }) => {
+    const [location, setLocation] = useState<{ longitude: number; latitude: number } | null>(null);
+
+    const handleGenerateLocation = () => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            setLocation({
+              longitude: position.coords.longitude,
+              latitude: position.coords.latitude,
+            });
+          },
+          (error) => {
+            toast.error('Failed to get location');
+          }
+        );
+      } else {
+        toast.error('Geolocation is not supported by this browser');
+      }
+    };
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md overflow-y-auto max-h-full">
+          <h2 className="text-xl font-semibold mb-4">Edit Transport</h2>
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            const formData = {
+              firstName: (e.target as any).firstName.value,
+              lastName: (e.target as any).lastName.value,
+              birthday: new Date((e.target as any).birthday.value).toISOString(),
+              nationalId: (e.target as any).nationalId.value,
+              phoneNumber: (e.target as any).phoneNumber.value,
+              longitude: location ? location.longitude : parseFloat((e.target as any).longitude.value),
+              latitude: location ? location.latitude : parseFloat((e.target as any).latitude.value),
+              username: (e.target as any).username.value,
+              password: (e.target as any).password.value,
+              status: 'pending', // Set default status to 'pending'
+            };
+            onSubmit(formData);
+          }}>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">First Name</label>
+              <input type="text" name="firstName" className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm" required value={transport.firstName} />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">Last Name</label>
+              <input type="text" name="lastName" className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm" required value={transport.lastName} />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">Birthday</label>
+              <input type="date" name="birthday" className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm" required value={transport.birthday} />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">National ID</label>
+              <input type="text" name="nationalId" className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm" required value={transport.nationalId} />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">Phone Number</label>
+              <input type="text" name="phoneNumber" className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm" required value={transport.phoneNumber} />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">Longitude</label>
+              <input type="number" step="any" name="longitude" className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm" required value={transport.longitude} />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">Latitude</label>
+              <input type="number" step="any" name="latitude" className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm" required value={transport.latitude} />
+            </div>
+            <div className="mb-4">
+              <button type="button" onClick={handleGenerateLocation} className="bg-blue-600 text-white px-4 py-2 rounded-lg">Generate Location</button>
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">Username</label>
+              <input type="text" name="username" className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm" required value={transport.username} />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">Password</label>
+              <input type="password" name="password" className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm" required value={transport.password} />
             </div>
             <div className="flex justify-end gap-2">
               <button type="button" onClick={onClose} className="bg-gray-500 text-white px-4 py-2 rounded-lg">Close</button>
@@ -815,7 +1143,10 @@ const UserManagement = () => {
             setShowEditModal(false);
             setSelectedUser(null);
           }}
-          onSubmit={handleEditUser}
+          onSubmit={(updatedUser) => {
+            // Handle the updated user data
+            console.log('Updated user:', updatedUser);
+          }}
         />
       )}
 
@@ -889,6 +1220,17 @@ const UserManagement = () => {
             setSelectedProduction(null);
           }}
           onEdit={fetchData}
+        />
+      )}
+
+      {showEditTransportModal && selectedTransport && (
+        <EditTransportForm
+          transport={selectedTransport}
+          onClose={() => {
+            setShowEditTransportModal(false);
+            setSelectedTransport(null);
+          }}
+          onSubmit={handleEditTransport}
         />
       )}
     </div>

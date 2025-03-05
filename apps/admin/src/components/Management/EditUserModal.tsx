@@ -1,59 +1,42 @@
-import React, { useState, useEffect } from 'react';
-import { FiX, FiMapPin } from 'react-icons/fi';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
+import React, { useState } from 'react';
+import { FiX } from 'react-icons/fi';
+import axiosInstance from '../../utils/axiosInstance';
+import { toast } from 'react-hot-toast';
 
 interface EditUserModalProps {
-  user: {
-    id: number;
-    name: string;
-    email: string;
-    phone: string;
-    role: string;
-    site: string;
-    coordinates: {
-      lat: number;
-      lng: number;
-    };
-    status: 'Active' | 'Inactive';
-  };
+  user: { id: number; username: string; email: string; role: string; name: string; phone: string };
   onClose: () => void;
-  onSubmit: (userId: number, userData: any) => void;
+  onSubmit: (userData: any) => void;
 }
-
-// Map click handler component
-const MapClickHandler = ({ onLocationSelect }: { onLocationSelect: (lat: number, lng: number) => void }) => {
-  useMapEvents({
-    click: (e) => {
-      onLocationSelect(e.latlng.lat, e.latlng.lng);
-    },
-  });
-  return null;
-};
 
 const EditUserModal: React.FC<EditUserModalProps> = ({ user, onClose, onSubmit }) => {
   const [formData, setFormData] = useState({
-    name: user.name,
-    email: user.email,
-    phone: user.phone,
-    role: user.role,
-    site: user.site,
-    coordinates: user.coordinates || { lat: 0, lng: 0 },
-    status: user.status
+    username: user.username || '',
+    email: user.email || '',
+    password: '',
+    role: user.role || 'ADMIN',
+    name: user.name || '',
+    phone: user.phone || ''
   });
 
-  const { lat, lng } = formData.coordinates;
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(user.id, formData);
-  };
+    try {
+      const userData = {
+        ...formData,
+        id: user.id,
+      };
 
-  const handleLocationSelect = (lat: number, lng: number) => {
-    setFormData(prev => ({
-      ...prev,
-      coordinates: { lat, lng }
-    }));
+      console.log('Submitting edited user data:', userData);
+
+      await axiosInstance.put(`/users/${user.id}`, userData);
+      toast.success('User updated successfully!');
+      onSubmit(userData);
+      onClose();
+    } catch (error) {
+      console.error('Error updating user:', error);
+      toast.error('Failed to update user');
+    }
   };
 
   return (
@@ -68,6 +51,31 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ user, onClose, onSubmit }
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Username
+              </label>
+              <input
+                type="text"
+                className="w-full px-3 py-2 border rounded-lg"
+                value={formData.username}
+                onChange={e => setFormData(prev => ({ ...prev, username: e.target.value }))}
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Password
+              </label>
+              <input
+                type="password"
+                className="w-full px-3 py-2 border rounded-lg"
+                value={formData.password}
+                onChange={e => setFormData(prev => ({ ...prev, password: e.target.value }))}
+              />
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Full Name
@@ -117,63 +125,9 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ user, onClose, onSubmit }
                 onChange={e => setFormData(prev => ({ ...prev, role: e.target.value }))}
                 required
               >
-                <option value="Production Manager">Production Manager</option>
-                <option value="Transport Coordinator">Transport Coordinator</option>
-                <option value="Diary Manager">Diary Manager</option>
-                <option value="POC Manager">POC Manager</option>
+                <option value="Admin">Admin</option>
               </select>
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Site
-              </label>
-              <input
-                type="text"
-                className="w-full px-3 py-2 border rounded-lg"
-                value={formData.site}
-                onChange={e => setFormData(prev => ({ ...prev, site: e.target.value }))}
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Status
-              </label>
-              <select
-                className="w-full px-3 py-2 border rounded-lg"
-                value={formData.status}
-                onChange={e => setFormData(prev => ({ ...prev, status: e.target.value as 'Active' | 'Inactive' }))}
-                required
-              >
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Location <span className="text-gray-500">(Click to update location)</span>
-            </label>
-            <div className="h-[300px] w-full rounded-lg overflow-hidden border">
-              <MapContainer
-                center={[formData.coordinates.lat, formData.coordinates.lng]}
-                zoom={13}
-                style={{ height: '100%', width: '100%' }}
-              >
-                <TileLayer
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                />
-                <Marker position={[formData.coordinates.lat, formData.coordinates.lng]} />
-                <MapClickHandler onLocationSelect={handleLocationSelect} />
-              </MapContainer>
-            </div>
-            <p className="text-sm text-gray-500 mt-1">
-              Selected coordinates: {formData.coordinates.lat.toFixed(4)}, {formData.coordinates.lng.toFixed(4)}
-            </p>
           </div>
 
           <div className="flex justify-end space-x-3">
@@ -188,7 +142,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ user, onClose, onSubmit }
               type="submit"
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
-              Save Changes
+              Update User
             </button>
           </div>
         </form>
