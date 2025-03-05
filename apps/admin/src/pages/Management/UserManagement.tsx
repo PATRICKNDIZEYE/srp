@@ -303,7 +303,22 @@ const UserManagement = () => {
 
   const handleAddDairy = async (dairyData: Dairy) => {
     try {
-      await axiosInstance.post('/diary', dairyData, {
+      // Format the data to match the expected structure
+      const formattedDairyData = {
+        firstName: dairyData.firstName,
+        lastName: dairyData.lastName,
+        nationalId: dairyData.nationalId,
+        status: dairyData.status,
+        approveStatus: dairyData.approveStatus,
+        phoneNumber: dairyData.phoneNumber,
+        password: dairyData.password,
+        longitude: dairyData.longitude,
+        latitude: dairyData.latitude,
+      };
+
+      console.log('Submitting dairy data:', formattedDairyData); // Log the formatted data
+
+      await axiosInstance.post('/diary', formattedDairyData, {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -311,6 +326,7 @@ const UserManagement = () => {
       toast.success('Dairy added successfully!');
       fetchData(); // Refresh data after adding
     } catch (error) {
+      console.error('Error adding dairy:', error);
       toast.error('Error adding dairy');
     }
   };
