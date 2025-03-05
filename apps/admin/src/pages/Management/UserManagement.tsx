@@ -320,9 +320,23 @@ const UserManagement = () => {
     setShowAddDairyModal(true);
   };
 
-  const handleEditButtonClick = (user: User) => {
-    setSelectedUser(user);
-    setShowEditModal(true);
+  const handleEditButtonClick = (entity: any) => {
+    if (activeTab === 'farmers') {
+      setSelectedFarmer(entity);
+      setShowAddFarmerModal(true);
+    } else if (activeTab === 'dairies') {
+      setSelectedDairy(entity);
+      setShowAddDairyModal(true);
+    } else if (activeTab === 'pocs') {
+      setSelectedPoc(entity);
+      setShowEditPocModal(true);
+    } else if (activeTab === 'transports') {
+      setSelectedTransport(entity);
+      setShowEditTransportModal(true);
+    } else {
+      setSelectedUser(entity);
+      setShowEditModal(true);
+    }
   };
 
   const handleAddProduction = () => {
@@ -1143,10 +1157,7 @@ const UserManagement = () => {
             setShowEditModal(false);
             setSelectedUser(null);
           }}
-          onSubmit={(updatedUser) => {
-            // Handle the updated user data
-            console.log('Updated user:', updatedUser);
-          }}
+          onSubmit={handleEditUser}
         />
       )}
 
