@@ -372,6 +372,10 @@ const UserManagement = () => {
     setShowEditTransportModal(true);
   };
 
+  const handlePocClick = (pocId: number) => {
+    navigate(`/management/farmer-management/${pocId}`);
+  };
+
   const AddUserForm = ({ onClose, onSubmit, initialData }: { onClose: () => void; onSubmit: (data: any) => void; initialData?: User }) => (
     <div>
       {/* Form fields for adding or editing a user */}
@@ -1121,7 +1125,7 @@ const UserManagement = () => {
                         </button>
                         {activeTab === 'pocs' && (
                           <button 
-                            onClick={() => navigate(`/management/farmer-management/${entity.id}`)}
+                            onClick={() => handlePocClick(entity.id)}
                             className="text-green-600 hover:text-green-800"
                           >
                             <FiEye />

@@ -42,11 +42,9 @@ const FarmerManagement = () => {
   const [selectedFarmerId, setSelectedFarmerId] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const fetchFarmers = async () => {
+  const fetchFarmers = async (pocId: number) => {
     try {
-      const userData = JSON.parse(localStorage.getItem('userData') || '[]');
-      const userId = userData[0]?.id || 1; // Default to 1 if not found
-      const response = await axiosInstance.get(`/farmer/poc/${userId}`);
+      const response = await axiosInstance.get(`/farmer/poc/${pocId}`);
       setPendingFarmers(response.data);
     } catch (error) {
       console.error('Error fetching farmers:', error);
@@ -55,7 +53,9 @@ const FarmerManagement = () => {
   };
 
   useEffect(() => {
-    fetchFarmers();
+    // Assuming you have a way to get the current pocId
+    const currentPocId = 1; // Replace with actual logic to get pocId
+    fetchFarmers(currentPocId);
   }, []);
 
   const handleConfirmRegistration = (farmerId: string) => {
@@ -68,7 +68,7 @@ const FarmerManagement = () => {
       await axiosInstance.patch(`/farmer/${farmerId}/status`, { status: newStatus });
       toast.success(`Status changed to ${newStatus}`);
       // Refresh data after status change
-      fetchFarmers();
+      fetchFarmers(1); // Assuming you want to refresh for pocId 1
     } catch (error) {
       toast.error('Failed to change status');
     }
@@ -244,7 +244,7 @@ const FarmerManagement = () => {
             // Logic to add the new farmer
             setPendingFarmers([...pendingFarmers, newFarmer]);
             setShowAddFarmerModal(false);
-            fetchFarmers(); // Fetch the updated list of farmers
+            fetchFarmers(1); // Assuming you want to refresh for pocId 1
           }}
         />
       )}

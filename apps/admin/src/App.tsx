@@ -147,7 +147,7 @@ function App() {
           <Route path="/management/analytics" element={<AnalyticsDashboard />} />
           <Route path="/management/sales-history" element={<ManagementSalesHistory />} />
           <Route path="/management/settings" element={<SystemSettings />} />
-          <Route path="/management/farmer-management/:farmerId" element={<ManagementFarmerManagement />} />
+          <Route path="/management/farmer-management/:pocId" element={<ManagementFarmerManagement />} />
           <Route path="/management/farmer-submission/:farmerId" element={<ManagementMilkSubmissions />} />
         </Route>
 
