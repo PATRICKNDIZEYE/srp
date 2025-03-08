@@ -169,9 +169,17 @@ const AddFarmerModal: React.FC<AddFarmerModalProps> = ({ isOpen, onClose, onSubm
       return;
     }
 
+    // Validate birthday is not in the future
+    const today = new Date();
+    const birthdayDate = new Date(formData.birthday);
+    if (birthdayDate > today) {
+      toast.error('Birthday cannot be in the future');
+      return;
+    }
+
     try {
       const formattedBirthday = formData.birthday
-        ? new Date(formData.birthday).toISOString()
+        ? birthdayDate.toISOString()
         : '1990-01-01T00:00:00.000Z';
 
       // Sanitize firstName and username
@@ -179,21 +187,26 @@ const AddFarmerModal: React.FC<AddFarmerModalProps> = ({ isOpen, onClose, onSubm
       const sanitizedUsername = sanitizedFirstName.toLowerCase() + Math.floor(Math.random() * 1000);
 
       // Generate dummy nationalId if not provided
-      const generatedNationalId = formData.nationalId || `DUMMY${Math.floor(Math.random() * 1000000000000)}`;
+      const generatedNationalId = formData.nationalId || `11992${Math.floor(Math.random() * 100000000000).toString().padStart(11, '0')}`;
 
+      // Ensure longitude and latitude are numbers
+      const longitude = parseFloat(formData.longitude) || 30.123456;
+      const latitude = parseFloat(formData.latitude) || -1.987654;
+
+      // Include pocId in the registrationData
       const registrationData: NewFarmer = {
         firstName: sanitizedFirstName,
         lastName: formData.fullName.split(' ').slice(1).join(' ') || '',
         birthday: formattedBirthday,
-        nationalId: generatedNationalId, // Use generated nationalId
+        nationalId: generatedNationalId,
         phoneNumber: formData.phone,
-        longitude: parseFloat(formData.longitude) || 30.12345,
-        latitude: parseFloat(formData.latitude) || -1.98765,
+        longitude,
+        latitude,
         username: sanitizedUsername,
         password: formData.password,
-        farmDetails: formData.location || 'Large farm with maize and beans',
+        farmDetails: formData.location || 'Organic vegetable farm',
         status: 'active',
-        pocId: parseInt(formData.pocId)
+        pocId: parseInt(formData.pocId) // Ensure pocId is a number
       };
 
       console.log('Registration Data:', registrationData);
