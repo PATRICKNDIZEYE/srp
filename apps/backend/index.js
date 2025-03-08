@@ -106,6 +106,10 @@ app.post('/api/register-farmer', async (req, res) => {
   }
 });
 
+// ... other imports and middleware
+
+app.use('/api/payments', paymentRoutes); 
+
 // Use the routes
 app.use('/api/users', userRoutes);
 app.use('/api/transports', transportRoutes);

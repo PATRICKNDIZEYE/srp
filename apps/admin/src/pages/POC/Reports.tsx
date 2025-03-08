@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Breadcrumb from '../../components/Breadcrumb';
 import axiosInstance from '../../utils/axiosInstance';
 import * as XLSX from 'xlsx';
+import { differenceInDays, parseISO } from 'date-fns';
 
 // Define types for the data structure
 interface Farmer {
@@ -33,6 +34,7 @@ interface Group {
   totalLoanAmount: number;
   submissions: Submission[];
   loans: Loan[];
+  lastPaymentDate: string;
 }
 
 const Reports = () => {
@@ -48,7 +50,15 @@ const Reports = () => {
         if (userId) {
           // Use the userId in the API endpoint
           const response = await axiosInstance.get(`/reports/grouped/poc/${userId}`);
-          setGroupedReports(response.data);
+          const data = response.data;
+
+          // Ensure lastPaymentDate is set
+          const updatedData = Object.values(data).map((group: Group) => ({
+            ...group,
+            lastPaymentDate: group.lastPaymentDate || '1970-01-01', // Default to a very old date
+          }));
+
+          setGroupedReports(updatedData);
         } else {
           console.error('User ID not found in local storage');
         }
@@ -76,6 +86,33 @@ const Reports = () => {
     XLSX.writeFile(workbook, 'Reports.xlsx');
   };
 
+  const isPaymentDue = (submissions: Submission[]) => {
+    if (submissions.length === 0) {
+      return false; // No submissions, assume payment is not due
+    }
+    const lastSubmissionDate = submissions[submissions.length - 1].createdAt;
+    const daysSinceLastSubmission = differenceInDays(new Date(), parseISO(lastSubmissionDate));
+    return daysSinceLastSubmission >= 15;
+  };
+
+  const handlePayment = async (farmerId: string, amount: number, startDate: string, endDate: string) => {
+    try {
+      const response = await axiosInstance.post('/payments/create', {
+        farmerId,
+        amount,
+        startDate,
+        endDate,
+      });
+
+      if (response.status === 201) {
+        console.log('Payment created successfully:', response.data);
+        // Optionally update the UI or state here
+      }
+    } catch (error) {
+      console.error('Error creating payment:', error);
+    }
+  };
+
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
       <Breadcrumb pageName="Reports" />
@@ -99,24 +136,48 @@ const Reports = () => {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase border border-gray-300">Amafaranga y'Amata</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase border border-gray-300">Ideni Afite</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase border border-gray-300">Balance</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase border border-gray-300">Status</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase border border-gray-300">Payment</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {Object.values(groupedReports).map((group) => (
-              <tr key={group.farmer.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{group.farmer.id}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{group.farmer.firstName}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{group.farmer.lastName}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{group.farmer.phoneNumber}</td>
-                {/* <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">
-                  {group.submissions.length > 0 ? group.submissions[0].quality : 'N/A'}
-                </td> */}
-                <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{group.totalMilkAmount}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{group.totalMilkAmount * 400}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{group.totalLoanAmount}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{(group.totalMilkAmount * 400) - group.totalLoanAmount}</td>
-              </tr>
-            ))}
+            {Object.values(groupedReports).map((group) => {
+              const paymentDue = isPaymentDue(group.submissions);
+              return (
+                <React.Fragment key={group.farmer.id}>
+                  <tr className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{group.farmer.id}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{group.farmer.firstName}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{group.farmer.lastName}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{group.farmer.phoneNumber}</td>
+                    {/* <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">
+                      {group.submissions.length > 0 ? group.submissions[0].quality : 'N/A'}
+                    </td> */}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{group.totalMilkAmount}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{group.totalMilkAmount * 400}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{group.totalLoanAmount}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{(group.totalMilkAmount * 400) - group.totalLoanAmount}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{group.submissions.length > 0 ? group.submissions[0].status : 'N/A'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">
+                      <button
+                        onClick={() => handlePayment(group.farmer.id, group.totalMilkAmount * 400, group.submissions[group.submissions.length - 1].createdAt, new Date().toISOString())}
+                        className={`px-4 py-2 rounded ${paymentDue ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
+                        disabled={!paymentDue}
+                      >
+                        Pay
+                      </button>
+                    </td>
+                  </tr>
+                  {paymentDue && (
+                    <tr className="hover:bg-gray-50">
+                      <td colSpan={10} className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300 text-center">
+                        15 days have passed since the last submission.
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              );
+            })}
           </tbody>
         </table>
       </div>

@@ -75,6 +75,12 @@ import ManagementSalesHistory from './components/Management/ManagementSalesHisto
 import InguzanyoPage from './pages/POC/Inguzanyo';
 import RequestMilkPage from './pages/Diary/RequestMilkPage';
 
+// Import the new FarmerManagement component
+import ManagementFarmerManagement from './pages/Management/FarmerManagement';
+
+// Import the new MilkSubmissions component
+import ManagementMilkSubmissions from './pages/Management/MilkSubmissions';
+
 function App() {
   return (
     <UserProvider>
@@ -141,6 +147,8 @@ function App() {
           <Route path="/management/analytics" element={<AnalyticsDashboard />} />
           <Route path="/management/sales-history" element={<ManagementSalesHistory />} />
           <Route path="/management/settings" element={<SystemSettings />} />
+          <Route path="/management/farmer-management/:farmerId" element={<ManagementFarmerManagement />} />
+          <Route path="/management/farmer-submission/:farmerId" element={<ManagementMilkSubmissions />} />
         </Route>
 
         {/* Diary Routes */}

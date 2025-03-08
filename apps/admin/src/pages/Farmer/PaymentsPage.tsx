@@ -6,6 +6,7 @@ import { useUser } from '../../context/UserContext';
 import axiosInstance from '../../utils/axios';
 import { formatNumber } from '../../utils/formatters';
 import PaymentConfirmation from '../../components/PaymentConfirmation';
+import { toast } from 'react-toastify';
 
 interface Payment {
   id: number;
@@ -39,35 +40,77 @@ const PaymentsPage = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
 
-  useEffect(() => {
+  const fetchPaymentData = async () => {
     if (!user?.id || !user?.token) return;
 
-    const fetchPaymentData = async () => {
-      try {
-        const [paymentsRes, summaryRes] = await Promise.all([
-          axiosInstance.get(`/payment/farmer/${user.id}`, {
-            headers: {
-              Authorization: `Bearer ${user.token}`
-            }
-          }),
-          axiosInstance.get(`/payment/farmer/${user.id}/summary`, {
-            headers: {
-              Authorization: `Bearer ${user.token}`
-            }
-          })
-        ]);
+    try {
+      const [paymentsRes, summaryRes] = await Promise.all([
+        axiosInstance.get(`/payment/farmer/${user.id}`, {
+          headers: {
+            Authorization: `Bearer ${user.token}`
+          }
+        }),
+        axiosInstance.get(`/payment/farmer/${user.id}/summary`, {
+          headers: {
+            Authorization: `Bearer ${user.token}`
+          }
+        })
+      ]);
 
-        setPayments(paymentsRes.data);
-        setSummary(summaryRes.data);
-      } catch (error) {
-        console.error('Error fetching payment data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+      setPayments(paymentsRes.data);
+      setSummary(summaryRes.data);
+    } catch (error) {
+      console.error('Error fetching payment data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  const changePaymentStatus = async (paymentId: number, status: string) => {
+    if (!user?.token) return;
+
+    try {
+      await axiosInstance.patch(`/payment/${paymentId}/status`, { status }, {
+        headers: {
+          Authorization: `Bearer ${user.token}`
+        }
+      });
+      toast.success('Payment status updated successfully');
+      fetchPaymentData();
+    } catch (error) {
+      console.error('Error changing payment status:', error);
+      toast.error('Failed to update payment status');
+    }
+  };
+
+  const calculateSummary = (payments: Payment[]) => {
+    const ayishyuwe = payments
+      .filter(payment => payment.status === 'paid')
+      .reduce((acc, payment) => acc + payment.amount, 0);
+
+    const ayanzwe = payments
+      .filter(payment => payment.status === 'rejected')
+      .reduce((acc, payment) => acc + payment.amount, 0);
+
+    const ategerejeKwemezwa = payments
+      .filter(payment => payment.status === 'pending')
+      .reduce((acc, payment) => acc + payment.amount, 0);
+
+    setSummary({
+      nextPayment: ayishyuwe,
+      daysUntilPayment: 0, // Update this if needed
+      monthlyTotal: ategerejeKwemezwa,
+      yearToDate: ayanzwe
+    });
+  };
+
+  useEffect(() => {
     fetchPaymentData();
   }, [user?.id, user?.token]);
+
+  useEffect(() => {
+    calculateSummary(payments);
+  }, [payments]);
 
   // Filter data based on selected filters
   const filterData = (data: Payment[]) => {
@@ -100,7 +143,7 @@ const PaymentsPage = () => {
       {/* Payment Summary Cards */}
       <div className="grid gap-4 md:grid-cols-3 mb-6">
         <div className="bg-white rounded-lg p-6 shadow-lg">
-          <h3 className="text-lg font-semibold text-gray-700">Ubwishyu Bukurikira</h3>
+          <h3 className="text-lg font-semibold text-gray-700">Ayishyuwe</h3>
           <div className="mt-2">
             <div className="text-2xl font-bold text-blue-600">
               {formatNumber(summary.nextPayment)} Rwf
@@ -112,7 +155,7 @@ const PaymentsPage = () => {
         </div>
 
         <div className="bg-white rounded-lg p-6 shadow-lg">
-          <h3 className="text-lg font-semibold text-gray-700">Uku Kwezi</h3>
+          <h3 className="text-lg font-semibold text-gray-700">Ategereje Kwemezwa</h3>
           <div className="mt-2">
             <div className="text-2xl font-bold text-green-600">
               {formatNumber(summary.monthlyTotal)} Rwf
@@ -124,7 +167,7 @@ const PaymentsPage = () => {
         </div>
 
         <div className="bg-white rounded-lg p-6 shadow-lg">
-          <h3 className="text-lg font-semibold text-gray-700">Yose Hamwe</h3>
+          <h3 className="text-lg font-semibold text-gray-700">Ayanzwe</h3>
           <div className="mt-2">
             <div className="text-2xl font-bold text-gray-800">
               {formatNumber(summary.yearToDate)} Rwf
@@ -207,27 +250,35 @@ const PaymentsPage = () => {
                     {new Date(payment.date).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {payment.milkSubmissions.map(sub => 
+                    {payment.milkSubmissions?.map(sub => 
                       sub.milkType === 'inshushyu' ? 'Inshushyu' : 'Umuhondo'
-                    ).join(', ')}
+                    ).join(', ') || 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {formatNumber(payment.milkSubmissions.reduce((acc, sub) => acc + sub.amount, 0))}L
+                    {formatNumber(payment.milkSubmissions?.reduce((acc, sub) => acc + sub.amount, 0) || 0)}L
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {formatNumber(payment.milkSubmissions[0]?.rate || 300)} Rwf/L
+                    {formatNumber(payment.milkSubmissions?.[0]?.rate || 300)} Rwf/L
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {formatNumber(payment.amount)} Rwf
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {payment.status === 'pending' ? (
-                      <PaymentConfirmation
-                        paymentId={payment.id}
-                        amount={payment.amount}
-                        farmerPhone={user?.phoneNumber || ''}
-                        onConfirm={fetchPaymentData}
-                      />
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => changePaymentStatus(payment.id, 'paid')}
+                          className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800"
+                        >
+                          Mark as Paid
+                        </button>
+                        <button
+                          onClick={() => changePaymentStatus(payment.id, 'rejected')}
+                          className="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800"
+                        >
+                          Reject
+                        </button>
+                      </div>
                     ) : (
                       <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
                         payment.status === 'paid' ? 'bg-green-100 text-green-800' :
