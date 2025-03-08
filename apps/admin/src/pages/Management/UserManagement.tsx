@@ -13,6 +13,7 @@ import AddEditFarmerModal from '../../components/Management/AddEditFarmerModal';
 import EditPocForm from '../../components/Management/EditPocForm';
 import AddProductionModal from '../../components/Management/AddProductionModal';
 import EditProductionModal from '../../components/Management/EditProductionModal';
+import { useNavigate } from 'react-router-dom';
 
 interface User {
   id: number;
@@ -100,6 +101,8 @@ const UserManagement = () => {
 
   const [selectedTransport, setSelectedTransport] = useState<any>(null);
   const [showEditTransportModal, setShowEditTransportModal] = useState(false);
+
+  const navigate = useNavigate();
 
   const fetchData = async () => {
     try {
@@ -1116,6 +1119,14 @@ const UserManagement = () => {
                         >
                           <FiRefreshCw />
                         </button>
+                        {activeTab === 'pocs' && (
+                          <button 
+                            onClick={() => navigate(`/management/farmer-management/${entity.id}`)}
+                            className="text-green-600 hover:text-green-800"
+                          >
+                            <FiEye />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

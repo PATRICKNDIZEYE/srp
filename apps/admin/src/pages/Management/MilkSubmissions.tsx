@@ -79,12 +79,9 @@ const MilkSubmissions = () => {
   useEffect(() => {
     const fetchSubmissions = async () => {
       try {
-        if (farmerId) {
-          const response = await axiosInstance.get(`/milk-sub/farmer/${farmerId}`);
-          setSubmissions(Array.isArray(response.data.submissions) ? response.data.submissions : []);
-        } else {
-          toast.error('Farmer ID not found');
-        }
+        const response = await axiosInstance.get(`/milk-sub/farmer/${farmerId}`);
+        console.log('API Response:', response.data);
+        setSubmissions(Array.isArray(response.data.submissions) ? response.data.submissions : []);
       } catch (error) {
         // toast.error('Failed to fetch milk submissions');
       }
@@ -226,9 +223,38 @@ const MilkSubmissions = () => {
     }
   };
 
+  // Calculate the sums
+  const totalPending = submissions
+    .filter(submission => submission.status.toLowerCase() === 'pending')
+    .reduce((sum, submission) => sum + Number(submission.amount), 0);
+
+  const totalAccepted = submissions
+    .filter(submission => submission.status.toLowerCase() === 'accepted')
+    .reduce((sum, submission) => sum + Number(submission.amount), 0);
+
+  useEffect(() => {
+    console.log('Fetched Submissions:', submissions);
+    const pendingSubmissions = submissions.filter(submission => submission.status.toLowerCase() === 'pending');
+    console.log('Pending Submissions:', pendingSubmissions);
+  }, [submissions]);
+
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
       <Breadcrumb pageName="Milk Submissions" />
+
+      {/* Status Summary */}
+      <div className="flex justify-between mb-4">
+        <div className="bg-white p-4 rounded-lg shadow-md">
+          <h3 className="text-lg font-semibold">Total Collection</h3>
+          <p className="text-2xl">{totalAccepted}</p>
+          <p className="text-green-500">Today's total ↑</p>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow-md">
+          <h3 className="text-lg font-semibold">Pending Quantity Check</h3>
+          <p className="text-2xl">{totalPending}</p>
+          <p className="text-red-500">Needs verification</p>
+        </div>
+      </div>
 
       {/* Filters & Table */}
       <div className="bg-white rounded-lg shadow-lg">

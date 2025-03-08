@@ -229,7 +229,7 @@ model TranspDerived {
   transport  Transport  @relation("TransportToTranspDerived", fields: [transportId], references: [id])
   deriveries Derivery[] @relation("DeriveryToTranspDerived")
 }
-
+ 
 model Payment {
   id          Int      @id @default(autoincrement())
   farmerId    Int
