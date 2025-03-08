@@ -4,12 +4,14 @@ import Breadcrumb from '../../components/Breadcrumb';
 import { FiDollarSign, FiClock, FiAlertCircle } from 'react-icons/fi';
 import { formatNumber } from '../../utils/formatters';
 import axiosInstance from '../../utils/axiosInstance';
+import { differenceInDays } from 'date-fns';
 
 const InguzanyoPage = () => {
   const { farmerId } = useParams<{ farmerId: string }>();
   const location = useLocation();
   const [farmer, setFarmer] = useState(location.state?.farmer || null);
   const [loans, setLoans] = useState([]);
+  const [milkSubmissionAmount, setMilkSubmissionAmount] = useState(0);
 
   useEffect(() => {
     if (farmerId && !farmer) {
@@ -17,6 +19,7 @@ const InguzanyoPage = () => {
     }
     if (farmerId) {
       fetchLoans(farmerId);
+      fetchMilkSubmissions(farmerId);
     }
   }, [farmerId, farmer]);
 
@@ -34,11 +37,51 @@ const InguzanyoPage = () => {
     try {
       const response = await axiosInstance.get(`/loans/farmer/${farmerId}`);
       console.log('Fetched loans:', response.data);
-      setLoans(response.data);
+
+      const loans = Array.isArray(response.data) ? response.data : response.data.loans || [];
+      setLoans(loans);
     } catch (error) {
       console.error('Error fetching loans:', error);
     }
   };
+
+  const fetchMilkSubmissions = async (farmerId: string) => {
+    try {
+      const response = await axiosInstance.get(`/milk-submissions/farmer/${farmerId}`);
+      console.log('Milk submissions response:', response.data);
+
+      const submissions = Array.isArray(response.data) ? response.data : response.data.submissions || [];
+      const recentSubmissions = submissions.filter((submission: any) => 
+        differenceInDays(new Date(), new Date(submission.createdAt)) <= 15
+      );
+      const totalAmount = recentSubmissions.reduce((sum: number, submission: any) => sum + submission.amount, 0);
+      setMilkSubmissionAmount(totalAmount);
+    } catch (error) {
+      console.error('Error fetching milk submissions:', error);
+    }
+  };
+
+  const calculateLoanEligibility = () => {
+    const money = milkSubmissionAmount * 400;
+    if (milkSubmissionAmount > 60) {
+      return money * 0.7;
+    } else if (milkSubmissionAmount > 45) {
+      return money * 0.5;
+    }
+    return 0;
+  };
+
+  const eligibleLoanAmount = calculateLoanEligibility();
+
+  // Calculate the total amount of approved loans
+  const totalApprovedLoans = loans
+    .filter((loan: any) => loan.status.toLowerCase() === 'approved')
+    .reduce((sum: number, loan: any) => sum + loan.loanAmount, 0);
+
+  // Calculate the total amount of rejected loans
+  const totalRejectedLoans = loans
+    .filter((loan: any) => loan.status.toLowerCase() === 'rejected')
+    .reduce((sum: number, loan: any) => sum + loan.loanAmount, 0);
 
   const [showLoanForm, setShowLoanForm] = useState(false);
   const [formData, setFormData] = useState({
@@ -111,7 +154,7 @@ const InguzanyoPage = () => {
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
       <Breadcrumb pageName="Inguzanyo" />
-
+ 
       {/* Display Farmer Information */}
       {farmer && (
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
@@ -131,7 +174,7 @@ const InguzanyoPage = () => {
           </div>
           <div className="mt-2">
             <div className="text-2xl font-bold text-blue-600">
-              {formatNumber(0)} Rwf
+              {formatNumber(eligibleLoanAmount)} Rwf
             </div>
             <div className="text-sm text-gray-500">Ntarengwa</div>
           </div>
@@ -144,7 +187,7 @@ const InguzanyoPage = () => {
           </div>
           <div className="mt-2">
             <div className="text-2xl font-bold text-gray-800">
-              {formatNumber(0)} Rwf
+              {formatNumber(totalApprovedLoans)} Rwf
             </div>
             <div className="text-sm text-gray-500">Asigaye kwishyurwa</div>
           </div>
@@ -152,14 +195,14 @@ const InguzanyoPage = () => {
 
         <div className="bg-white rounded-lg p-6 shadow-lg">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-700">Amafaranga y'Ukwezi</h3>
+            <h3 className="text-lg font-semibold text-gray-700">Inguzanyo yanzwe</h3>
             <FiAlertCircle className="text-green-600" size={24} />
           </div>
           <div className="mt-2">
             <div className="text-2xl font-bold text-green-600">
-              {formatNumber(0)} Rwf
+              {formatNumber(totalRejectedLoans)} Rwf
             </div>
-            <div className="text-sm text-gray-500">Kuva ku mata watanze</div>
+            <div className="text-sm text-gray-500">Amafaranga yanzwe</div>
           </div>
         </div>
       </div>
@@ -206,9 +249,10 @@ const InguzanyoPage = () => {
                     placeholder="Urugero: 50000"
                     required
                     min="1000"
+                    max={eligibleLoanAmount}
                   />
                   <p className="text-sm text-gray-500 mt-1">
-                    Ntarengwa: {formatNumber(0)} Rwf
+                    Ntarengwa: {formatNumber(eligibleLoanAmount)} Rwf
                   </p>
                 </div>
                 <div>

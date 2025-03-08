@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import axiosInstance from '../../utils/axios';
 import { useUser } from '../../context/UserContext';
 import { formatNumber } from '../../utils/formatters';
+import { differenceInDays } from 'date-fns';
 
 interface Loan {
   id: number;
@@ -36,36 +37,74 @@ const LoanPortalPage = () => {
     purpose: ''
   });
   const [loading, setLoading] = useState(true);
+  const [milkSubmissionAmount, setMilkSubmissionAmount] = useState(0);
 
   useEffect(() => {
-    if (!user?.id || !user?.token) return;
+    if (user?.id) {
+      fetchMilkSubmissions(user.id);
+      fetchLoanData();
+    }
+  }, [user?.id]);
 
-    const fetchLoanData = async () => {
-      try {
-        const [loansRes, summaryRes] = await Promise.all([
-          axiosInstance.get(`/loans/farmer/${user.id}`, {
-            headers: {
-              Authorization: `Bearer ${user.token}`
-            }
-          }),
-          axiosInstance.get(`/loans/farmer/${user.id}/summary`, {
-            headers: {
-              Authorization: `Bearer ${user.token}`
-            }
-          })
-        ]);
+  const fetchMilkSubmissions = async (farmerId: string) => {
+    try {
+      const response = await axiosInstance.get(`/milk-submissions/farmer/${farmerId}`);
+      console.log('Milk submissions response:', response.data);
 
-        setLoans(loansRes.data);
-        setSummary(summaryRes.data);
-      } catch (error) {
-        toast.error('Hari ikibazo. Ongera ugerageze.');
-      } finally {
-        setLoading(false);
-      }
-    };
+      const submissions = Array.isArray(response.data) ? response.data : response.data.submissions || [];
+      const recentSubmissions = submissions.filter((submission: any) => 
+        differenceInDays(new Date(), new Date(submission.createdAt)) <= 15
+      );
+      const totalAmount = recentSubmissions.reduce((sum: number, submission: any) => sum + submission.amount, 0);
+      setMilkSubmissionAmount(totalAmount);
+    } catch (error) {
+      console.error('Error fetching milk submissions:', error);
+    }
+  };
 
-    fetchLoanData();
-  }, [user?.id, user?.token]);
+  const fetchLoanData = async () => {
+    try {
+      const [loansRes, summaryRes] = await Promise.all([
+        axiosInstance.get(`/loans/farmer/${user.id}`, {
+          headers: {
+            Authorization: `Bearer ${user.token}`
+          }
+        }),
+        axiosInstance.get(`/loans/farmer/${user.id}/summary`, {
+          headers: {
+            Authorization: `Bearer ${user.token}`
+          }
+        })
+      ]);
+
+      console.log('Fetched loans:', loansRes.data);
+
+      const loans = Array.isArray(loansRes.data) ? loansRes.data : loansRes.data.loans || [];
+      setLoans(loans);
+      setSummary(summaryRes.data);
+    } catch (error) {
+      toast.error('Hari ikibazo. Ongera ugerageze.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const calculateLoanEligibility = () => {
+    const money = milkSubmissionAmount * 400;
+    if (milkSubmissionAmount > 60) {
+      return money * 0.7;
+    } else if (milkSubmissionAmount > 45) {
+      return money * 0.5;
+    }
+    return 0;
+  };
+
+  const eligibleLoanAmount = calculateLoanEligibility();
+
+  // Calculate the total amount of rejected loans
+  const totalRejectedLoans = loans
+    .filter((loan: any) => loan.status.toLowerCase() === 'rejected')
+    .reduce((sum: number, loan: any) => sum + loan.loanAmount, 0);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,6 +137,19 @@ const LoanPortalPage = () => {
     }
   };
 
+  const mapStatusToDisplayText = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'approved':
+        return 'Yemejwe';
+      case 'pending':
+        return 'Itegerejwe';
+      case 'rejected':
+        return 'Yanzwe';
+      default:
+        return 'Unknown';
+    }
+  };
+
   if (loading) {
     return <div className="p-4">Biratunganywa...</div>;
   }
@@ -115,7 +167,7 @@ const LoanPortalPage = () => {
           </div>
           <div className="mt-2">
             <div className="text-2xl font-bold text-blue-600">
-              {formatNumber(summary.maxLoanAmount)} Rwf
+              {formatNumber(eligibleLoanAmount)} Rwf
             </div>
             <div className="text-sm text-gray-500">Ntarengwa</div>
           </div>
@@ -136,14 +188,14 @@ const LoanPortalPage = () => {
 
         <div className="bg-white rounded-lg p-6 shadow-lg">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-700">Amafaranga y'Ukwezi</h3>
+            <h3 className="text-lg font-semibold text-gray-700">Inguzanyo yanzwe</h3>
             <FiAlertCircle className="text-green-600" size={24} />
           </div>
           <div className="mt-2">
             <div className="text-2xl font-bold text-green-600">
-              {formatNumber(summary.monthlyIncome)} Rwf
+              {formatNumber(totalRejectedLoans)} Rwf
             </div>
-            <div className="text-sm text-gray-500">Kuva ku mata watanze</div>
+            <div className="text-sm text-gray-500">Amafaranga yanzwe</div>
           </div>
         </div>
       </div>
@@ -178,10 +230,10 @@ const LoanPortalPage = () => {
                     placeholder="Urugero: 50000"
                     required
                     min="1000"
-                    max={summary.maxLoanAmount}
+                    max={eligibleLoanAmount}
                   />
                   <p className="text-sm text-gray-500 mt-1">
-                    Ntarengwa: {formatNumber(summary.maxLoanAmount)} Rwf
+                    Ntarengwa: {formatNumber(eligibleLoanAmount)} Rwf
                   </p>
                 </div>
                 <div>
@@ -255,13 +307,11 @@ const LoanPortalPage = () => {
                   </td>
                   <td className="px-6 py-4">
                     <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                      loan.status === 'approved' ? 'bg-green-100 text-green-800' :
-                      loan.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                      loan.status.toLowerCase() === 'approved' ? 'bg-green-100 text-green-800' :
+                      loan.status.toLowerCase() === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                       'bg-red-100 text-red-800'
                     }`}>
-                      {loan.status === 'approved' ? 'Yemewe' :
-                       loan.status === 'pending' ? 'Itegerejwe' :
-                       'Yanzwe'}
+                      {mapStatusToDisplayText(loan.status)}
                     </span>
                   </td>
                 </tr>
