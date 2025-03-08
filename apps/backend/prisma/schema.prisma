@@ -81,7 +81,7 @@ model Farmer {
   firstName   String
   lastName    String
   birthday    DateTime
-  nationalId  String   @unique
+  nationalId  String   
   phoneNumber String   @unique
   longitude   Float
   latitude    Float
