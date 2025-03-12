@@ -98,22 +98,26 @@ const Reports = () => {
     return daysSinceLastSubmission >= 15;
   };
 
+  // Pagination logic
+  const paginatedReports = Object.values(groupedReports).slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
+  const totalPages = Math.ceil(Object.values(groupedReports).length / itemsPerPage);
 
-    // Pagination logic
-    const paginatedReports = Object.values(groupedReports).slice(
-      (currentPage - 1) * itemsPerPage,
-      currentPage * itemsPerPage
-    );
-  
-    const totalPages = Math.ceil(Object.values(groupedReports).length / itemsPerPage);
-  
-    // Calculate total balance
-    const totalBalance = paginatedReports.reduce((sum, group) => {
-      return sum + (group.totalMilkAmount * 400 - group.totalLoanAmount);
-    }, 0);
+  // Calculate total balance
+  const totalBalance = paginatedReports.reduce((sum, group) => {
+    return sum + (group.totalMilkAmount * 400 - group.totalLoanAmount);
+  }, 0);
 
-    
+  const totalQuantity = paginatedReports.reduce((sum, group) => {
+    return sum + group.totalMilkAmount;
+  }, 0);
+
+  const totalLoanAmount = paginatedReports.reduce((sum, group) => {
+    return sum + group.totalLoanAmount;
+  }, 0);
 
   const handlePayment = async (farmerId: string, amount: number, startDate: string, endDate: string) => {
     try {
@@ -196,6 +200,16 @@ const Reports = () => {
               );
             })}
           </tbody>
+          <tfoot>
+            <tr className="bg-gray-100">
+              <td colSpan={4} className="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase border border-gray-300">Totals</td>
+              <td className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase border border-gray-300">{totalQuantity}</td>
+              <td className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase border border-gray-300"></td>
+              <td className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase border border-gray-300">{totalLoanAmount}</td>
+              <td className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase border border-gray-300">{totalBalance}</td>
+              <td colSpan={2} className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase border border-gray-300"></td>
+            </tr>
+          </tfoot>
         </table>
       </div>
       <div className="flex justify-between mt-4">
@@ -214,9 +228,6 @@ const Reports = () => {
         >
           Next
         </button>
-      </div>
-      <div className="mt-4">
-        <h3 className="text-lg font-semibold">Total Balance: {totalBalance} RWF</h3>
       </div>
     </div>
   );
