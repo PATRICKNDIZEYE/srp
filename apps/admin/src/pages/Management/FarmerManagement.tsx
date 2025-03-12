@@ -5,7 +5,7 @@ import DateRangeFilter from '../../components/Filters/DateRangeFilter';
 import { toast } from 'react-toastify';
 import axiosInstance from '../../utils/axiosInstance';
 import AddFarmerModal from '../../components/Management/AddFarmerModal';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import ChangePasswordForm from '../../components/Management/ChangePasswordForm';
 
 // Define a type for the farmer objects
@@ -33,6 +33,7 @@ interface NewFarmer {
 }
 
 const FarmerManagement = () => {
+  const { pocId } = useParams<{ pocId: string }>();
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState('all');
@@ -42,7 +43,7 @@ const FarmerManagement = () => {
   const [selectedFarmerId, setSelectedFarmerId] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const fetchFarmers = async (pocId: number) => {
+  const fetchFarmers = async (pocId: string) => {
     try {
       const response = await axiosInstance.get(`/farmer/poc/${pocId}`);
       setPendingFarmers(response.data);
@@ -53,10 +54,10 @@ const FarmerManagement = () => {
   };
 
   useEffect(() => {
-    // Assuming you have a way to get the current pocId
-    const currentPocId = 1; // Replace with actual logic to get pocId
-    fetchFarmers(currentPocId);
-  }, []);
+    if (pocId) {
+      fetchFarmers(pocId);
+    }
+  }, [pocId]);
 
   const handleConfirmRegistration = (farmerId: string) => {
     toast.success('Farmer registration confirmed');
@@ -68,7 +69,7 @@ const FarmerManagement = () => {
       await axiosInstance.patch(`/farmer/${farmerId}/status`, { status: newStatus });
       toast.success(`Status changed to ${newStatus}`);
       // Refresh data after status change
-      fetchFarmers(1); // Assuming you want to refresh for pocId 1
+      fetchFarmers(pocId);
     } catch (error) {
       toast.error('Failed to change status');
     }
@@ -91,7 +92,7 @@ const FarmerManagement = () => {
         },
         body: JSON.stringify({
           ...formData,
-          pocId: selectedPocId, // Ensure this is set correctly
+          pocId: pocId, // Ensure this is set correctly
         }),
       });
 
@@ -244,7 +245,7 @@ const FarmerManagement = () => {
             // Logic to add the new farmer
             setPendingFarmers([...pendingFarmers, newFarmer]);
             setShowAddFarmerModal(false);
-            fetchFarmers(1); // Assuming you want to refresh for pocId 1
+            fetchFarmers(pocId);
           }}
         />
       )}

@@ -81,6 +81,11 @@ import ManagementFarmerManagement from './pages/Management/FarmerManagement';
 // Import the new MilkSubmissions component
 import ManagementMilkSubmissions from './pages/Management/MilkSubmissions';
 
+import ManagementInguzanyoPage from './pages/Management/Inguzanyo';
+
+// Import the new SubmissionsSummary component
+import ManagementSubmissionsSummary from './pages/Management/SubmissionsSummary';
+
 function App() {
   return (
     <UserProvider>
@@ -149,6 +154,8 @@ function App() {
           <Route path="/management/settings" element={<SystemSettings />} />
           <Route path="/management/farmer-management/:pocId" element={<ManagementFarmerManagement />} />
           <Route path="/management/farmer-submission/:farmerId" element={<ManagementMilkSubmissions />} />
+          <Route path="/management/inguzanyo/:farmerId" element={<ManagementInguzanyoPage />} />
+          <Route path="/management/submissions-summary/:pocId" element={<ManagementSubmissionsSummary />} />
         </Route>
 
         {/* Diary Routes */}

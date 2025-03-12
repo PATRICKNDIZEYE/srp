@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import Breadcrumb from '../../components/Breadcrumb';
 import axiosInstance from '../../utils/axiosInstance';
 import * as XLSX from 'xlsx';
@@ -37,33 +38,27 @@ interface Group {
   lastPaymentDate: string;
 }
 
-const Reports = () => {
+const SubmissionsSummary = () => {
+  const { pocId } = useParams<{ pocId: string }>();
   const [groupedReports, setGroupedReports] = useState<Record<string, Group>>({});
-  
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10; // Number of items per page
 
   useEffect(() => {
     const fetchGroupedReports = async () => {
       try {
-        // Retrieve user data from local storage
-        const userData = localStorage.getItem('userData');
-        const userId = userData ? JSON.parse(userData)[0].id : null;
-
-        if (userId) {
-          // Use the userId in the API endpoint
-          const response = await axiosInstance.get(`/reports/grouped/poc/${userId}`);
+        if (pocId) {
+          const response = await axiosInstance.get(`/reports/grouped/poc/${pocId}`);
           const data = response.data;
 
-          // Ensure lastPaymentDate is set
           const updatedData = Object.values(data).map((group: Group) => ({
             ...group,
-            lastPaymentDate: group.lastPaymentDate || '1970-01-01', // Default to a very old date
+            lastPaymentDate: group.lastPaymentDate || '1970-01-01',
           }));
 
           setGroupedReports(updatedData);
         } else {
-          console.error('User ID not found in local storage');
+          console.error('POC ID not found in URL');
         }
       } catch (error) {
         console.error('Error fetching grouped reports:', error);
@@ -71,7 +66,7 @@ const Reports = () => {
     };
 
     fetchGroupedReports();
-  }, []);
+  }, [pocId]);
 
   const downloadExcel = () => {
     const data = Object.values(groupedReports).map(group => ({
@@ -91,29 +86,25 @@ const Reports = () => {
 
   const isPaymentDue = (submissions: Submission[]) => {
     if (submissions.length === 0) {
-      return false; // No submissions, assume payment is not due
+      return false;
     }
     const lastSubmissionDate = submissions[submissions.length - 1].createdAt;
     const daysSinceLastSubmission = differenceInDays(new Date(), parseISO(lastSubmissionDate));
     return daysSinceLastSubmission >= 15;
   };
 
+  // Pagination logic
+  const paginatedReports = Object.values(groupedReports).slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
+  const totalPages = Math.ceil(Object.values(groupedReports).length / itemsPerPage);
 
-    // Pagination logic
-    const paginatedReports = Object.values(groupedReports).slice(
-      (currentPage - 1) * itemsPerPage,
-      currentPage * itemsPerPage
-    );
-  
-    const totalPages = Math.ceil(Object.values(groupedReports).length / itemsPerPage);
-  
-    // Calculate total balance
-    const totalBalance = paginatedReports.reduce((sum, group) => {
-      return sum + (group.totalMilkAmount * 400 - group.totalLoanAmount);
-    }, 0);
-
-    
+  // Calculate total balance
+  const totalBalance = paginatedReports.reduce((sum, group) => {
+    return sum + (group.totalMilkAmount * 400 - group.totalLoanAmount);
+  }, 0);
 
   const handlePayment = async (farmerId: string, amount: number, startDate: string, endDate: string) => {
     try {
@@ -222,4 +213,4 @@ const Reports = () => {
   );
 };
 
-export default Reports;
+export default SubmissionsSummary;

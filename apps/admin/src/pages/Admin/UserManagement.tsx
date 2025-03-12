@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Breadcrumb from '../../components/Breadcrumb';
-import { BsPersonPlus, BsPencil, BsTrash } from 'react-icons/bs';
+import { BsPersonPlus, BsPencil, BsTrash, BsFileEarmarkText } from 'react-icons/bs';
 import AddUserModal from './AddUserModal';
+import { useNavigate } from 'react-router-dom';
 
 interface User {
   id: number;
@@ -17,6 +18,7 @@ const UserManagement = () => {
   const { t } = useTranslation();
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const navigate = useNavigate();
 
   // Dummy data
   const [users] = useState<User[]>([
@@ -132,6 +134,12 @@ const UserManagement = () => {
                         className="hover:text-danger"
                       >
                         <BsTrash className="h-5 w-5" />
+                      </button>
+                      <button
+                        onClick={() => navigate(`/management/submissions-summary/${user.id}`)}
+                        className="hover:text-info"
+                      >
+                        <BsFileEarmarkText className="h-5 w-5" />
                       </button>
                     </div>
                   </td>

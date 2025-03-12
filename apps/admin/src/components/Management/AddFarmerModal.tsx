@@ -179,7 +179,7 @@ const AddFarmerModal: React.FC<AddFarmerModalProps> = ({ isOpen, onClose, onSubm
       const sanitizedUsername = sanitizedFirstName.toLowerCase() + Math.floor(Math.random() * 1000);
 
       // Generate dummy nationalId if not provided
-      const generatedNationalId = formData.nationalId || `DUMMY${Math.floor(Math.random() * 1000000000000)}`;
+      const generatedNationalId = formData.nationalId || `11992${Math.floor(Math.random() * 100000000000).toString().padStart(11, '0')}`;
 
       const registrationData: NewFarmer = {
         firstName: sanitizedFirstName,
