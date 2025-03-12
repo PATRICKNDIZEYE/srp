@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FiUserPlus, FiEdit2, FiTrash2, FiMapPin, FiRefreshCw, FiEye, FiEyeOff, FiLoader } from 'react-icons/fi';
+import { BsFileEarmarkText } from 'react-icons/bs';
 import Breadcrumb from '../../components/Breadcrumb';
 import { toast } from 'react-toastify';
 import DeleteUserModal from '../../components/Management/DeleteUserModal';
@@ -1129,6 +1130,14 @@ const UserManagement = () => {
                             className="text-green-600 hover:text-green-800"
                           >
                             <FiEye />
+                          </button>
+                        )}
+                        {activeTab === 'pocs' && (
+                          <button
+                            onClick={() => navigate(`/management/submissions-summary/${entity.id}`)}
+                            className="text-info hover:text-info-600"
+                          >
+                            <BsFileEarmarkText className="h-5 w-5" />
                           </button>
                         )}
                       </div>
