@@ -106,6 +106,14 @@ const SubmissionsSummary = () => {
     return sum + (group.totalMilkAmount * 400 - group.totalLoanAmount);
   }, 0);
 
+  const totalQuantity = paginatedReports.reduce((sum, group) => {
+    return sum + group.totalMilkAmount;
+  }, 0);
+
+  const totalLoanAmount = paginatedReports.reduce((sum, group) => {
+    return sum + group.totalLoanAmount;
+  }, 0);
+
   const handlePayment = async (farmerId: string, amount: number, startDate: string, endDate: string) => {
     try {
       const response = await axiosInstance.post('/payments/create', {
@@ -187,6 +195,16 @@ const SubmissionsSummary = () => {
               );
             })}
           </tbody>
+          <tfoot>
+            <tr className="bg-gray-100">
+              <td colSpan={4} className="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase border border-gray-300">Totals</td>
+              <td className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase border border-gray-300">{totalQuantity}</td>
+              <td className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase border border-gray-300"></td>
+              <td className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase border border-gray-300">{totalLoanAmount}</td>
+              <td className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase border border-gray-300">{totalBalance}</td>
+              <td colSpan={2} className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase border border-gray-300"></td>
+            </tr>
+          </tfoot>
         </table>
       </div>
       <div className="flex justify-between mt-4">
@@ -205,9 +223,6 @@ const SubmissionsSummary = () => {
         >
           Next
         </button>
-      </div>
-      <div className="mt-4">
-        <h3 className="text-lg font-semibold">Total Balance: {totalBalance} RWF</h3>
       </div>
     </div>
   );
