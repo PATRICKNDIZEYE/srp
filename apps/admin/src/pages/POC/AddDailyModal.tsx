@@ -22,48 +22,38 @@ const AddDailyModal: React.FC<AddDailyModalProps> = ({ onClose, onAdd, initialTr
   const [maxAmount, setMaxAmount] = useState<number | null>(null);
 
   useEffect(() => {
-    const fetchDiaries = async () => {
+    const fetchData = async () => {
       try {
-        const response = await axiosInstance.get('/production');
-        setDiaries(response.data);
+        // Get transportation details with remaining amount
+        const transportResponse = await axiosInstance.get(`/transportations/${deriveryId}`);
+        const transportData = transportResponse.data;
+        setTransports([transportData.transport]);
+        setSelectedTransport(transportData.transport);
+        setTransportId(transportData.transport.id.toString());
+        
+        // Set the maximum amount from the remaining amount
+        setMaxAmount(transportData.remainingAmount);
+
+        // Fetch diaries
+        const diariesResponse = await axiosInstance.get('/production');
+        setDiaries(diariesResponse.data);
       } catch (error) {
-        toast.error('Failed to fetch diaries');
-      }
-    }; 
-
-    const fetchTransports = async () => {
-      try {
-        const response = await axiosInstance.get(`/transportations/${deriveryId}`);
-        const transportData = response.data.transport;
-        setTransports([transportData]);
-        setSelectedTransport(transportData);
-        setTransportId(transportData.id.toString());
-
-        const totalAmount = response.data.amount;
-
-        const derivedResponse = await axiosInstance.get(`/transp-derived/transportation/${deriveryId}`);
-        const derivedTotal = derivedResponse.data.reduce((sum: number, item: any) => sum + item.amount, 0);
-
-        setMaxAmount(totalAmount - derivedTotal);
-      } catch (error) {
-        toast.error('Failed to fetch transport data');
+        console.error('Error fetching data:', error);
+        toast.error('Failed to fetch required data');
       }
     };
 
-    fetchDiaries();
-    fetchTransports();
-
-    if (initialTransportId) {
-      setTransportId(initialTransportId);
-    }
-  }, [initialTransportId, deriveryId]);
+    fetchData();
+  }, [deriveryId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    const amountNum = parseFloat(amount);
+
     // Validate the amount
-    if (maxAmount !== null && parseFloat(amount) > maxAmount) {
-      toast.error(`Amount cannot exceed the maximum allowed: ${maxAmount}`);
+    if (maxAmount !== null && amountNum > maxAmount) {
+      toast.error(`Amount cannot exceed the maximum allowed: ${maxAmount}L`);
       return;
     }
 
@@ -71,11 +61,9 @@ const AddDailyModal: React.FC<AddDailyModalProps> = ({ onClose, onAdd, initialTr
       diaryId: Number(diaryId),
       transportId: Number(transportId),
       deriveryId: Number(deriveryId),
-      amount: parseFloat(amount),
+      amount: amountNum,
       status,
     };
-
-    console.log('Data being sent:', dataToSend);
 
     try {
       await axiosInstance.post('/derived', dataToSend);
@@ -144,7 +132,7 @@ const AddDailyModal: React.FC<AddDailyModalProps> = ({ onClose, onAdd, initialTr
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Amount
+              Amount (Maximum: {maxAmount}L)
             </label>
             <input
               type="number"
@@ -155,7 +143,9 @@ const AddDailyModal: React.FC<AddDailyModalProps> = ({ onClose, onAdd, initialTr
               required
             />
             {maxAmount !== null && (
-              <p className="text-sm text-gray-500">Maximum amount you can enter is {maxAmount}</p>
+              <p className="text-sm text-gray-500">
+                Remaining amount available: {maxAmount}L
+              </p>
             )}
           </div>
           <div>

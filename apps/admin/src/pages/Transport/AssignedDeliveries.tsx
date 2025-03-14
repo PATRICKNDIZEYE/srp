@@ -22,15 +22,58 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
 }) => {
   const [quantity, setQuantity] = useState(delivery.quantity.replace('L', ''));
   const [notes, setNotes] = useState('');
+  const [availableAmount, setAvailableAmount] = useState(0);
+  const [totalVolume, setTotalVolume] = useState(0);
+  const { user } = useUserContext();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    const fetchVolumes = async () => {
+      try {
+        const response = await axiosInstance.get(`/transportations/available-amount/${user.id}`);
+        setAvailableAmount(response.data.availableAmount);
+        setTotalVolume(response.data.totalVolume);
+      } catch (error) {
+        console.error('Error fetching volumes:', error);
+        toast.error('Failed to fetch milk volumes');
+      }
+    };
+
+    fetchVolumes();
+  }, [user.id]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const quantityNum = parseFloat(quantity);
+    
     if (!quantity) {
       toast.error('Please enter the quantity');
       return;
     }
-    onConfirm(delivery.id, `${quantity}L`, notes);
-    onClose();
+
+    if (quantityNum > availableAmount) {
+      toast.error(`You only have ${availableAmount}L available milk`);
+      return;
+    }
+
+    try {
+      // Complete the delivery
+      const response = await axiosInstance.post('/transportations/complete-delivery', {
+        transportId: user.id,
+        deliveryId: delivery.id,
+        amount: quantityNum
+      });
+
+      // Update local state with new volumes
+      setAvailableAmount(response.data.updatedVolumes.availableVolume);
+      setTotalVolume(response.data.updatedVolumes.totalVolume);
+
+      onConfirm(delivery.id, `${quantity}L`, notes);
+      onClose();
+      toast.success('Delivery completed successfully');
+    } catch (error) {
+      console.error('Error completing delivery:', error);
+      toast.error('Failed to complete delivery');
+    }
   };
 
   return (
@@ -44,6 +87,25 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Total Volume
+              </label>
+              <div className="text-lg font-semibold text-gray-600">
+                {totalVolume}L
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Available Amount
+              </label>
+              <div className="text-lg font-semibold text-blue-600">
+                {availableAmount}L
+              </div>
+            </div>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Delivery Details
@@ -67,6 +129,7 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
               onChange={(e) => setQuantity(e.target.value)}
               required
               min="1"
+              max={availableAmount}
             />
           </div>
 
@@ -207,16 +270,19 @@ const AssignedDeliveries = () => {
 
   const handleApproveDelivery = async (deliveryId: string) => {
     try {
-      const response = await axiosInstance.patch(`/delivery/${deliveryId}/status`, { newStatus: 'Completed' });
-      toast.success('Delivery approved successfully!');
-      
-      // Update the delivery status in the local state
-      setAssignedDeliveries((prev) =>
-        prev.map((delivery) =>
-          delivery.id === deliveryId ? { ...delivery, transportStatus: 'Completed' } : delivery
-        )
-      );
+      // Update to use the same endpoint and request format
+      const response = await axiosInstance.patch(`/transportations/${deliveryId}/status`, {
+        newStatus: 'Completed'  // Changed from status to newStatus
+      });
+
+      if (response.status === 200) {
+        toast.success('Delivery approved successfully!');
+        // Refresh the deliveries list
+        const updatedDeliveries = await axiosInstance.get(`/transportations/transport/${userId}`);
+        setAssignedDeliveries(updatedDeliveries.data);
+      }
     } catch (error) {
+      console.error('Error approving delivery:', error);
       toast.error('Failed to approve delivery');
     }
   };

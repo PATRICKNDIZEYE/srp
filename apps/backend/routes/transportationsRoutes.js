@@ -149,6 +149,7 @@ router.patch("/:id/status", async (req, res) => {
     }
   } catch (error) {
     console.error('Error updating transportation status:', error);
+    console.error('Error updating transportation status:', error);
     res.status(400).json({ error: error.message });
   }
 });
