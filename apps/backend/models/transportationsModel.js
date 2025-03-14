@@ -52,11 +52,18 @@ class TransportationsModel {
     });
   }
 
-  async updateTransportationStatus(id, transportStatus) {
-    return await prisma.transportations.update({
-      where: { id: parseInt(id) },
-      data: { transportStatus },
-    });
+  async updateTransportationStatus(id, status) {
+    try {
+      return await prisma.transportations.update({
+        where: { id: parseInt(id) },
+        data: { 
+          transportStatus: status 
+        },
+      });
+    } catch (error) {
+      console.error('Error updating transportation status:', error);
+      throw new Error('Failed to update transportation status');
+    }
   }
 
   async getTransportationsByTransportId(transportId) {
@@ -88,3 +95,40 @@ export const getTransportationsByProductionId = transportationsModel.getTranspor
 export const updateTransportationStatus = transportationsModel.updateTransportationStatus.bind(transportationsModel);
 export const getTransportationsByTransportId = transportationsModel.getTransportationsByTransportId.bind(transportationsModel);
 export const getTransportationsByPhoneNumber = transportationsModel.getTransportationsByPhoneNumber.bind(transportationsModel);
+
+export const getTransporterTotalVolume = async (transportId) => {
+  try {
+    // Get total assigned volume
+    const assignedVolume = await prisma.transportations.aggregate({
+      where: {
+        transportId: parseInt(transportId),
+        transportStatus: 'approved'
+      },
+      _sum: {
+        amount: true
+      }
+    });
+
+    // Get total delivered volume
+    const deliveredVolume = await prisma.transpDerived.aggregate({
+      where: {
+        transportId: parseInt(transportId),
+        status: 'Completed'
+      },
+      _sum: {
+        amount: true
+      }
+    });
+
+    const totalAssigned = assignedVolume._sum.amount || 0;
+    const totalDelivered = deliveredVolume._sum.amount || 0;
+
+    return {
+      totalVolume: totalAssigned,
+      availableVolume: totalAssigned - totalDelivered
+    };
+  } catch (error) {
+    console.error('Error calculating transporter volumes:', error);
+    throw error;
+  }
+};

@@ -9,10 +9,13 @@ import {
   getTransportationsByProductionId,
   updateTransportationStatus,
   getTransportationsByTransportId,
-  getTransportationsByPhoneNumber
+  getTransportationsByPhoneNumber,
+  getTransporterTotalVolume
 } from "../models/transportationsModel.js";
+import { PrismaClient } from "@prisma/client";
 
 const router = express.Router();
+const prisma = new PrismaClient();
 
 // Create a new transportation entry
 router.post("/", async (req, res) => {
@@ -131,14 +134,21 @@ router.get("/production/:productionId", async (req, res) => {
 // Update Transportation Status by ID
 router.patch("/:id/status", async (req, res) => {
   try {
-    const { status } = req.body;
-    const transportation = await updateTransportationStatus(req.params.id, status);
+    const { newStatus } = req.body;
+    
+    if (!newStatus) {
+      return res.status(400).json({ error: "Status is required" });
+    }
+
+    const transportation = await updateTransportationStatus(parseInt(req.params.id), newStatus);
+    
     if (transportation) {
       res.status(200).json(transportation);
     } else {
       res.status(404).json({ message: "Transportation entry not found" });
     }
   } catch (error) {
+    console.error('Error updating transportation status:', error);
     res.status(400).json({ error: error.message });
   }
 });
@@ -167,6 +177,90 @@ router.get("/phone/:phoneNumber", async (req, res) => {
       res.status(404).json({ message: "No transportation entries found for this phone number" });
     }
   } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update the available-amount endpoint
+router.get("/available-amount/:transportId", async (req, res) => {
+  try {
+    const transportId = parseInt(req.params.transportId);
+    const volumes = await getTransporterTotalVolume(transportId);
+    
+    res.status(200).json({
+      totalVolume: volumes.totalVolume,
+      availableAmount: volumes.availableVolume
+    });
+  } catch (error) {
+    console.error('Error fetching available milk amount:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update the delivery completion endpoint
+router.post("/complete-delivery", async (req, res) => {
+  try {
+    const { transportId, deliveryId, amount } = req.body;
+    
+    // Create the delivery record
+    await prisma.transpDerived.create({
+      data: {
+        transportId: parseInt(transportId),
+        deriveryId: parseInt(deliveryId),
+        amount: parseFloat(amount),
+        status: 'Completed'
+      }
+    });
+
+    // Get updated volumes
+    const volumes = await getTransporterTotalVolume(transportId);
+    
+    res.status(200).json({
+      message: 'Delivery completed successfully',
+      updatedVolumes: volumes
+    });
+  } catch (error) {
+    console.error('Error completing delivery:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get transportation details with remaining amount
+router.get("/:deliveryId", async (req, res) => {
+  try {
+    const deliveryId = parseInt(req.params.deliveryId);
+    
+    // Get the original transportation record
+    const transportation = await prisma.transportations.findUnique({
+      where: { id: deliveryId },
+      include: {
+        transport: true
+      }
+    });
+
+    if (!transportation) {
+      return res.status(404).json({ message: "Transportation not found" });
+    }
+
+    // Get sum of all derived deliveries for this transportation
+    const derivedSum = await prisma.transpDerived.aggregate({
+      where: {
+        deriveryId: deliveryId
+      },
+      _sum: {
+        amount: true
+      }
+    });
+
+    const totalDelivered = derivedSum._sum.amount || 0;
+    const remainingAmount = transportation.amount - totalDelivered;
+
+    res.status(200).json({
+      ...transportation,
+      remainingAmount: Math.max(0, remainingAmount)
+    });
+  } catch (error) {
+    console.error('Error fetching transportation details:', error);
     res.status(500).json({ error: error.message });
   }
 });
