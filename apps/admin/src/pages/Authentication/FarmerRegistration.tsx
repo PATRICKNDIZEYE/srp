@@ -134,6 +134,8 @@ const FarmerRegistration = () => {
           password: formData.password
         });
 
+
+        console.log(response);
         const { token } = response.data;
         const decodedToken: any = jwtDecode(token);
         localStorage.setItem('token', token);
@@ -183,26 +185,43 @@ const FarmerRegistration = () => {
           password: formData.password,
           farmDetails: formData.location || 'Farm in Kigali',
           status: 'Active',
-          pocId: formData.pocId
+          pocId: Number(formData.pocId)
         };
 
         console.log('Registration Data:', registrationData);
 
         const response = await axiosInstance.post('/register-farmer', registrationData);
+        console.log(response.data);
+
         if (response.status === 201) {
-          toast.success('Registration successful! Please login.');
+          toast.success('Kwiyandikisha byagenze neza! Injira.');
           setIsLogin(true);
         }
-      } catch (error) {
-        const axiosError = error as AxiosError<{ message: string }>;
-        if (axiosError.response && axiosError.response.data) {
-          toast.error(`Registration failed: ${axiosError.response.data.message}`);
+      } catch (error: any) {
+        console.error('Registration error:', error);
+        
+        // Handle the error response from the backend
+        if (error.response?.data) {
+          const errorData = error.response.data;
+          
+          // Show the error message from the backend
+          toast.error(errorData.message || 'Kwiyandikisha Byanze. Gerageza urebe niba ibyo wanditse bidasanzwe muri sisitemu.');
+          
+          // If there's a specific field error, update the form errors
+          if (errorData.field === 'phone') {
+            setErrors(prev => ({
+              ...prev,
+              phone: errorData.message
+            }));
+          }
         } else {
-          toast.error('Registration failed. Please try again.');
+          toast.error('Kwiyandikisha Byanze. Gerageza urebe niba ibyo wanditse bidasanzwe muri sisitemu.');
         }
-      }
+      } 
     }
   };
+
+
 
   const handleCopy = () => {
     setFormData(prev => ({
@@ -269,13 +288,22 @@ const FarmerRegistration = () => {
                 <label className="block text-gray-700 mb-2">Telefoni</label>
                 <input
                   type="tel"
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 
+                    ${errors.phone ? 'border-red-500' : ''}`}
                   value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  onChange={(e) => {
+                    setFormData({ ...formData, phone: e.target.value });
+                    // Clear the error when user starts typing
+                    if (errors.phone) {
+                      setErrors(prev => ({ ...prev, phone: '' }));
+                    }
+                  }}
                   required
                   placeholder="07X XXX XXXX"
                 />
-                {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
+                {errors.phone && (
+                  <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
+                )}
               </div>
 
               <div>

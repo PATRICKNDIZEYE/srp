@@ -7,16 +7,29 @@ const router = express.Router();
 const prisma = new PrismaClient();
 
 // Create a new Farmer
-router.post("/", async (req, res) => {
+router.post("/register-farmer", async (req, res) => {
   try {
-    console.log("Request Body:", req.body); // Log the request body for debugging
+    console.log("Request Body:", req.body);
 
     const { firstName, lastName, birthday, nationalId, phoneNumber, longitude, latitude, username, password, farmDetails, status, pocId } = req.body;
+
+    // Check if POC exists first
+    const poc = await prisma.pOC.findUnique({
+      where: { id: parseInt(pocId) }
+    });
+
+    if (!poc) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'POC utanze ntabwo ahari. Hitamo undi POC.',
+        field: 'pocId'
+      });
+    }
 
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create Farmer
+    // Try to create the farmer
     const farmer = await createFarmer({
       firstName,
       lastName,
@@ -29,13 +42,41 @@ router.post("/", async (req, res) => {
       password: hashedPassword,
       farmDetails,
       status,
-      pocId: parseInt(pocId, 10),
+      pocId: parseInt(pocId)
     });
 
-    res.status(201).json(farmer);
+    res.status(201).json({
+      status: 'success',
+      message: 'Kwiyandikisha byagenze neza!',
+      data: farmer
+    });
+
   } catch (error) {
-    console.error("Error creating farmer:", error); // Log the error for debugging
-    res.status(400).json({ error: error.message });
+    console.error("Error creating farmer:", error);
+
+    // Handle specific error messages from the model
+    if (error.message.includes('numero ya telefoni')) {
+      return res.status(400).json({
+        status: 'error',
+        message: error.message,
+        field: 'phone'
+      });
+    }
+
+    if (error.message.includes('Izina ryawe')) {
+      return res.status(400).json({
+        status: 'error',
+        message: error.message,
+        field: 'username'
+      });
+    }
+
+    // Fallback error message in Kinyarwanda
+    return res.status(400).json({
+      status: 'error',
+      message: 'Gerageza urebe niba ibyo wanditse bidasanzwe muri sisitemu.',
+      details: error.message
+    });
   }
 });
 

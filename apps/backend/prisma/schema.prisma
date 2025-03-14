@@ -1,6 +1,6 @@
 datasource db {
   provider = "postgresql"
-  url      ="postgresql://postgres:lionson@localhost:2005/srp"
+  url      = env("DATABASE_URL")
 }
 
 generator client {
@@ -90,8 +90,8 @@ model Farmer {
   farmDetails Json
   status      String
 
-  poc   POC? @relation(fields: [pocId], references: [id])
-  pocId Int?
+  pocId     Int
+  poc       POC      @relation(fields: [pocId], references: [id])
 
   stocks          Stock[]
   milkSubmissions MilkSubmission[] @relation("FarmerToMilkSubmission")

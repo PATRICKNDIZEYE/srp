@@ -22,25 +22,29 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ role }) => {
     navigate('/');
   };
 
-  return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
-      <DashboardSidebar 
-        role={role} 
-        isOpen={sidebarOpen} 
-        onClose={() => setSidebarOpen(false)} 
-      />
+  const handleSidebarToggle = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
 
-      {/* Main Content */}
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <DashboardHeader 
-          onMenuButtonClick={() => setSidebarOpen(true)}
-          role={role}
-        />
-        
-        <main className="flex-1 overflow-auto bg-gray-50">
-          <Outlet />
-        </main>
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <DashboardHeader onMenuButtonClick={handleSidebarToggle} role={role} />
+      <div className="pt-16 relative">
+        <div className="flex min-h-[calc(100vh-4rem)] bg-gray-50">
+          {/* Sidebar */}
+          <DashboardSidebar 
+            role={role} 
+            isOpen={sidebarOpen} 
+            onClose={() => setSidebarOpen(false)} 
+          />
+
+          {/* Main Content */}
+          <div className="flex-1 overflow-x-hidden">
+            <main className="h-full bg-gray-50">
+              <Outlet />
+            </main>
+          </div>
+        </div>
       </div>
     </div>
   );

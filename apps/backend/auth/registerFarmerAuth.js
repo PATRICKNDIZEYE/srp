@@ -4,9 +4,6 @@ import { prisma } from '../postgres/postgres.js';
 // Register a new Farmer
 export const registerFarmerAuth = async ({ firstName, lastName, birthday, nationalId, phoneNumber, longitude, latitude, username, password, farmDetails, status, pocId }) => {
   // Validate required fields
-  if (!nationalId) {
-    throw new Error('National ID is required.');
-  }
 
   // Check if the POC exists
   const poc = await prisma.pOC.findUnique({
@@ -18,11 +15,11 @@ export const registerFarmerAuth = async ({ firstName, lastName, birthday, nation
   }
 
   const existingFarmer = await prisma.farmer.findUnique({
-    where: { nationalId },
+    where: { username },
   });
 
   if (existingFarmer) {
-    throw new Error('Farmer with this National ID already exists.');
+    throw new Error('Farmer with this username already exists.');
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -34,7 +31,7 @@ export const registerFarmerAuth = async ({ firstName, lastName, birthday, nation
       firstName,
       lastName,
       birthday,
-      nationalId,
+      ...(nationalId && { nationalId }),
       phoneNumber,
       longitude,
       latitude,
@@ -67,11 +64,11 @@ async function registerFarmer(req, res) {
                 firstName,
                 lastName,
                 birthday: new Date(birthday),
-                nationalId,
+                ...(nationalId && { nationalId }),
                 phoneNumber,
                 username,
                 password,
-                pocId, // Ensure this is set correctly
+                pocId,
                 // other fields...
             }
         });

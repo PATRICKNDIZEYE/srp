@@ -2,22 +2,52 @@ import { prisma } from "../postgres/postgres.js";
 
 // Create a new Farmer
 export const createFarmer = async ({ firstName, lastName, birthday, nationalId, phoneNumber, longitude, latitude, username, password, farmDetails, status, pocId }) => {
-  return await prisma.farmer.create({
-    data: {
-      firstName,
-      lastName,
-      birthday,
-      nationalId,
-      phoneNumber,
-      longitude,
-      latitude,
-      username,
-      password,
-      farmDetails,
-      status,
-      pocId,
-    },
-  });
+  try {
+    // Check if phone number already exists
+    const existingFarmer = await prisma.farmer.findFirst({
+      where: { 
+        phoneNumber: phoneNumber.trim() 
+      }
+    });
+
+    if (existingFarmer) {
+      throw new Error('Iyi numero ya telefoni isanzwe iriho. Koresha indi numero.');
+    }
+
+    // Check if username already exists
+    const existingUsername = await prisma.farmer.findFirst({
+      where: { username }
+    });
+
+    if (existingUsername) {
+      throw new Error('Izina ryawe risanzwe rikoreshwa. Hitamo irindi.');
+    }
+
+    // Create the farmer if no duplicates found
+    return await prisma.farmer.create({
+      data: {
+        firstName,
+        lastName,
+        birthday,
+        nationalId,
+        phoneNumber: phoneNumber.trim(),
+        longitude: parseFloat(longitude),
+        latitude: parseFloat(latitude),
+        username,
+        password,
+        farmDetails,
+        status,
+        pocId: parseInt(pocId),
+      },
+    });
+  } catch (error) {
+    // If it's not one of our custom errors, throw a generic error in Kinyarwanda
+    if (!error.message.includes('numero ya telefoni') && 
+        !error.message.includes('Izina ryawe')) {
+      throw new Error('Gerageza urebe niba ibyo wanditse bidasanzwe muri sisitemu.');
+    }
+    throw error;
+  }
 };
 
 // Get all Farmers

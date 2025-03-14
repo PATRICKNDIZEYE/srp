@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { FiMenu, FiBell, FiUser, FiLogOut } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -14,20 +14,33 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuButtonClick, ro
   const { user: contextUser } = useUserContext();
   const [user, setUser] = useState<any>(null);
   const [showLogout, setShowLogout] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const userData = localStorage.getItem('userData');
     if (userData) {
       const parsedUserData = JSON.parse(userData);
       if (Array.isArray(parsedUserData)) {
-        setUser(parsedUserData[0]); // Access the first element if it's an array
+        setUser(parsedUserData[0]);
       } else {
-        setUser(parsedUserData); // Use the object directly if it's not an array
+        setUser(parsedUserData);
       }
     } else {
-      setUser(contextUser); // Fallback to context user if localStorage is empty
+      setUser(contextUser);
     }
   }, [contextUser]);
+
+  useEffect(() => {
+    // Close dropdown when clicking outside
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowLogout(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleLogout = () => {
     sessionStorage.clear();
@@ -41,7 +54,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuButtonClick, ro
   };
 
   return (
-    <header className="bg-white shadow-sm">
+    <header className="bg-white shadow-sm fixed top-0 left-0 right-0 z-40">
       <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center space-x-3">
           <button
@@ -50,7 +63,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuButtonClick, ro
           >
             <FiMenu size={24} />
           </button>
-          <div className="text-xl font-semibold text-gray-800">
+          <div className="text-xl font-semibold text-gray-800 truncate">
             {role.charAt(0).toUpperCase() + role.slice(1)} Dashboard
           </div>
         </div>
@@ -63,13 +76,15 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuButtonClick, ro
             </span>
           </button>
 
-          <div className="relative">
+          <div className="relative" ref={dropdownRef}>
             <button
               onClick={toggleLogoutVisibility}
-              className="flex items-center space-x-2 text-gray-700 hover:text-gray-900"
+              className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 p-2 rounded-full hover:bg-gray-100"
             >
-              <FiUser size={20} />
-              <span className="hidden md:inline">
+              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                <FiUser size={20} />
+              </div>
+              <span className="hidden md:inline max-w-[120px] truncate">
                 {user ? 
                   (user.firstName || user.lastName ? `${user.firstName || user.lastName}` : user.phoneNumber) 
                   : 'Loading...'}
@@ -77,10 +92,20 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuButtonClick, ro
             </button>
 
             {showLogout && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1">
+              <div className="fixed top-16 right-4 w-48 bg-white rounded-lg shadow-xl py-1 border border-gray-100 z-50 animate-fadeIn">
+                <div className="px-4 py-3 border-b border-gray-100">
+                  <p className="text-sm font-medium text-gray-900 truncate">
+                    {user ? 
+                      (user.firstName || user.lastName ? `${user.firstName || user.lastName}` : user.phoneNumber) 
+                      : 'Loading...'}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {user?.phoneNumber}
+                  </p>
+                </div>
                 <button
                   onClick={handleLogout}
-                  className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full"
+                  className="flex items-center space-x-2 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 w-full transition-colors duration-150"
                 >
                   <FiLogOut size={16} />
                   <span>Logout</span>

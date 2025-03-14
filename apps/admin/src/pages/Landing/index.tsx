@@ -228,8 +228,8 @@ const Landing = () => {
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center text-sm">
             <div className="flex items-center space-x-4">
-              <a href="tel:+250788123456" className="flex items-center">
-                <FiPhoneCall className="mr-2" /> +250 788 123 456
+              <a href="tel:+250 792 575 100" className="flex items-center">
+                <FiPhoneCall className="mr-2" /> 250 792 575 100
               </a>
               <a href="mailto:info@SJRP.rw" className="flex items-center">
                 <FiMessageCircle className="mr-2" /> info@SJRP.rw
