@@ -7,7 +7,7 @@ import { AxiosError } from 'axios';
 
 // Define a type for POC
 type POC = {
-  id: string;
+  id: number;
   firstName: string;
   lastName: string;
 };
@@ -45,7 +45,7 @@ const AddFarmerModal: React.FC<AddFarmerModalProps> = ({ isOpen, onClose, onSubm
   const initialUser = userData[0] || {};
 
   // Set a default POC ID if initialUser.id is not available
-  const defaultPocId = pocs.length > 0 ? pocs[0].id : '';
+  const defaultPocId = pocs.length > 0 ? pocs[0].id : 0;
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -64,7 +64,7 @@ const AddFarmerModal: React.FC<AddFarmerModalProps> = ({ isOpen, onClose, onSubm
     sector: '',
     cell: '',
     copyField: '',
-    pocId: initialUser.id || defaultPocId
+    pocId: initialUser.id ? parseInt(initialUser.id) : defaultPocId
   });
 
   const [errors, setErrors] = useState({
@@ -149,6 +149,14 @@ const AddFarmerModal: React.FC<AddFarmerModalProps> = ({ isOpen, onClose, onSubm
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Reset errors
+    setErrors({
+      phone: '',
+      password: '',
+      confirmPassword: '',
+      location: ''
+    });
 
     if (!isValidPhone(formData.phone)) {
       setErrors({
@@ -206,23 +214,36 @@ const AddFarmerModal: React.FC<AddFarmerModalProps> = ({ isOpen, onClose, onSubm
         password: formData.password,
         farmDetails: formData.location || 'Organic vegetable farm',
         status: 'active',
-        pocId: parseInt(formData.pocId) // Ensure pocId is a number
+        pocId: typeof formData.pocId === 'string' ? parseInt(formData.pocId) : formData.pocId
       };
 
       console.log('Registration Data:', registrationData);
 
       const response = await axiosInstance.post('/register-farmer', registrationData);
       if (response.status === 201) {
-        toast.success('Registration successful!');
+        toast.success('Kwiyandikisha byagenze neza!');
         onSubmit(response.data);
         onClose();
       }
-    } catch (error) {
-      const axiosError = error as AxiosError<{ message: string }>;
-      if (axiosError.response && axiosError.response.data) {
-        toast.error(`Registration failed: ${axiosError.response.data.message}`);
+    } catch (error: any) {
+      console.error('Registration error:', error);
+
+      // Handle axios error response
+      if (error.response?.data) {
+        const { message, field } = error.response.data;
+        
+        // Show toast message
+        toast.error(message || 'Habaye ikibazo. Ongera ugerageze.');
+        
+        // Set field error if specified
+        if (field) {
+          setErrors(prev => ({
+            ...prev,
+            [field]: message
+          }));
+        }
       } else {
-        toast.error('Registration failed. Please try again.');
+        toast.error('Habaye ikibazo. Ongera ugerageze.');
       }
     }
   };
@@ -279,13 +300,22 @@ const AddFarmerModal: React.FC<AddFarmerModalProps> = ({ isOpen, onClose, onSubm
             <label className="block text-gray-700 mb-2">Phone</label>
             <input
               type="tel"
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 
+                ${errors.phone ? 'border-red-500' : ''}`}
               value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              onChange={(e) => {
+                setFormData({ ...formData, phone: e.target.value });
+                // Clear the error when user starts typing
+                if (errors.phone) {
+                  setErrors(prev => ({ ...prev, phone: '' }));
+                }
+              }}
               required
-              placeholder="Phone Number"
+              placeholder="07X XXX XXXX"
             />
-            {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
+            {errors.phone && (
+              <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
+            )}
           </div>
 
           <div>
@@ -293,7 +323,7 @@ const AddFarmerModal: React.FC<AddFarmerModalProps> = ({ isOpen, onClose, onSubm
             <select
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={formData.pocId}
-              onChange={(e) => setFormData({ ...formData, pocId: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, pocId: parseInt(e.target.value) })}
               required
             >
               {pocs.map((poc) => (
