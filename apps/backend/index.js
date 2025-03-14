@@ -24,6 +24,8 @@ import { loginAdminAuth } from './auth/loginAdminAuth.js';
 
 
 // Import additional routes
+
+import milkTransportationRoutes from './routes/milkTransportationRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import transportRoutes from './routes/transportRoutes.js';
 import derivedRoutes from './routes/derivedRoutes.js';
@@ -111,6 +113,8 @@ app.post('/api/register-farmer', async (req, res) => {
 app.use('/api/payments', paymentRoutes); 
 
 // Use the routes
+
+app.use('/api/milk-transportation', milkTransportationRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/transports', transportRoutes);
 app.use('/api/diaries', diaryRoutes);

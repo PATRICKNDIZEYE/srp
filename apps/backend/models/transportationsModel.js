@@ -74,6 +74,15 @@ class TransportationsModel {
       where: { phoneNumber },
     });
   }
+
+  async getDeliveriesByPocId(pocId) {
+    return await prisma.transportations.findMany({
+      where: { pocId: parseInt(pocId) },
+      select: {
+        amount: true,
+      },
+    });
+  }
 }
 
 const transportationsModel = new TransportationsModel();
@@ -88,3 +97,4 @@ export const getTransportationsByProductionId = transportationsModel.getTranspor
 export const updateTransportationStatus = transportationsModel.updateTransportationStatus.bind(transportationsModel);
 export const getTransportationsByTransportId = transportationsModel.getTransportationsByTransportId.bind(transportationsModel);
 export const getTransportationsByPhoneNumber = transportationsModel.getTransportationsByPhoneNumber.bind(transportationsModel);
+export const getDeliveriesByPocId = transportationsModel.getDeliveriesByPocId.bind(transportationsModel);

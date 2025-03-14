@@ -14,6 +14,7 @@ const AddDeliveryModal: React.FC<AddDeliveryModalProps> = ({ onClose, onAdd }) =
   const [amount, setAmount] = useState('');
   const [status, setStatus] = useState('In Progress');
   const [transports, setTransports] = useState([]);
+  const [maxAmount, setMaxAmount] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchTransports = async () => {
@@ -25,11 +26,31 @@ const AddDeliveryModal: React.FC<AddDeliveryModalProps> = ({ onClose, onAdd }) =
       }
     };
 
+    const fetchMaxAmount = async () => {
+      try {
+        const userData = JSON.parse(localStorage.getItem('userData') || '[]');
+        const userId = userData[0]?.id;
+        console.log('Fetched userId from localStorage:', userId);
+        const response = await axiosInstance.get(`/milk-transportation/calculate-by-poc/${userId}`);
+        setMaxAmount(response.data.totalAmount);
+      } catch (error) {
+        toast.error('Failed to load maximum amount');
+      }
+    };
+
     fetchTransports();
+    fetchMaxAmount();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate the amount before submission
+    if (maxAmount !== null && parseFloat(amount) > maxAmount) {
+      toast.error(`Amount cannot exceed the maximum limit of ${maxAmount}`);
+      return;
+    }
+
     try {
       const deliveryData = {
         transportId: Number(transportId),
@@ -91,7 +112,11 @@ const AddDeliveryModal: React.FC<AddDeliveryModalProps> = ({ onClose, onAdd }) =
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               required
+              max={maxAmount || undefined}
             />
+            {maxAmount !== null && (
+              <p className="text-sm text-gray-500">Maximum amount: {maxAmount}</p>
+            )}
           </div>
           <div className="flex justify-end space-x-3">
             <button

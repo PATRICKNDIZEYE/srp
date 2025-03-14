@@ -9,7 +9,8 @@ import {
   getTransportationsByProductionId,
   updateTransportationStatus,
   getTransportationsByTransportId,
-  getTransportationsByPhoneNumber
+  getTransportationsByPhoneNumber,
+  getDeliveriesByPocId
 } from "../models/transportationsModel.js";
 
 const router = express.Router();
@@ -132,6 +133,9 @@ router.get("/production/:productionId", async (req, res) => {
 router.patch("/:id/status", async (req, res) => {
   try {
     const { status } = req.body;
+    if (!status) {
+      return res.status(400).json({ error: "Status is required." });
+    }
     const transportation = await updateTransportationStatus(req.params.id, status);
     if (transportation) {
       res.status(200).json(transportation);
@@ -139,6 +143,7 @@ router.patch("/:id/status", async (req, res) => {
       res.status(404).json({ message: "Transportation entry not found" });
     }
   } catch (error) {
+    console.error('Error updating transportation status:', error);
     res.status(400).json({ error: error.message });
   }
 });
@@ -165,6 +170,21 @@ router.get("/phone/:phoneNumber", async (req, res) => {
       res.status(200).json(transportations);
     } else {
       res.status(404).json({ message: "No transportation entries found for this phone number" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get deliveries by POC ID
+router.get("/transportations/poc/:pocId", async (req, res) => {
+  try {
+    const deliveries = await getDeliveriesByPocId(req.params.pocId);
+    if (deliveries.length > 0) {
+      const total = deliveries.reduce((sum, delivery) => sum + delivery.amount, 0);
+      res.status(200).json({ total });
+    } else {
+      res.status(404).json({ message: "No deliveries found for this POC ID" });
     }
   } catch (error) {
     res.status(500).json({ error: error.message });
