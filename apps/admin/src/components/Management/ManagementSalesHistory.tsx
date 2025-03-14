@@ -43,7 +43,9 @@ const ManagementSalesHistory: React.FC<SalesHistoryProps> = ({ dateRange }) => {
 
   const handleStatusChange = async (id: string, status: string) => {
     try {
-      await axiosInstance.patch(`/daily-sales/${id}/status`, { status });
+      const response = await axiosInstance.patch(`/daily-sales/${id}/status`, { status });
+      const { icon } = response.data;
+      console.log(`Status changed to ${status} ${icon}`);
       fetchSales();
     } catch (error) {
       console.error('Error updating sale status:', error);
