@@ -46,7 +46,7 @@ const Modal: React.FC<{ onClose: () => void; children: React.ReactNode }> = ({ o
             onClick={onClose}
             className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
           >
-            Close
+            Funga
           </button>
         </div>
       </div>
@@ -75,6 +75,8 @@ const MilkSubmissions = () => {
   const [quality, setQuality] = useState<string>('');
   const [isDateModalOpen, setIsDateModalOpen] = useState(false);
   const [dateFormData, setDateFormData] = useState({ createdAt: '', updatedAt: '' });
+  const [showWarningModal, setShowWarningModal] = useState(false);
+  const [pendingSubmissionId, setPendingSubmissionId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchSubmissions = async () => {
@@ -105,18 +107,27 @@ const MilkSubmissions = () => {
   }, [farmerId]);
 
   const handleConfirmSubmission = async (submissionId: string) => {
+    // Get the submission quality
+    const submission = submissions.find(s => s.id.toString() === submissionId);
+    
+    if (!submission?.quality) {
+      setShowWarningModal(true);
+      setPendingSubmissionId(submissionId);
+      return;
+    }
+
     try {
       const response = await axiosInstance.put(`/milk-submissions/${submissionId}/status`, {
         status: 'accepted'
       });
       if (response.status === 200) {
-        toast.success('Milk submission confirmed');
-        // Optionally, refresh the submissions list
+        toast.success('Amata yemewe neza');
+        // Refresh submissions
         const newResponse = await axiosInstance.get('/milk-submissions');
         setSubmissions(newResponse.data);
       }
     } catch (error) {
-      toast.error('Failed to confirm milk submission');
+      toast.error('Habaye ikibazo. Ongera ugerageze');
     }
   };
 
@@ -140,18 +151,33 @@ const MilkSubmissions = () => {
   const handleQualityChange = async () => {
     if (selectedSubmissionId !== null) {
       try {
+        const qualityValue = parseInt(quality);
+        
+        if (isNaN(qualityValue)) {
+          toast.error('Quality igomba kuba ari umubare');
+          return;
+        }
+
         const response = await axiosInstance.put(`/milk-submissions/${selectedSubmissionId}/quality`, {
-          quality,
+          quality: qualityValue
         });
+
         if (response.status === 200) {
-          toast.success('Quality updated successfully');
+          // Show different messages based on quality value
+          if (qualityValue < 25) {
+            toast.warning('Amata yanzwe kubera quality iri munsi ya 25');
+          } else {
+            toast.success('Quality yavuguruwe neza');
+          }
+          
           setIsQualityModalOpen(false);
-          // Refresh the submissions list to reflect the updated quality
-          const newResponse = await axiosInstance.get('/milk-submissions');
-          setSubmissions(newResponse.data);
+          // Refresh the submissions list
+          const newResponse = await axiosInstance.get(`/milk-sub/farmer/${farmerId}`);
+          setSubmissions(Array.isArray(newResponse.data.submissions) ? 
+            newResponse.data.submissions : []);
         }
       } catch (error) {
-        toast.error('Failed to update quality');
+        toast.error('Habaye ikibazo. Ongera ugerageze');
       }
     }
   };
@@ -343,23 +369,50 @@ const MilkSubmissions = () => {
         </div>
       </div>
 
+      {/* Warning Modal for Quality Check */}
+      {showWarningModal && (
+        <Modal onClose={() => setShowWarningModal(false)}>
+          <div className="p-4">
+            <div className="text-yellow-600 text-5xl mb-4">⚠️</div>
+            <h2 className="text-lg font-semibold mb-4">Ugomba gushyiramo quality mbere yo kwakira amata</h2>
+            <div className="flex justify-center space-x-4">
+              <button
+                onClick={() => {
+                  setShowWarningModal(false);
+                  if (pendingSubmissionId) {
+                    setSelectedSubmissionId(parseInt(pendingSubmissionId));
+                    setIsQualityModalOpen(true);
+                  }
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Shyiramo Quality
+              </button>
+              
+            </div>
+          </div>
+        </Modal>
+      )}
+
       {/* Modal for changing quality */}
       {isQualityModalOpen && (
         <Modal onClose={() => setIsQualityModalOpen(false)}>
           <div className="p-4">
-            <h2 className="text-lg font-semibold">Change Quality</h2>
+            <h2 className="text-lg font-semibold">Shyiramo Quality</h2>
             <input
-              type="text"
+              type="number"
+              min="0"
+              max="100"
               value={quality}
               onChange={(e) => setQuality(e.target.value)}
               className="mt-2 p-2 border rounded w-full"
-              placeholder="Enter new quality"
+              placeholder="Andika quality"
             />
             <button
               onClick={handleQualityChange}
               className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
-              Update Quality
+              Emeza Quality
             </button>
           </div>
         </Modal>

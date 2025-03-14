@@ -176,7 +176,12 @@ const Reports = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{group.farmer.phoneNumber}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{group.totalMilkAmount}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{group.totalMilkAmount * 400}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{group.totalLoanAmount}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">
+                      {group.loans.reduce((total, loan) => 
+                        loan.status === 'approved' ? total + loan.loanAmount : total, 
+                        0
+                      )}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{(group.totalMilkAmount * 400) - group.totalLoanAmount}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{group.submissions.length > 0 ? group.submissions[0].status : 'N/A'}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">

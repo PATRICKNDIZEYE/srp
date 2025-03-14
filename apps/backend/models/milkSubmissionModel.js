@@ -73,9 +73,15 @@ export const updateMilkSubmission = async (id, { milkType, amount, notes, status
 // Update milk submission quality by ID
 export const updateMilkSubmissionQuality = async (id, quality) => {
   try {
+    const qualityValue = parseInt(quality);
+    
+    // Update only quality and status based on the quality value
     return await prisma.milkSubmission.update({
       where: { id: parseInt(id) },
-      data: { quality },
+      data: { 
+        quality: qualityValue.toString(), // Convert to string before saving
+        status: qualityValue < 25 ? 'rejected' : 'pending'
+      },
     });
   } catch (error) {
     console.error('Error updating milk submission quality:', error);

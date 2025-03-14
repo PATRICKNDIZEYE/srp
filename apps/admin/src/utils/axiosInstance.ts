@@ -5,7 +5,7 @@ let getToken = () => localStorage.getItem('adminToken');
 
 // Create axios instance with default config
 const axiosInstance = axios.create({
-    baseURL: 'https://api.gasabomilk.rw/api',
+    baseURL: import.meta.env.VITE_API_URL,
     headers: {
         // Add any default headers here if needed
     },

@@ -172,7 +172,7 @@ router.get("/grouped/poc/:pocId", async (req, res) => {
   try {
     const pocId = parseInt(req.params.pocId);
 
-    // Fetch all milk submissions with farmer and poc details
+    // Fetch all milk submissions with farmer details
     const milkSubmissions = await prisma.milkSubmission.findMany({
       where: {
         farmer: {
@@ -195,9 +195,10 @@ router.get("/grouped/poc/:pocId", async (req, res) => {
       },
     });
 
-    // Fetch all loans with farmer and poc details
+    // Fetch only approved loans with farmer details
     const loans = await prisma.loan.findMany({
       where: {
+        status: 'approved', // Only get approved loans
         farmer: {
           poc: {
             id: pocId,
@@ -236,6 +237,7 @@ router.get("/grouped/poc/:pocId", async (req, res) => {
       groupedData[farmerId].totalMilkAmount += submission.amount;
     });
 
+    // Only add approved loans to the total
     loans.forEach((loan) => {
       const farmerId = loan.farmer.id;
       if (!groupedData[farmerId]) {
@@ -248,7 +250,10 @@ router.get("/grouped/poc/:pocId", async (req, res) => {
         };
       }
       groupedData[farmerId].loans.push(loan);
-      groupedData[farmerId].totalLoanAmount += loan.loanAmount;
+      // Only add to total if loan is approved
+      if (loan.status === 'approved') {
+        groupedData[farmerId].totalLoanAmount += loan.loanAmount;
+      }
     });
 
     res.json(groupedData);
