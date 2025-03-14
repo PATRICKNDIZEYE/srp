@@ -53,6 +53,16 @@ class RequestMilkModel {
       data: { status },
     });
   }
+
+  async getRequestsByDiaryIdFrom(diaryIdFrom) {
+    return await prisma.requestMilk.findMany({
+      where: { diaryIdFrom: parseInt(diaryIdFrom) },
+      include: {
+        diaryFrom: true,
+        diaryAccept: true,
+      },
+    });
+  }
 }
 
 const requestMilkModel = new RequestMilkModel();
@@ -62,4 +72,5 @@ export const getRequestById = requestMilkModel.getRequestById.bind(requestMilkMo
 export const updateRequest = requestMilkModel.updateRequest.bind(requestMilkModel);
 export const deleteRequest = requestMilkModel.deleteRequest.bind(requestMilkModel);
 export const listRequests = requestMilkModel.listRequests.bind(requestMilkModel);
-export const changeRequestStatus = requestMilkModel.changeRequestStatus.bind(requestMilkModel); 
+export const changeRequestStatus = requestMilkModel.changeRequestStatus.bind(requestMilkModel);
+export const getRequestsByDiaryIdFrom = requestMilkModel.getRequestsByDiaryIdFrom.bind(requestMilkModel); 

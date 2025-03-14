@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiUserPlus, FiEdit2, FiTrash2, FiMapPin, FiRefreshCw, FiEye, FiEyeOff, FiLoader } from 'react-icons/fi';
+import { FiUserPlus, FiEdit2, FiTrash2, FiMapPin, FiRefreshCw, FiEye, FiEyeOff, FiLoader, FiTruck } from 'react-icons/fi';
 import { BsFileEarmarkText } from 'react-icons/bs';
 import Breadcrumb from '../../components/Breadcrumb';
 import { toast } from 'react-toastify';
@@ -375,6 +375,10 @@ const UserManagement = () => {
 
   const handlePocClick = (pocId: number) => {
     navigate(`/management/farmer-management/${pocId}`);
+  };
+
+  const handleNavigateToDelivery = (deliveryId: string) => {
+    navigate(`/management/production-delivery/${deliveryId}`);
   };
 
   const AddUserForm = ({ onClose, onSubmit, initialData }: { onClose: () => void; onSubmit: (data: any) => void; initialData?: User }) => (
@@ -878,55 +882,57 @@ const UserManagement = () => {
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
       <Breadcrumb pageName="User Management" />
       
-      <div className="tabs flex space-x-4 mb-6">
-        <button
-          onClick={() => setActiveTab('users')}
-          className={`px-4 py-2 rounded-lg font-semibold transition-colors duration-300 ${
-            activeTab === 'users' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          }`}
-        >
-          Users
-        </button>
-        <button
-          onClick={() => setActiveTab('farmers')}
-          className={`px-4 py-2 rounded-lg font-semibold transition-colors duration-300 ${
-            activeTab === 'farmers' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          }`}
-        >
-          Farmers
-        </button>
-        <button
-          onClick={() => setActiveTab('pocs')}
-          className={`px-4 py-2 rounded-lg font-semibold transition-colors duration-300 ${
-            activeTab === 'pocs' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          }`}
-        >
-          POCs
-        </button>
-        <button
-          onClick={() => setActiveTab('transports')}
-          className={`px-4 py-2 rounded-lg font-semibold transition-colors duration-300 ${
-            activeTab === 'transports' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          }`}
-        >
-          Transports
-        </button>
-        <button
-          onClick={() => setActiveTab('dairies')}
-          className={`px-4 py-2 rounded-lg font-semibold transition-colors duration-300 ${
-            activeTab === 'dairies' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          }`}
-        >
-          Dairies
-        </button>
-        <button
-          onClick={() => setActiveTab('productions')}
-          className={`px-4 py-2 rounded-lg font-semibold transition-colors duration-300 ${
-            activeTab === 'productions' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          }`}
-        >
-          Productions
-        </button>
+      <div className="tabs-container overflow-x-auto">
+        <div className="tabs flex space-x-4 mb-6">
+          <button
+            onClick={() => setActiveTab('users')}
+            className={`px-4 py-2 rounded-lg font-semibold transition-colors duration-300 ${
+              activeTab === 'users' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            Users
+          </button>
+          <button
+            onClick={() => setActiveTab('farmers')}
+            className={`px-4 py-2 rounded-lg font-semibold transition-colors duration-300 ${
+              activeTab === 'farmers' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            Farmers
+          </button>
+          <button
+            onClick={() => setActiveTab('pocs')}
+            className={`px-4 py-2 rounded-lg font-semibold transition-colors duration-300 ${
+              activeTab === 'pocs' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            POCs
+          </button>
+          <button
+            onClick={() => setActiveTab('transports')}
+            className={`px-4 py-2 rounded-lg font-semibold transition-colors duration-300 ${
+              activeTab === 'transports' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            Transports
+          </button>
+          <button
+            onClick={() => setActiveTab('dairies')}
+            className={`px-4 py-2 rounded-lg font-semibold transition-colors duration-300 ${
+              activeTab === 'dairies' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            Dairies
+          </button>
+          <button
+            onClick={() => setActiveTab('productions')}
+            className={`px-4 py-2 rounded-lg font-semibold transition-colors duration-300 ${
+              activeTab === 'productions' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            Productions
+          </button>
+        </div>
       </div>
 
       <div className="bg-white rounded-lg shadow-lg overflow-hidden">
@@ -1056,6 +1062,12 @@ const UserManagement = () => {
                         >
                           <FiRefreshCw />
                         </button>
+                        <button 
+                          onClick={() => handleNavigateToDelivery(production.id.toString())}
+                          className="text-green-600 hover:text-green-800"
+                        >
+                          <FiTruck />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -1139,6 +1151,44 @@ const UserManagement = () => {
                           >
                             <BsFileEarmarkText className="h-5 w-5" />
                           </button>
+                        )}
+                        {activeTab === 'transports' && (
+                          <>
+                            <button 
+                              onClick={() => navigate(`/management/assigned-deliveries/${entity.id}`)}
+                              className="text-green-600 hover:text-green-800"
+                            >
+                              <FiMapPin />
+                            </button>
+                            <button 
+                              onClick={() => navigate(`/management/production-management/${entity.id}`)}
+                              className="text-purple-600 hover:text-purple-800"
+                            >
+                              <BsFileEarmarkText />
+                            </button>
+                          </>
+                        )}
+                        {activeTab === 'dairies' && (
+                          <>
+                            <button 
+                              onClick={() => navigate(`/management/receive-milk/${entity.id}`)}
+                              className="text-green-600 hover:text-green-800"
+                            >
+                              <FiMapPin />
+                            </button>
+                            <button 
+                              onClick={() => navigate(`/management/sales-history/${entity.id}`)}
+                              className="text-purple-600 hover:text-purple-800"
+                            >
+                              <BsFileEarmarkText />
+                            </button>
+                            <button 
+                              onClick={() => navigate(`/management/milk-requests/${entity.id}`)}
+                              className="text-orange-600 hover:text-orange-800"
+                            >
+                              <FiEye />
+                            </button>
+                          </>
                         )}
                       </div>
                     </td>
