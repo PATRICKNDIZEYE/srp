@@ -1,109 +1,118 @@
 import React, { useEffect, useState } from 'react';
-import { FiDollarSign, FiDownload, FiTrendingUp, FiPlus } from 'react-icons/fi';
+import { FiDollarSign, FiDownload, FiTrendingUp, FiCheckCircle, FiXCircle } from 'react-icons/fi';
 import axiosInstance from '../../utils/axiosInstance';
-import SaleModal from './Modals/SaleModal';
 import { Sale } from '../../types'; // Assuming you have a types file where Sale is defined
+import * as XLSX from 'xlsx'; // Import the xlsx library
 import { useParams } from 'react-router-dom'; // Import useParams
 
 interface SalesHistoryProps {
   dateRange: { start: string; end: string };
 }
 
-const SalesHistory: React.FC<SalesHistoryProps> = ({ dateRange }) => {
-  const { salesHistoryId } = useParams<{ salesHistoryId: string }>();
+const groupSalesData = (sales: Sale[]) => {
+  return sales.reduce((acc, sale) => {
+    const key = `${sale.date}-${sale.productType}-${sale.pricePerUnit}-${sale.dairyId}`;
+    if (!acc[key]) {
+      acc[key] = {
+        ...sale,
+        quantity: 0,
+        totalAmount: 0,
+      };
+    }
+    acc[key].quantity += sale.quantity;
+    acc[key].totalAmount += sale.totalAmount;
+    return acc;
+  }, {} as Record<string, Sale>);
+};
+
+const ManagementSalesHistory: React.FC<SalesHistoryProps> = ({ dateRange }) => {
+  const { salesHistoryId } = useParams<{ salesHistoryId: string }>(); // Get salesHistoryId from URL
   const [sales, setSales] = useState<Sale[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedSale, setSelectedSale] = useState(null);
+  const [receivedMilk, setReceivedMilk] = useState<number>(0); // State for received milk
 
   useEffect(() => {
-    const fetchSalesData = async () => {
-      if (!salesHistoryId) {
-        console.error('No salesHistoryId found in URL');
-        return;
-      }
-      try {
-        const response = await axiosInstance.get(`/daily-sales/diary/${salesHistoryId}`);
-        setSales(response.data);
-      } catch (error) {
-        console.error('Error fetching sales data:', error);
-      }
-    };
-
-    fetchSalesData();
-  }, [salesHistoryId]);
-
-  const handleAddOrUpdateSale = async (saleData: Sale) => {
-    try {
-      // Retrieve user data from localStorage
-      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-      const diaryId = userData.id; // Assuming 'id' is the diaryId
-
-      if (!diaryId) {
-        throw new Error('Diary ID is missing');
-      }
-
-      // Convert the date to an ISO string
-      const formattedDate = new Date(saleData.date).toISOString();
-
-      // Remove id from payload if it's null or undefined
-      const { id, ...rest } = saleData;
-      const salePayload = {
-        ...rest,
-        date: formattedDate,
-        diaryId,
-        quantity: parseFloat(saleData.quantity.toString()),
-        pricePerUnit: parseFloat(saleData.pricePerUnit.toString()),
-        totalAmount: parseFloat(saleData.totalAmount.toString()),
-        depance: parseFloat(saleData.depance.toString()),
-        description: saleData.description,
-      };
-
-      // Log the payload to inspect the data being sent
-      console.log('Sending sale data:', salePayload);
-
-      if (id) {
-        await axiosInstance.patch(`/daily-sales/${id}`, salePayload);
-      } else {
-        await axiosInstance.post('/daily-sales', salePayload);
-      }
+    if (salesHistoryId) {
       fetchSales();
-      setIsModalOpen(false);
+      fetchReceivedMilk(); // Fetch received milk data
+    }
+  }, [salesHistoryId]); // Add salesHistoryId as a dependency
+
+  const fetchSales = async () => {
+    try {
+      const response = await axiosInstance.get(`/daily-sales/diary/${salesHistoryId}`);
+      const groupedSales = groupSalesData(response.data);
+      setSales(Object.values(groupedSales));
     } catch (error) {
-      console.error('Error saving sale:', error);
+      console.error('Error fetching sales:', error);
     }
   };
 
-  const handleDeleteSale = async (id: string) => {
+  const fetchReceivedMilk = async () => {
     try {
-      await axiosInstance.delete(`/daily-sales/${id}`);
+      const response = await axiosInstance.get(`/derived/diary/${salesHistoryId}`);
+      setReceivedMilk(response.data.receivedMilk); // Assuming the response contains receivedMilk
+    } catch (error) {
+      console.error('Error fetching received milk:', error);
+    }
+  };
+
+  const handleStatusChange = async (id: string, status: string) => {
+    try {
+      const response = await axiosInstance.patch(`/daily-sales/${id}/status`, { status });
+      const { icon } = response.data;
+      console.log(`Status changed to ${status} ${icon}`);
       fetchSales();
     } catch (error) {
-      console.error('Error deleting sale:', error);
+      console.error('Error updating sale status:', error);
     }
   };
 
   const calculateTotals = () => {
+    const totalSales = sales.reduce((acc, sale) => acc + sale.quantity, 0);
+    const totalRevenue = sales.reduce((acc, sale) => acc + sale.totalAmount, 0);
+    const totalVolume = sales.reduce((acc, sale) => acc + parseInt(sale.quantity.toString()), 0);
+    const averagePrice = sales.reduce((acc, sale) => acc + (sale.pricePerLiter || 0), 0) / sales.length;
+    const dairiesCount = new Set(sales.map(sale => sale.productType)).size; // Count unique dairies
+    const moneyCash = sales.reduce((acc, sale) => acc + (sale.totalAmount - sale.depance), 0);
+    const stockAfterSale = receivedMilk - totalSales;
+
     return {
-      totalSales: sales.length,
-      totalRevenue: sales.reduce((acc, sale) => acc + sale.totalAmount, 0),
-      totalVolume: sales.reduce((acc, sale) => acc + parseInt(sale.quantity.toString()), 0),
-      averagePrice: sales.reduce((acc, sale) => acc + (sale.pricePerLiter || 0), 0) / sales.length,
+      totalSales,
+      totalRevenue,
+      totalVolume,
+      averagePrice,
+      dairiesCount,
+      moneyCash,
+      stockAfterSale,
     };
   };
 
   const totals = calculateTotals();
 
+  const exportToExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(sales);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'SalesData');
+    XLSX.writeFile(workbook, 'SalesData.xlsx');
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Sales History</h3>
-        <button onClick={() => { setSelectedSale(null); setIsModalOpen(true); }} className="flex items-center space-x-2 text-blue-600 hover:text-blue-700">
-          <FiPlus />
-          <span>Add Sale</span>
-        </button>
       </div>
-      {/* Sales summary cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-white rounded-lg p-6 shadow">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-500">Received Milk</p>
+              <h4 className="text-2xl font-semibold">{receivedMilk}L</h4>
+              <p className="text-sm text-blue-600">Total Received</p>
+            </div>
+            <FiDollarSign className="text-blue-500 text-2xl" />
+          </div>
+        </div>
+
         <div className="bg-white rounded-lg p-6 shadow">
           <div className="flex items-center justify-between">
             <div>
@@ -131,9 +140,9 @@ const SalesHistory: React.FC<SalesHistoryProps> = ({ dateRange }) => {
         <div className="bg-white rounded-lg p-6 shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500">Total Volume</p>
-              <h4 className="text-2xl font-semibold">{totals.totalVolume}L</h4>
-              <p className="text-sm text-blue-600">All Products</p>
+              <p className="text-gray-500">Stock After Sale</p>
+              <h4 className="text-2xl font-semibold">{totals.stockAfterSale}L</h4>
+              <p className="text-sm text-blue-600">Remaining Stock</p>
             </div>
             <FiDollarSign className="text-blue-500 text-2xl" />
           </div>
@@ -142,22 +151,22 @@ const SalesHistory: React.FC<SalesHistoryProps> = ({ dateRange }) => {
         <div className="bg-white rounded-lg p-6 shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500">Average Price</p>
-              <h4 className="text-2xl font-semibold">
-                {Math.round(totals.averagePrice).toLocaleString()} RWF
-              </h4>
-              <p className="text-sm text-gray-600">Per Liter</p>
+              <p className="text-gray-500">Money Cash</p>
+              <h4 className="text-2xl font-semibold">{totals.moneyCash.toLocaleString()} RWF</h4>
+              <p className="text-sm text-blue-600">Net Cash</p>
             </div>
-            <FiDollarSign className="text-purple-500 text-2xl" />
+            <FiDollarSign className="text-blue-500 text-2xl" />
           </div>
         </div>
       </div>
 
-      {/* Sales table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
           <h3 className="text-lg font-semibold">Recent Sales</h3>
-          <button className="flex items-center space-x-2 text-blue-600 hover:text-blue-700">
+          <button
+            onClick={exportToExcel}
+            className="flex items-center space-x-2 text-blue-600 hover:text-blue-700"
+          >
             <FiDownload />
             <span>Export</span>
           </button>
@@ -176,6 +185,12 @@ const SalesHistory: React.FC<SalesHistoryProps> = ({ dateRange }) => {
                   Quantity
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Received Milk
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Stock After Sale
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Price/L (RWF)
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -186,6 +201,9 @@ const SalesHistory: React.FC<SalesHistoryProps> = ({ dateRange }) => {
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Depance (RWF)
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Money Cash (RWF)
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Description
@@ -208,6 +226,12 @@ const SalesHistory: React.FC<SalesHistoryProps> = ({ dateRange }) => {
                     {sale.quantity}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {receivedMilk}L
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {(receivedMilk - sale.quantity).toLocaleString()}L
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {sale.pricePerUnit ? sale.pricePerUnit.toLocaleString() : 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
@@ -220,23 +244,23 @@ const SalesHistory: React.FC<SalesHistoryProps> = ({ dateRange }) => {
                     {sale.depance.toLocaleString()} RWF
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {(sale.totalAmount - sale.depance).toLocaleString()} RWF
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {sale.description || 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <button
-                      onClick={() => {
-                        setSelectedSale(sale);
-                        setIsModalOpen(true);
-                      }}
-                      className="text-blue-600 hover:text-blue-700 mr-2"
+                      onClick={() => sale.id && handleStatusChange(sale.id, 'approved')}
+                      className="text-green-600 hover:text-green-700 mr-2"
                     >
-                      Edit
+                      <FiCheckCircle />
                     </button>
                     <button
-                      onClick={() => handleDeleteSale(sale.id || '')}
+                      onClick={() => sale.id && handleStatusChange(sale.id, 'rejected')}
                       className="text-red-600 hover:text-red-700"
                     >
-                      Delete
+                      <FiXCircle />
                     </button>
                   </td>
                 </tr>
@@ -245,15 +269,8 @@ const SalesHistory: React.FC<SalesHistoryProps> = ({ dateRange }) => {
           </table>
         </div>
       </div>
-      {isModalOpen && (
-        <SaleModal
-          sale={selectedSale}
-          onClose={() => setIsModalOpen(false)}
-          onSave={handleAddOrUpdateSale}
-        />
-      )}
     </div>
   );
 };
 
-export default SalesHistory; 
+export default ManagementSalesHistory; 

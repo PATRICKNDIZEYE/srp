@@ -68,6 +68,27 @@ export const updateDailySaleStatus = async (req, res) => {
   }
 };
 
+export const updateDailySaleStatusWithIcon = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!id || status === undefined) {
+      return res.status(400).json({ error: 'Sale ID and status are required for update' });
+    }
+
+    const updatedSale = await prisma.dailySale.update({
+      where: { id: parseInt(id) },
+      data: { status },
+    });
+
+    const icon = status === 'approved' ? '✅' : '❌'; // Add icon based on status
+    res.json({ ...updatedSale, icon });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
 export const deleteDailySale = async (req, res) => {
   try {
     const { id } = req.params;
