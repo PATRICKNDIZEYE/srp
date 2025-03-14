@@ -42,7 +42,7 @@ import MilkSubmissions from './pages/POC/MilkSubmissions';
 import DeliveryManagement from './pages/POC/DeliveryManagement';
 import AssignedDeliveries from './pages/Transport/AssignedDeliveries';
 import DiaryOperations from './pages/Diary/DiaryOperations';
-import MilkReceiving from './pages/Diary/MilkReceiving';
+import MilkReceiving from './pages/Management/MilkReceiving';
 import SalesHistory from './components/Diary/SalesHistory';
 import AdminFinancialReports from './components/Diary/FinancialReports';
 import ProductionDeliveries from './pages/Production/ProductionDeliveries';
@@ -71,9 +71,9 @@ import ProtectedTransportRoute from './components/ProtectedTransportRoute';
 import ProtectedDiaryRoute from './components/ProtectedDiaryRoute';
 import ProtectedPOCRoute from './components/ProtectedPOCRoute';
 import Reports from './pages/POC/Reports';
-import ManagementSalesHistory from './components/Management/ManagementSalesHistory';
+import ManagementSalesHistory from './components/Management/SalesHistory';
 import InguzanyoPage from './pages/POC/Inguzanyo';
-import RequestMilkPage from './pages/Diary/RequestMilkPage';
+import RequestMilkPage from './pages/Management/RequestMilkPage';
 
 // Import the new FarmerManagement component
 import ManagementFarmerManagement from './pages/Management/FarmerManagement';
@@ -85,6 +85,13 @@ import ManagementInguzanyoPage from './pages/Management/Inguzanyo';
 
 // Import the new SubmissionsSummary component
 import ManagementSubmissionsSummary from './pages/Management/SubmissionsSummary';
+
+// Import the new components
+import ManagementAssignedDeliveries from './pages/Management/AssignedDeliveries';
+import ManagementAssignedTransportations from './pages/Management/AssignedTransportation';
+import ManagementDailyManagement from './pages/Management/DailyManagement';
+import ManagementProductionManagement from './pages/Management/ProductionManagement';
+import ProductionDelivery from './pages/Management/ProductionDelivery';
 
 function App() {
   return (
@@ -151,11 +158,19 @@ function App() {
           <Route path="/management/operations" element={<OperationsManagement />} />
           <Route path="/management/analytics" element={<AnalyticsDashboard />} />
           <Route path="/management/sales-history" element={<ManagementSalesHistory />} />
+          <Route path="/management/sales-history/:salesHistoryId" element={<ManagementSalesHistory />} />
           <Route path="/management/settings" element={<SystemSettings />} />
           <Route path="/management/farmer-management/:pocId" element={<ManagementFarmerManagement />} />
           <Route path="/management/farmer-submission/:farmerId" element={<ManagementMilkSubmissions />} />
           <Route path="/management/inguzanyo/:farmerId" element={<ManagementInguzanyoPage />} />
           <Route path="/management/submissions-summary/:pocId" element={<ManagementSubmissionsSummary />} />
+          <Route path="/management/assigned-deliveries/:transportId" element={<ManagementAssignedDeliveries />} />
+          <Route path="/management/assigned-transportations/:transportId" element={<ManagementAssignedTransportations />} />
+          <Route path="/management/daily-management/:transportId" element={<ManagementDailyManagement />} />
+          <Route path="/management/production-management/:transportId" element={<ManagementProductionManagement />} />
+          <Route path="/management/receive-milk/:entityId" element={<MilkReceiving />} />
+          <Route path="/management/milk-requests/:entityId" element={<RequestMilkPage />} />
+          <Route path="/management/production-delivery/:id" element={<ProductionDelivery />} />
         </Route>
 
         {/* Diary Routes */}

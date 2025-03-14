@@ -1,5 +1,5 @@
 import express from "express";
-import { createRequest, getRequestById, updateRequest, deleteRequest, listRequests, changeRequestStatus } from "../models/requestMilkModel.js";
+import { createRequest, getRequestById, updateRequest, deleteRequest, listRequests, changeRequestStatus, getRequestsByDiaryIdFrom } from "../models/requestMilkModel.js";
 
 const router = express.Router();
 
@@ -83,6 +83,17 @@ router.patch("/:id/status", async (req, res) => {
   } catch (error) {
     console.error("Error changing request status:", error);
     res.status(400).json({ error: error.message });
+  }
+});
+
+// Get requests by diaryIdFrom
+router.get("/from/:diaryIdFrom", async (req, res) => {
+  try {
+    const requests = await getRequestsByDiaryIdFrom(req.params.diaryIdFrom);
+    res.status(200).json(requests);
+  } catch (error) {
+    console.error("Error fetching requests by diaryIdFrom:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 

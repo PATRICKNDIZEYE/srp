@@ -32,6 +32,17 @@ interface NewFarmer {
   status: 'active' | 'inactive';
 }
 
+// Define a type for the form data
+interface FarmerFormData {
+  birthday: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  latitude: number;
+  longitude: number;
+  status: 'active' | 'inactive';
+}
+
 const FarmerManagement = () => {
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
   const [filterOpen, setFilterOpen] = useState(false);
@@ -82,7 +93,10 @@ const FarmerManagement = () => {
     navigate(`/poc/inguzanyo/${farmer.id}`, { state: { farmer } });
   };
 
-  const handleSubmit = async (formData) => {
+  // Ensure selectedPocId is defined
+  const selectedPocId = 1; // Replace with actual logic to get the selectedPocId
+
+  const handleSubmit = async (formData: FarmerFormData) => {
     try {
       const response = await fetch('/api/farmers', {
         method: 'POST',
@@ -205,13 +219,15 @@ const FarmerManagement = () => {
                     <div className="flex gap-2">
                       <button 
                         onClick={(e) => { e.stopPropagation(); handleFarmerClick(farmer.id); }}
-                        className="text-blue-600 hover:text-blue-800"
+                        className={`text-blue-600 hover:text-blue-800 ${farmer.status !== 'active' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        disabled={farmer.status !== 'active'}
                       >
                         <FiEye />
                       </button>
                       <button 
                         onClick={(e) => { e.stopPropagation(); handleEditClick(farmer.id); }}
-                        className="text-blue-600 hover:text-blue-800"
+                        className={`text-blue-600 hover:text-blue-800 ${farmer.status !== 'active' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        disabled={farmer.status !== 'active'}
                       >
                         <FiEdit2 />
                       </button>
@@ -223,7 +239,8 @@ const FarmerManagement = () => {
                       </button>
                       <button 
                         onClick={(e) => { e.stopPropagation(); handleInguzanyoClick(farmer); }}
-                        className="text-green-600 hover:text-green-800"
+                        className={`text-green-600 hover:text-green-800 ${farmer.status !== 'active' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        disabled={farmer.status !== 'active'}
                       >
                         <FiDollarSign />
                       </button>
