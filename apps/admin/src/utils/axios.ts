@@ -2,7 +2,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:2025/api',
+  baseURL: 'https://api.gasabomilk.rw/api',
   headers: {
     'Content-Type': 'application/json',
   },
