@@ -27,9 +27,9 @@ async function main() {
   const superAdmin = await prisma.user.create({
     data: {
       username: 'superadmin',
-      email: 'admin@srp.rw',
-      phone: '0780000000',
-      password: await bcrypt.hash('admin123', 10),
+      email: 'lionson@gmail.com',
+      phone: '0787524803',
+      password: await bcrypt.hash('lionson', 10),
       role: 'super_admin',
       name: 'Super Admin'
     }
@@ -42,11 +42,11 @@ async function main() {
       lastName: 'Doe',
       birthday: new Date('1980-01-01'),
       nationalId: '1198080123456789',
-      phoneNumber: '0780000007',
+      phoneNumber: '0787524803',
       longitude: 30.0588,
       latitude: -1.9441,
       username: 'johndoe',
-      password: await bcrypt.hash('password123', 10),
+      password: await bcrypt.hash('lionson', 10),
       role: 'admin',
       status: 'active'
     }
@@ -57,8 +57,8 @@ async function main() {
     data: {
       status: 'active',
       approveStatus: 'approved',
-      phoneNumber: '0780000008',
-      password: await bcrypt.hash('password123', 10),
+      phoneNumber: '0787524803',
+      password: await bcrypt.hash('lionson', 10),
       longitude: 30.0588,
       latitude: -1.9441,
       username: 'production1'
@@ -72,8 +72,8 @@ async function main() {
       lastName: 'Johnson',
       status: 'active',
       approveStatus: 'approved',
-      phoneNumber: '0780000006',
-      password: await bcrypt.hash('password123', 10),
+      phoneNumber: '0787524803',
+      password: await bcrypt.hash('lionson', 10),
       longitude: 30.0588,
       latitude: -1.9441,
       nationalId: '1199080123456783'
@@ -87,8 +87,8 @@ async function main() {
       lastName: 'Mugabo',
       birthday: new Date('1985-01-01'),
       nationalId: '1198580123456781',
-      phoneNumber: '0780000001',
-      password: await bcrypt.hash('password123', 10),
+      phoneNumber: '0787524803',
+      password: await bcrypt.hash('lionson', 10),
       status: 'active',
       longitude: 30.0588,
       latitude: -1.9441,
@@ -111,8 +111,8 @@ async function main() {
       lastName: 'Kamanzi',
       birthday: new Date('1988-01-01'),
       nationalId: '1198880123456782',
-      phoneNumber: '0780000005',
-      password: await bcrypt.hash('password123', 10),
+      phoneNumber: '0787524803',
+      password: await bcrypt.hash('lionson', 10),
       status: 'active',
       longitude: 30.0588,
       latitude: -1.9441,
@@ -195,13 +195,13 @@ async function main() {
 
   console.log('Seed data created successfully!');
   console.log('\nTest Accounts:');
-  console.log('Super Admin:', { email: 'admin@srp.rw', phone: '0780000000', password: 'admin123' });
-  console.log('Manager:', { phone: '0780000007', password: 'password123' });
-  console.log('Production:', { phone: '0780000008', password: 'password123' });
-  console.log('POC:', { phone: '0780000001', password: 'password123' });
-  console.log('Farmer:', { phone: '0780000003', password: 'password123' });
-  console.log('Transport:', { phone: '0780000005', password: 'password123' });
-  console.log('Diary:', { phone: '0780000006', password: 'password123' });
+  console.log('Super Admin:', { email: 'lionson@gmail.com', phone: '0787524803', password: 'lionson' });
+  console.log('Manager:', { phone: '0787524803', password: 'lionson' });
+  console.log('Production:', { phone: '0787524803', password: 'lionson' });
+  console.log('POC:', { phone: '0787524803', password: 'lionson' });
+  console.log('Farmer:', { phone: '0787524803', password: 'lionson' });
+  console.log('Transport:', { phone: '0787524803', password: 'lionson' });
+  console.log('Diary:', { phone: '0787524803', password: 'lionson' });
 }
 
 main()

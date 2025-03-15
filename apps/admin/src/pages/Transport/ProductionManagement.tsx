@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import axiosInstance from '../../utils/axiosInstance';
 import Breadcrumb from '../../components/Breadcrumb';
-import { useParams } from 'react-router-dom';
 import AddProductionModal from '../Production/AddProductionModal';
 import CardDataStats from '../../components/CardDataStats';
 import { FiCheckCircle, FiAlertCircle, FiDroplet, FiTruck } from 'react-icons/fi';
@@ -18,12 +17,11 @@ interface DailyData {
   transportId: string;
 }
 
-interface RouteParams extends Record<string, string | undefined> {
-  deliveryId: string;
-}
-
 const ProductionManagement: React.FC = () => {
-  const { deliveryId } = useParams<RouteParams>();
+  // Retrieve the user data from localStorage
+  const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+  const userId = userData.id;
+
   const [dailyData, setDailyData] = useState<DailyData[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTransportId, setSelectedTransportId] = useState<string | null>(null);
@@ -36,22 +34,21 @@ const ProductionManagement: React.FC = () => {
 
   // Move fetchDailyData outside of useEffect
   const fetchDailyData = async () => {
-    if (!deliveryId) return; // Ensure deliveryId is defined before making the request
-
     try {
-      const response = await axiosInstance.get(`/delivery/transport/${deliveryId}`);
+      // Use userId instead of deliveryId
+      const response = await axiosInstance.get(`/delivery/transport/${userId}`);
 
       // Ensure response.data is an array before using map
       const data = Array.isArray(response.data)
         ? response.data.map((item: any) => ({
             id: item.id,
             date: item.date,
-            status: item.transportStatus?.toLowerCase() || 'unknown', // Use transportStatus instead of status
-            amount: item.amount || 0, // Ensure amount is valid
+            status: item.transportStatus?.toLowerCase() || 'unknown',
+            amount: item.amount || 0,
             transportName: `${item.transport?.firstName || ''} ${item.transport?.lastName || ''}`.trim(),
             diaryPhoneNumber: item.transport?.phoneNumber || 'N/A',
             transportId: item.transport?.id || null,
-            transportationId: item.transportations?.id || null, // Correctly extract transportationId
+            transportationId: item.transportations?.id || null,
           }))
         : [];
 
@@ -78,7 +75,7 @@ const ProductionManagement: React.FC = () => {
 
   useEffect(() => {
     fetchDailyData();
-  }, [deliveryId]);
+  }, [userId]);
 
   const handleApprove = async (id: number) => {
     try {
@@ -110,7 +107,7 @@ const ProductionManagement: React.FC = () => {
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-      <Breadcrumb pageName={`Production Management for Delivery ${deliveryId}`} />
+      <Breadcrumb pageName={`Production Management for User ${userId}`} />
 
       {/* New Cards for Completed and Pending Data */}
       <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -153,7 +150,7 @@ const ProductionManagement: React.FC = () => {
 
       <div className="bg-white rounded-lg shadow-lg">
         <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-          <h2 className="text-xl font-semibold">Production Management for Delivery {deliveryId}</h2>
+          <h2 className="text-xl font-semibold">Production Management for User {userId}</h2>
           <button
             onClick={() => setIsModalOpen(true)}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -180,7 +177,6 @@ const ProductionManagement: React.FC = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Diary Phone Number
                 </th>
-              
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -201,7 +197,6 @@ const ProductionManagement: React.FC = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     {data.diaryPhoneNumber}
                   </td>
-               
                 </tr>
               ))}
             </tbody>
@@ -223,7 +218,7 @@ const ProductionManagement: React.FC = () => {
             fetchDailyData();
           }}
           initialTransportId={selectedTransportId}
-          deliveryId={deliveryId || ''}
+          deliveryId={userId || ''}
         />
       )}
     </div>

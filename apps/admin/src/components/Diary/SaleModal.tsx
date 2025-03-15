@@ -4,9 +4,11 @@ interface SaleModalProps {
   sale: any;
   onClose: () => void;
   onSave: (saleData: any) => void;
+  approvedProducts: { product: string; amount: number }[];
+  stockAfterSales: number;
 }
 
-const SaleModal: React.FC<SaleModalProps> = ({ sale, onClose, onSave }) => {
+const SaleModal: React.FC<SaleModalProps> = ({ sale, onClose, onSave, approvedProducts = [], stockAfterSales }) => {
   const [formData, setFormData] = useState({
     id: sale?.id || null,
     date: sale?.date || new Date().toISOString().split('T')[0],
@@ -43,6 +45,14 @@ const SaleModal: React.FC<SaleModalProps> = ({ sale, onClose, onSave }) => {
     onSave(formData);
   };
 
+  const getMaxAmount = () => {
+    if (formData.productType === 'inshyushyu') {
+      return stockAfterSales;
+    }
+    const product = approvedProducts.find(p => p.product === formData.productType);
+    return product ? product.amount : 0;
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
       <div className="bg-white p-6 rounded-lg">
@@ -51,10 +61,21 @@ const SaleModal: React.FC<SaleModalProps> = ({ sale, onClose, onSave }) => {
           <input type="date" name="date" value={formData.date} onChange={handleChange} required />
           <select name="productType" value={formData.productType} onChange={handleChange} required>
             <option value="inshyushyu">Inshyushyu</option>
-            <option value="ikivuguto">Ikivuguto</option>
-            <option value="amavuta">Amavuta</option>
+            {approvedProducts.map((product) => (
+              <option key={product.product} value={product.product}>
+                {product.product}
+              </option>
+            ))}
           </select>
-          <input type="number" name="quantity" value={formData.quantity} onChange={handleChange} placeholder="Quantity" required />
+          <input
+            type="number"
+            name="quantity"
+            value={formData.quantity}
+            onChange={handleChange}
+            placeholder="Quantity"
+            required
+            max={getMaxAmount()}
+          />
           <input type="number" name="pricePerUnit" value={formData.pricePerUnit} onChange={handleChange} placeholder="Price Per Unit" required />
           <input type="text" name="totalAmount" value={formData.totalAmount} readOnly placeholder="Total Amount" />
           <select name="status" value={formData.status} onChange={handleChange}>

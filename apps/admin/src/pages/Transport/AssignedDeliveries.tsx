@@ -28,6 +28,10 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
 
   useEffect(() => {
     const fetchVolumes = async () => {
+      if (!user) {
+        console.error('User is not available');
+        return;
+      }
       try {
         const response = await axiosInstance.get(`/transportations/available-amount/${user.id}`);
         setAvailableAmount(response.data.availableAmount);
@@ -39,12 +43,17 @@ const DeliveryConfirmationModal: React.FC<DeliveryConfirmationModalProps> = ({
     };
 
     fetchVolumes();
-  }, [user.id]);
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const quantityNum = parseFloat(quantity);
     
+    if (!user) {
+      toast.error('User information is missing');
+      return;
+    }
+
     if (!quantity) {
       toast.error('Please enter the quantity');
       return;
@@ -204,7 +213,9 @@ const AssignedDeliveries = () => {
 
   // Calculate summary data
   const totalDeliveries = assignedDeliveries.length;
-  const totalVolume = assignedDeliveries.reduce((sum, delivery) => sum + delivery.amount, 0);
+  const totalVolume = assignedDeliveries
+    .filter(delivery => delivery.transportStatus === 'Completed')
+    .reduce((sum, delivery) => sum + delivery.amount, 0);
   const completedDeliveries = assignedDeliveries.filter(delivery => delivery.transportStatus === 'Completed').length;
 
   const handleConfirmDelivery = (deliveryId: string, quantity: string, notes: string) => {
@@ -287,28 +298,47 @@ const AssignedDeliveries = () => {
     }
   };
 
+  const handleRejectDelivery = async (deliveryId: string) => {
+    try {
+      // Assuming there's an endpoint to update the delivery status to "Rejected"
+      const response = await axiosInstance.patch(`/transportations/${deliveryId}/status`, {
+        newStatus: 'Rejected'
+      });
+
+      if (response.status === 200) {
+        toast.success('Delivery rejected successfully!');
+        // Refresh the deliveries list
+        const updatedDeliveries = await axiosInstance.get(`/transportations/transport/${userId}`);
+        setAssignedDeliveries(updatedDeliveries.data);
+      }
+    } catch (error) {
+      console.error('Error rejecting delivery:', error);
+      toast.error('Failed to reject delivery');
+    }
+  };
+
   const handleViewDaily = (deliveryId: string) => {
     navigate(`/transport/daily-management/${deliveryId}`);
   };
 
   const getActionButton = (delivery: any) => {
+    if (delivery.transportStatus === 'Completed' || delivery.transportStatus === 'Rejected') {
+      return null; // Hide actions for completed or rejected deliveries
+    }
+
     return (
       <div className="flex space-x-2">
-        {delivery.transportStatus !== 'Completed' ? (
-          <button
-            onClick={() => handleApproveDelivery(delivery.id)}
-            className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200"
-          > 
-            Approve
-          </button>
-        ) : (
-          <span className="text-gray-500">Completed</span>
-        )}
         <button
-          onClick={() => handleViewDaily(delivery.id)}
-          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+          onClick={() => handleApproveDelivery(delivery.id)}
+          className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200"
+        > 
+          Approve
+        </button>
+        <button
+          onClick={() => handleRejectDelivery(delivery.id)}
+          className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200"
         >
-          Daily
+          Reject
         </button>
       </div>
     );
@@ -373,9 +403,9 @@ const AssignedDeliveries = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Date
                 </th>
-                {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   POC Name
-                </th> */}
+                </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Amount
                 </th>
@@ -393,9 +423,9 @@ const AssignedDeliveries = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     {new Date(delivery.date).toLocaleDateString()}
                   </td>
-                  {/* <td className="px-6 py-4 whitespace-nowrap text-sm"> */}
-                    {/* {delivery.poc.firstName} {delivery.poc.lastName} */}
-                  {/* </td> */}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    {delivery.poc?.firstName} {delivery.poc?.lastName}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     {delivery.amount}L
                   </td>

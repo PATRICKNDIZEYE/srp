@@ -6,9 +6,10 @@ import { useUser } from '../../context/UserContext';
 interface AddDeliveryModalProps {
   onClose: () => void;
   onAdd: () => void;
+  totalQuantitySum: number;
 }
 
-const AddDeliveryModal: React.FC<AddDeliveryModalProps> = ({ onClose, onAdd }) => {
+const AddDeliveryModal: React.FC<AddDeliveryModalProps> = ({ onClose, onAdd, totalQuantitySum }) => {
   const { user } = useUser();
   const [transportId, setTransportId] = useState('');
   const [amount, setAmount] = useState('');
@@ -32,7 +33,7 @@ const AddDeliveryModal: React.FC<AddDeliveryModalProps> = ({ onClose, onAdd }) =
         const userId = userData[0]?.id;
         console.log('Fetched userId from localStorage:', userId);
         const response = await axiosInstance.get(`/milk-transportation/calculate-by-poc/${userId}`);
-        setMaxAmount(response.data.totalAmount);
+        setMaxAmount(response.data.totalAmount - totalQuantitySum);
       } catch (error) {
         toast.error('Failed to load maximum amount');
       }
@@ -40,7 +41,7 @@ const AddDeliveryModal: React.FC<AddDeliveryModalProps> = ({ onClose, onAdd }) =
 
     fetchTransports();
     fetchMaxAmount();
-  }, []);
+  }, [totalQuantitySum]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -198,7 +198,7 @@ router.get("/grouped/poc/:pocId", async (req, res) => {
     // Fetch only approved loans with farmer details
     const loans = await prisma.loan.findMany({
       where: {
-        status: 'approved', // Only get approved loans
+        status: 'APPROVED', // Only get approved loans
         farmer: {
           poc: {
             id: pocId,
@@ -251,7 +251,7 @@ router.get("/grouped/poc/:pocId", async (req, res) => {
       }
       groupedData[farmerId].loans.push(loan);
       // Only add to total if loan is approved
-      if (loan.status === 'approved') {
+      if (loan.status === 'APPROVED') {
         groupedData[farmerId].totalLoanAmount += loan.loanAmount;
       }
     });

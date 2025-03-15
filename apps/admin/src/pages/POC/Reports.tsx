@@ -178,7 +178,7 @@ const Reports = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">{group.totalMilkAmount * 400}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm border border-gray-300">
                       {group.loans.reduce((total, loan) => 
-                        loan.status === 'approved' ? total + loan.loanAmount : total, 
+                        loan.status === 'APPROVED' ? total + loan.loanAmount : total, 
                         0
                       )}
                     </td>

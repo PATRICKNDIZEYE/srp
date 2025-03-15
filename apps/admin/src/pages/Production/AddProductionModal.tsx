@@ -7,9 +7,10 @@ interface AddProductionModalProps {
   onAdd: () => void;
   initialTransportId: string | null;
   deliveryId: string;
+  maxAmount: number;
 }
 
-const AddProductionModal: React.FC<AddProductionModalProps> = ({ onClose, onAdd, initialTransportId, deliveryId }) => {
+const AddProductionModal: React.FC<AddProductionModalProps> = ({ onClose, onAdd, initialTransportId, deliveryId, maxAmount }) => {
   const [formData, setFormData] = useState({
     transportId: initialTransportId || '',
     productionId: deliveryId,
@@ -59,11 +60,18 @@ const AddProductionModal: React.FC<AddProductionModalProps> = ({ onClose, onAdd,
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const amountNum = Number(formData.amount);
+
+    if (amountNum > maxAmount) {
+      toast.error(`Amount cannot exceed the maximum allowed: ${maxAmount}L`);
+      return;
+    }
+
     const dataToSend = {
       ...formData,
       transportId: Number(formData.transportId),
       productionId: Number(formData.productionId),
-      amount: Number(formData.amount),
+      amount: amountNum,
     };
 
     try {
@@ -114,29 +122,19 @@ const AddProductionModal: React.FC<AddProductionModalProps> = ({ onClose, onAdd,
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Amount (Maximum: {maxAmount}L)</label>
             <input
               type="number"
               name="amount"
               className="w-full px-3 py-2 border rounded-lg"
               value={formData.amount}
               onChange={handleChange}
+              max={maxAmount}
               required
             />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Transport Status</label>
-            <select
-              name="transportStatus"
-              className="w-full px-3 py-2 border rounded-lg"
-              value={formData.transportStatus}
-              onChange={handleChange}
-              required
-            >
-              <option value="Pending">Pending</option>
-              <option value="Completed">Completed</option>
-              <option value="In Transit">In Transit</option>
-            </select>
+            <p className="text-sm text-gray-500">
+              Remaining amount available: {maxAmount}L
+            </p>
           </div>
           <div className="flex justify-end space-x-3">
             <button

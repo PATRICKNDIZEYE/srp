@@ -92,6 +92,8 @@ import ManagementAssignedTransportations from './pages/Management/AssignedTransp
 import ManagementDailyManagement from './pages/Management/DailyManagement';
 import ManagementProductionManagement from './pages/Management/ProductionManagement';
 import ProductionDelivery from './pages/Management/ProductionDelivery';
+import StockManagement from './pages/Production/StockManagement';
+import ProductManagement from './pages/Diary/ProductManagement';
 
 function App() {
   return (
@@ -148,6 +150,7 @@ function App() {
           <Route path="/production/settings" element={<Settings />} />
           <Route path="/production/daily-management/:deliveryId" element={<ProductionDailyManagement />} />
           <Route path="/production/delivery-management" element={<ProductionDeliveryManagement />} />
+          <Route path="/production/stock-management" element={<StockManagement />} />
         </Route>
 
         {/* Management Routes */}
@@ -182,6 +185,7 @@ function App() {
           <Route path="/diary/finances" element={<AdminFinancialReports period="daily" />} />
           <Route path="/diary/settings" element={<Settings />} />
           <Route path="/diary/requests" element={<RequestMilkPage />} />
+          <Route path="/diary/product-management" element={<ProductManagement />} />
         </Route>
 
         {/* Error Pages */}

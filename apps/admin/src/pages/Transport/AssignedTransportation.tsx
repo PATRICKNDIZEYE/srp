@@ -8,6 +8,8 @@ import RecipientVerificationModal from '../../components/Transport/RecipientVeri
 import RecipientSelectionModal from '../../components/Transport/RecipientSelectionModal';
 import axiosInstance from '../../utils/axiosInstance';
 import { useUserContext } from '../../context/UserContext';
+import AddDailyModal from '../POC/AddDailyModal';
+import AddProductionModal from '../Production/AddProductionModal';
 
 interface DeliveryConfirmationModalProps {
   delivery: any;
@@ -117,6 +119,10 @@ const AssignedTransportations = () => {
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [showRecipientModal, setShowRecipientModal] = useState(false);
   const [assignedDeliveries, setAssignedDeliveries] = useState<any[]>([]);
+  const [dailyData, setDailyData] = useState<any[]>([]);
+  const [productionData, setProductionData] = useState<any[]>([]);
+  const [isAddDailyModalOpen, setIsAddDailyModalOpen] = useState(false);
+  const [isAddProductionModalOpen, setIsAddProductionModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchDeliveries = async () => {
@@ -130,12 +136,47 @@ const AssignedTransportations = () => {
       }
     };
 
-    fetchDeliveries();
+    const fetchDailyData = async () => {
+      try {
+        const response = await axiosInstance.get(`/derived/transport/${userId}`);
+        setDailyData(response.data);
+      } catch (error) {
+        toast.error('Failed to fetch daily data');
+      }
+    };
+
+    const fetchProductionData = async () => {
+      try {
+        const response = await axiosInstance.get(`/delivery/transport/${userId}`);
+        setProductionData(response.data);
+      } catch (error) {
+        toast.error('Failed to fetch production data');
+      }
+    };
+
+    if (userId) {
+      fetchDeliveries();
+      fetchDailyData();
+      fetchProductionData();
+    }
   }, [userId]);
 
   // Calculate summary data
   const totalDeliveries = assignedDeliveries.length;
-  const totalVolume = assignedDeliveries.reduce((sum, delivery) => sum + delivery.amount, 0);
+  const totalVolume = assignedDeliveries
+    .filter(delivery => delivery.transportStatus === 'Completed') // Only include completed deliveries
+    .reduce((sum, delivery) => sum + delivery.amount, 0);
+
+  // Calculate total amount for daily and production data
+  const totalAmount = dailyData.reduce((sum: number, data: any) => sum + data.amount, 0) +
+                      productionData.reduce((sum: number, data: any) => sum + data.amount, 0);
+
+  // Calculate the difference between total volume and total amount
+  const volumeDifference = totalVolume - totalAmount;
+
+  // Ensure volumeDifference is a valid number
+  const validVolumeDifference = isNaN(volumeDifference) ? 0 : volumeDifference;
+
   const completedDeliveries = assignedDeliveries.filter(delivery => delivery.transportStatus === 'Completed').length;
 
   const handleConfirmDelivery = (deliveryId: string, quantity: string, notes: string) => {
@@ -215,8 +256,12 @@ const AssignedTransportations = () => {
     }
   };
 
-  const handleViewDaily = (deliveryId: string) => {
-    navigate(`/transport/production-management/${deliveryId}`);
+  const handleViewDaily = (date: string) => {
+    navigate(`/transport/daily-management/${encodeURIComponent(date)}`);
+  };
+
+  const handleViewProduction = (date: string) => {
+    navigate(`/transport/production-management/${encodeURIComponent(date)}`);
   };
 
   const getActionButton = (delivery: any) => {
@@ -233,10 +278,16 @@ const AssignedTransportations = () => {
           <span className="text-gray-500">Completed</span>
         )}
         <button
-          onClick={() => handleViewDaily(delivery.id)}
+          onClick={() => handleViewDaily(delivery.date)}
           className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
         >
-          Productions
+          Daily
+        </button>
+        <button
+          onClick={() => handleViewProduction(delivery.date)}
+          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+        >
+          Production
         </button>
       </div>
     );
@@ -244,7 +295,7 @@ const AssignedTransportations = () => {
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-      <Breadcrumb pageName="Assigned Deliveries" />
+      <Breadcrumb pageName="Transportation Management" />
 
       {/* Summary Section */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -277,6 +328,16 @@ const AssignedTransportations = () => {
             <FiDroplet className="text-blue-500 text-2xl" />
           </div>
         </div>
+
+        <div className="bg-white rounded-lg p-6 shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-500">AMATA MFITE</p>
+              <h3 className="text-2xl font-semibold">{validVolumeDifference}L</h3>
+            </div>
+            <FiDroplet className="text-red-500 text-2xl" />
+          </div>
+        </div>
       </div>
       {/* Deliveries Table */}
       <div className="bg-white rounded-lg shadow-lg">
@@ -299,16 +360,7 @@ const AssignedTransportations = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Date
-                </th>
-                {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  POC Name
-                </th> */}
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Amount
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Status
+                  Total Amount
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Actions
@@ -316,31 +368,79 @@ const AssignedTransportations = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {assignedDeliveries.map((delivery) => (
-                <tr key={delivery.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {new Date(delivery.date).toLocaleDateString()}
-                  </td>
-                  {/* <td className="px-6 py-4 whitespace-nowrap text-sm"> */}
-                    {/* {delivery.poc.firstName} {delivery.poc.lastName} */}
-                  {/* </td> */}
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {delivery.amount}L
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <span
-                      className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                        delivery.transportStatus === 'Completed'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}
+              <tr className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  {totalAmount}L
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => setIsAddDailyModalOpen(true)}
+                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
                     >
-                      {delivery.transportStatus}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {getActionButton(delivery)}
-                  </td>
+                      Daily
+                    </button>
+                    <button
+                      onClick={() => setIsAddProductionModalOpen(true)}
+                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                    >
+                      Production
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Daily Data Table */}
+      <div className="bg-white rounded-lg shadow-lg mt-6">
+        <div className="p-6 border-b border-gray-200">
+          <h2 className="text-xl font-semibold">Daily Data</h2>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {dailyData.map((data) => (
+                <tr key={data.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">{new Date(data.date).toLocaleDateString()}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">{data.status}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">{data.amount}L</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Production Data Table */}
+      <div className="bg-white rounded-lg shadow-lg mt-6">
+        <div className="p-6 border-b border-gray-200">
+          <h2 className="text-xl font-semibold">Production Data</h2>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {productionData.map((data) => (
+                <tr key={data.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">{new Date(data.date).toLocaleDateString()}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">{data.transportStatus}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">{data.amount}L</td>
                 </tr>
               ))}
             </tbody>
@@ -381,6 +481,34 @@ const AssignedTransportations = () => {
             setSelectedDelivery(null);
           }}
           onSubmit={handleSubmitToRecipient}
+        />
+      )}
+
+      {/* Daily Modal */}
+      {isAddDailyModalOpen && (
+        <AddDailyModal
+          onClose={() => setIsAddDailyModalOpen(false)}
+          onAdd={() => {
+            setIsAddDailyModalOpen(false);
+            // Optionally refresh data
+          }}
+          initialTransportId={userId || ''}
+          deriveryId={userId || ''}
+          maxVolumeDifference={validVolumeDifference}
+        />
+      )}
+
+      {/* Production Modal */}
+      {isAddProductionModalOpen && (
+        <AddProductionModal
+          onClose={() => setIsAddProductionModalOpen(false)}
+          onAdd={() => {
+            setIsAddProductionModalOpen(false);
+            // Optionally refresh data
+          }}
+          initialTransportId={userId || ''}
+          deliveryId={userId || ''}
+          maxAmount={validVolumeDifference}
         />
       )}
     </div>
