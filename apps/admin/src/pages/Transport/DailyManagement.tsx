@@ -23,7 +23,10 @@ interface RouteParams extends Record<string, string | undefined> {
 }
 
 const DailyManagement: React.FC = () => {
-  const { deliveryId } = useParams<RouteParams>();
+  // Retrieve the user data from localStorage
+  const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+  const userId = userData.id;
+
   const [dailyData, setDailyData] = useState<DailyData[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTransportId, setSelectedTransportId] = useState<string | null>(null);
@@ -34,42 +37,44 @@ const DailyManagement: React.FC = () => {
   const [pendingCount, setPendingCount] = useState(0);
   const [completedAmount, setCompletedAmount] = useState(0);
   const [pendingAmount, setPendingAmount] = useState(0);
- 
-  useEffect(() => {
-    const fetchDailyData = async () => {
-      try {
-        const response = await axiosInstance.get(`/derived/transport/${deliveryId}`);
-        const data = response.data.map((item: any) => ({
-          id: item.id,
-          date: item.date,
-          status: item.status.toLowerCase(),
-          amount: item.amount,
-          transportName: `${item.transport.firstName} ${item.transport.lastName}`,
-          diaryPhoneNumber: item.diary.phoneNumber,
-          transportId: item.transport.id,
-        }));
-        setDailyData(data);
 
-        // Set the transport ID from the first item (assuming all items have the same transport ID)
-        if (data.length > 0) {
-          setSelectedTransportId(data[0].transportId);
-        }
+  // Move fetchDailyData outside of useEffect
+  const fetchDailyData = async () => {
+    try {
+      // Use userId instead of deliveryId
+      const response = await axiosInstance.get(`/derived/transport/${userId}`);
+      const data = response.data.map((item: any) => ({
+        id: item.id,
+        date: item.date,
+        status: item.status.toLowerCase(),
+        amount: item.amount,
+        transportName: `${item.transport.firstName} ${item.transport.lastName}`,
+        diaryPhoneNumber: item.diary.phoneNumber,
+        transportId: item.transport.id,
+      }));
+      setDailyData(data);
 
-        // Calculate counts and amounts
-        const completedData = data.filter((item: DailyData) => item.status === 'completed');
-        const pendingData = data.filter((item: DailyData) => item.status === 'pending');
-
-        setCompletedCount(completedData.length);
-        setPendingCount(pendingData.length);
-        setCompletedAmount(completedData.reduce((sum: number, item: DailyData) => sum + item.amount, 0));
-        setPendingAmount(pendingData.reduce((sum: number, item: DailyData) => sum + item.amount, 0));
-      } catch (error) {
-        toast.error('Failed to load daily data');
+      // Set the transport ID from the first item (assuming all items have the same transport ID)
+      if (data.length > 0) {
+        setSelectedTransportId(data[0].transportId);
       }
-    };
 
+      // Calculate counts and amounts
+      const completedData = data.filter((item: DailyData) => item.status === 'completed');
+      const pendingData = data.filter((item: DailyData) => item.status === 'pending');
+
+      setCompletedCount(completedData.length);
+      setPendingCount(pendingData.length);
+      setCompletedAmount(completedData.reduce((sum: number, item: DailyData) => sum + item.amount, 0));
+      setPendingAmount(pendingData.reduce((sum: number, item: DailyData) => sum + item.amount, 0));
+    } catch (error) {
+      toast.error('Failed to load daily data');
+    }
+  };
+
+  useEffect(() => {
     fetchDailyData();
-  }, [deliveryId]);
+  }, [userId]);
 
   const handleApprove = async (id: number) => {
     try {
@@ -101,7 +106,7 @@ const DailyManagement: React.FC = () => {
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-      <Breadcrumb pageName={`Daily Management for Delivery ${deliveryId}`} />
+      <Breadcrumb pageName={`Daily Management for User ${userId}`} />
 
       {/* New Cards for Completed and Pending Data */}
       <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -153,7 +158,7 @@ const DailyManagement: React.FC = () => {
 
       <div className="bg-white rounded-lg shadow-lg">
         <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-          <h2 className="text-xl font-semibold">Daily Management for Delivery {deliveryId}</h2>
+          <h2 className="text-xl font-semibold">Daily Management for User {userId}</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -209,7 +214,7 @@ const DailyManagement: React.FC = () => {
             fetchDailyData();
           }}
           initialTransportId={selectedTransportId}
-          deriveryId={deliveryId || ''}
+          deriveryId={userId || ''}
         />
       )}
 
@@ -221,7 +226,7 @@ const DailyManagement: React.FC = () => {
             fetchDailyData();
           }}
           initialTransportId={selectedTransportId}
-          deriveryId={deliveryId || ''}
+          deriveryId={userId || ''}
         />
       )}
     </div>

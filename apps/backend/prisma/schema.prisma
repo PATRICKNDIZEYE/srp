@@ -169,6 +169,8 @@ model Diary {
 
   requestsFrom   RequestMilk[] @relation("DiaryFromRequest")
   requestsAccept RequestMilk[] @relation("DiaryAcceptRequest")
+
+  stockOuts      StockOut[]
 }
 
 model Production {
@@ -181,6 +183,9 @@ model Production {
   latitude      Float
   username      String   @unique @default("lionson")
   transpDerived TranspDerived[] @relation("ProductionToTranspDerived")
+
+  stockIns      StockIn[]
+  stockOuts     StockOut[]
 }
 
 model Loan {
@@ -289,4 +294,30 @@ model RequestMilk {
 
   diaryFrom       Diary    @relation("DiaryFromRequest", fields: [diaryIdFrom], references: [id])
   diaryAccept     Diary    @relation("DiaryAcceptRequest", fields: [diaryIdAccept], references: [id])
+}
+
+model StockIn {
+  id           Int      @id @default(autoincrement())
+  productionId Int
+  product      String
+  amount       Float
+  createdAt    DateTime @default(now())
+
+  production   Production @relation(fields: [productionId], references: [id])
+  stockOuts    StockOut[]
+}
+
+model StockOut {
+  id           Int      @id @default(autoincrement())
+  productionId Int
+  product      String
+  amount       Int
+  dailyId      Int
+  status       String
+  stockInId    Int?
+  stockIn      StockIn? @relation(fields: [stockInId], references: [id])
+  createdAt    DateTime @default(now())
+
+  production Production @relation(fields: [productionId], references: [id])
+  Diary  Diary? @relation(fields: [dailyId], references: [id])
 }

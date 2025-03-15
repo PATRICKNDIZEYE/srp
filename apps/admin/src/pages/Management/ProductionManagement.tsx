@@ -227,4 +227,4 @@ const ProductionManagement: React.FC = () => {
   );
 };
 
-export default ProductionManagement; 
+export default ProductionManagement;

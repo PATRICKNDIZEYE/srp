@@ -56,9 +56,9 @@ const DashboardSidebar: React.FC<SidebarProps> = ({ role, isOpen, onClose }) => 
     ],
     production: [
       { name: 'Dashboard', icon: FiHome, path: '/production/dashboard' },
-      // { name: 'Deliveries', icon: FiTruck, path: '/production/deliveries' },
-      // { name: 'Sales', icon: FiFileText, path: '/production/sales' },
       { name: 'Delivery Management', icon: FiTruck, path: '/production/delivery-management' },
+      { name: 'Stock Management', icon: FiPackage, path: '/production/stock-management' },
+      // { name: 'Sales', icon: FiFileText, path: '/production/sales' },
       // { name: 'Settings', icon: FiSettings, path: '/production/settings' },
     ],
     diary: [
@@ -67,6 +67,7 @@ const DashboardSidebar: React.FC<SidebarProps> = ({ role, isOpen, onClose }) => 
       { name: 'Receive Milk', icon: FiDroplet, path: '/diary/receiving' },
       { name: 'Sales', icon: FiDollarSign, path: '/diary/sales' },
       { name: 'Milk Requests', icon: FiDroplet, path: '/diary/requests' },
+      { name: 'Product Management', icon: FiPackage, path: '/diary/product-management' },
       // { name: 'Daily Sale Management', icon: FiFileText, path: '/diary/daily-sales' },
       // { name: 'Financial Reports', icon: FiBarChart2, path: '/diary/finances' },
       // { name: 'Settings', icon: FiSettings, path: '/diary/settings' },

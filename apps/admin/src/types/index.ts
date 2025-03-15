@@ -85,4 +85,10 @@ export interface MilkSubmission {
     status: string;
     pocId: number | null;
   };
+}
+
+export interface Stock {
+  id?: string;
+  product: string;
+  quantity: number;
 } 

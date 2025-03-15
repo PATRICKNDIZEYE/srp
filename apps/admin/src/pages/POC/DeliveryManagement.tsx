@@ -185,6 +185,8 @@ const DeliveryManagement = () => {
     fetchConfirmedMilk();
   }, []);
 
+  const totalQuantitySum = confirmedMilk.reduce((sum, milk) => sum + Number(milk.amount), 0);
+
   const handleAssignTransport = (milkId: string) => {
     setSelectedMilk(confirmedMilk.find(m => m.id === milkId));
     setShowAssignModal(true);
@@ -344,6 +346,7 @@ const DeliveryManagement = () => {
         <AddDeliveryModal
           onClose={() => setShowAddDeliveryModal(false)}
           onAdd={refreshDeliveries}
+          totalQuantitySum={totalQuantitySum}
         />
       )}
 

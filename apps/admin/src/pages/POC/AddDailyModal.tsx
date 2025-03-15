@@ -8,33 +8,28 @@ interface AddDailyModalProps {
   onAdd: () => void;
   initialTransportId?: string | null;
   deriveryId: string;
+  maxVolumeDifference: number;
 }
 
-const AddDailyModal: React.FC<AddDailyModalProps> = ({ onClose, onAdd, initialTransportId, deriveryId }) => {
+const AddDailyModal: React.FC<AddDailyModalProps> = ({ onClose, onAdd, initialTransportId, deriveryId, maxVolumeDifference }) => {
   const { user } = useUser();
   const [diaryId, setDiaryId] = useState('');
   const [transportId, setTransportId] = useState(initialTransportId || '');
   const [amount, setAmount] = useState('');
-  const [status, setStatus] = useState('Completed');
+  const [status, setStatus] = useState('Pending');
   const [diaries, setDiaries] = useState([]);
-  const [transports, setTransports] = useState([]);
-  const [selectedTransport, setSelectedTransport] = useState<any>(null);
-  const [maxAmount, setMaxAmount] = useState<number | null>(null);
+  const [transports, setTransports] = useState<{ id: number; firstName: string; lastName: string }[]>([]);
+  const [selectedTransport, setSelectedTransport] = useState<{ id: number; firstName: string; lastName: string } | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Get transportation details with remaining amount
         const transportResponse = await axiosInstance.get(`/transportations/${deriveryId}`);
         const transportData = transportResponse.data;
         setTransports([transportData.transport]);
         setSelectedTransport(transportData.transport);
         setTransportId(transportData.transport.id.toString());
-        
-        // Set the maximum amount from the remaining amount
-        setMaxAmount(transportData.remainingAmount);
 
-        // Fetch diaries
         const diariesResponse = await axiosInstance.get('/production');
         setDiaries(diariesResponse.data);
       } catch (error) {
@@ -51,9 +46,8 @@ const AddDailyModal: React.FC<AddDailyModalProps> = ({ onClose, onAdd, initialTr
     
     const amountNum = parseFloat(amount);
 
-    // Validate the amount
-    if (maxAmount !== null && amountNum > maxAmount) {
-      toast.error(`Amount cannot exceed the maximum allowed: ${maxAmount}L`);
+    if (amountNum > maxVolumeDifference) {
+      toast.error(`Amount cannot exceed the maximum allowed: ${maxVolumeDifference}L`);
       return;
     }
 
@@ -122,7 +116,7 @@ const AddDailyModal: React.FC<AddDailyModalProps> = ({ onClose, onAdd, initialTr
                 required
               >
                 <option value="" disabled>Select a Transport</option>
-                {transports.map((transport: any) => (
+                {transports.map((transport) => (
                   <option key={transport.id} value={transport.id}>
                     {transport.firstName} {transport.lastName}
                   </option>
@@ -132,35 +126,19 @@ const AddDailyModal: React.FC<AddDailyModalProps> = ({ onClose, onAdd, initialTr
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Amount (Maximum: {maxAmount}L)
+              Amount (Maximum: {maxVolumeDifference}L)
             </label>
             <input
               type="number"
               className="w-full px-3 py-2 border rounded-lg"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              max={maxAmount || undefined}
+              max={maxVolumeDifference}
               required
             />
-            {maxAmount !== null && (
-              <p className="text-sm text-gray-500">
-                Remaining amount available: {maxAmount}L
-              </p>
-            )}
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Status
-            </label>
-            <select
-              className="w-full px-3 py-2 border rounded-lg"
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              required
-            >
-              <option value="Completed">Completed</option>
-              <option value="Pending">Pending</option>
-            </select>
+            <p className="text-sm text-gray-500">
+              Remaining amount available: {maxVolumeDifference}L
+            </p>
           </div>
           <div className="flex justify-end space-x-3">
             <button

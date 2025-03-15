@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { FiDollarSign, FiDownload, FiTrendingUp, FiPlus } from 'react-icons/fi';
+import React, { useEffect, useState, useMemo } from 'react';
+import { FiDollarSign, FiDownload, FiTrendingUp, FiPlus, FiCheckCircle } from 'react-icons/fi';
 import axiosInstance from '../../utils/axiosInstance';
 import SaleModal from './SaleModal';
 import { Sale } from '../../types'; // Assuming you have a types file where Sale is defined
@@ -10,12 +10,21 @@ interface SalesHistoryProps {
 
 const SalesHistory: React.FC<SalesHistoryProps> = ({ dateRange }) => {
   const [sales, setSales] = useState<Sale[]>([]);
+  const [approvedProducts, setApprovedProducts] = useState<{ product: string; amount: number }[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedSale, setSelectedSale] = useState(null);
+  const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
+  const [receivedQuantities, setReceivedQuantities] = useState<number>(0);
 
   useEffect(() => {
     fetchSales();
+    fetchReceivedQuantities();
   }, []);
+
+  useEffect(() => {
+    if (sales.length > 0) {
+      fetchApprovedProducts();
+    }
+  }, [sales]);
 
   const fetchSales = async () => {
     try {
@@ -30,6 +39,49 @@ const SalesHistory: React.FC<SalesHistoryProps> = ({ dateRange }) => {
       setSales(response.data);
     } catch (error) {
       console.error('Error fetching sales:', error);
+    }
+  };
+
+  const fetchReceivedQuantities = async () => {
+    try {
+      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+      const diaryId = userData.id;
+
+      if (!diaryId) {
+        throw new Error('Diary ID is missing');
+      }
+
+      const response = await axiosInstance.get(`/derived/diary/${diaryId}`);
+      const nonPendingSales = response.data.filter((sale: Sale) => sale.status !== 'pending');
+      const totalReceived = nonPendingSales.reduce((acc: number, sale: Sale) => acc + (sale.quantity || 0), 0);
+      setReceivedQuantities(totalReceived);
+    } catch (error) {
+      console.error('Error fetching received quantities:', error);
+    }
+  };
+
+  const fetchApprovedProducts = async () => {
+    try {
+      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+      const dailyId = userData.id;
+
+      const response = await axiosInstance.get(`/stocks/stockout/daily/${dailyId}`);
+      const approved = response.data.filter((product: any) => product.status === 'Approved');
+
+      // Adjust the approved products' amounts based on sales
+      const adjustedApprovedProducts = approved.map((product: any) => {
+        const totalSold = sales
+          .filter((sale) => sale.productType === product.product)
+          .reduce((acc, sale) => acc + (sale.quantity || 0), 0);
+        return {
+          ...product,
+          amount: product.amount - totalSold,
+        };
+      });
+
+      setApprovedProducts(adjustedApprovedProducts);
+    } catch (error) {
+      console.error('Error fetching approved products:', error);
     }
   };
 
@@ -86,13 +138,22 @@ const SalesHistory: React.FC<SalesHistoryProps> = ({ dateRange }) => {
   const calculateTotals = () => {
     return {
       totalSales: sales.length,
-      totalRevenue: sales.reduce((acc, sale) => acc + sale.totalAmount, 0),
-      totalVolume: sales.reduce((acc, sale) => acc + parseInt(sale.quantity.toString()), 0),
-      averagePrice: sales.reduce((acc, sale) => acc + (sale.pricePerLiter || 0), 0) / sales.length,
+      totalRevenue: sales.reduce((acc, sale) => acc + (sale.totalAmount || 0), 0),
+      totalVolume: sales.reduce((acc, sale) => acc + (parseInt(sale.quantity.toString()) || 0), 0),
+      averagePrice: sales.length > 0 ? sales.reduce((acc, sale) => acc + (sale.pricePerLiter || 0), 0) / sales.length : 0,
     };
   };
 
   const totals = calculateTotals();
+
+  const calculateStockAfterSales = () => {
+    const inshyushyuSales = sales
+      .filter((sale) => sale.productType === 'inshyushyu')
+      .reduce((acc, sale) => acc + (sale.quantity || 0), 0);
+    return receivedQuantities - inshyushyuSales;
+  };
+
+  const stockAfterSales = useMemo(calculateStockAfterSales, [receivedQuantities, sales]);
 
   return (
     <div className="space-y-6">
@@ -104,7 +165,7 @@ const SalesHistory: React.FC<SalesHistoryProps> = ({ dateRange }) => {
         </button>
       </div>
       {/* Sales summary cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <div className="bg-white rounded-lg p-6 shadow">
           <div className="flex items-center justify-between">
             <div>
@@ -150,6 +211,33 @@ const SalesHistory: React.FC<SalesHistoryProps> = ({ dateRange }) => {
               <p className="text-sm text-gray-600">Per Liter</p>
             </div>
             <FiDollarSign className="text-purple-500 text-2xl" />
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg p-6 shadow">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-500">Stock After Sales</p>
+              <h4 className="text-2xl font-semibold">{stockAfterSales}L</h4>
+              <p className="text-sm text-blue-600">Remaining Stock</p>
+            </div>
+            <FiDollarSign className="text-blue-500 text-2xl" />
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg p-6 shadow">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-500">Approved Products</p>
+              <ul>
+                {approvedProducts.map((product) => (
+                  <li key={product.product} className="text-sm">
+                    {product.product}: {product.amount}L
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <FiCheckCircle className="text-green-500 text-2xl" />
           </div>
         </div>
       </div>
@@ -251,6 +339,8 @@ const SalesHistory: React.FC<SalesHistoryProps> = ({ dateRange }) => {
           sale={selectedSale}
           onClose={() => setIsModalOpen(false)}
           onSave={handleAddOrUpdateSale}
+          approvedProducts={approvedProducts}
+          stockAfterSales={stockAfterSales}
         />
       )}
     </div>

@@ -61,7 +61,7 @@ const FarmerManagement = () => {
       setPendingFarmers(response.data);
     } catch (error) {
       console.error('Error fetching farmers:', error);
-      toast.error('Failed to fetch farmers');
+      // toast.error('Failed to fetch farmers');
     }
   };
 
