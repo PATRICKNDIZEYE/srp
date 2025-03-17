@@ -63,9 +63,11 @@ const InguzanyoPage = () => {
 
   const calculateLoanEligibility = () => {
     const money = milkSubmissionAmount * 400;
-    if (milkSubmissionAmount > 60) {
-      return money * 0.7;
-    } else if (milkSubmissionAmount > 45) {
+    if (milkSubmissionAmount > 75) {
+      return money * 0.8;
+    } else if (milkSubmissionAmount > 50) {
+      return money * 0.6;
+    } else if (milkSubmissionAmount > 30) {
       return money * 0.5;
     }
     return 0;

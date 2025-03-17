@@ -8,9 +8,12 @@ router.get("/farmer/:farmerId", async (req, res) => {
   try {
     const farmerId = parseInt(req.params.farmerId);
 
-    // Fetch milk submissions with farmer details
+    // Fetch only approved milk submissions with farmer details
     const milkSubmissions = await prisma.milkSubmission.findMany({
-      where: { farmerId },
+      where: { 
+        farmerId,
+        status: 'APPROVED' // Only get approved milk submissions
+      },
       orderBy: { createdAt: 'desc' },
       include: {
         farmer: {
@@ -46,10 +49,11 @@ router.get("/farmer/:farmerId/poc/:pocId", async (req, res) => {
     const farmerId = parseInt(req.params.farmerId);
     const pocId = parseInt(req.params.pocId);
 
-    // Fetch milk submissions with farmer and poc details
+    // Fetch only approved milk submissions with farmer and poc details
     const milkSubmissions = await prisma.milkSubmission.findMany({
       where: {
         farmerId,
+        status: 'APPROVED', // Only get approved milk submissions
         farmer: {
           poc: {
             id: pocId,
@@ -172,9 +176,10 @@ router.get("/grouped/poc/:pocId", async (req, res) => {
   try {
     const pocId = parseInt(req.params.pocId);
 
-    // Fetch all milk submissions with farmer details
+    // Fetch only approved milk submissions with farmer details
     const milkSubmissions = await prisma.milkSubmission.findMany({
       where: {
+        status: 'accepted', // Only get approved milk submissions
         farmer: {
           poc: {
             id: pocId,
