@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { FiEye, FiEyeOff, FiMapPin, FiLoader } from 'react-icons/fi';
-import { isValidPhone } from '../../utils/validation';
 import axiosInstance from '../../utils/axios';
 import { AxiosError } from 'axios';
 
@@ -157,14 +156,6 @@ const AddFarmerModal: React.FC<AddFarmerModalProps> = ({ isOpen, onClose, onSubm
       confirmPassword: '',
       location: ''
     });
-
-    if (!isValidPhone(formData.phone)) {
-      setErrors({
-        ...errors,
-        phone: 'Please enter a valid Rwandan phone number'
-      });
-      return;
-    }
 
     if (formData.password !== formData.confirmPassword) {
       toast.error('Passwords do not match');

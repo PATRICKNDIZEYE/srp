@@ -32,6 +32,7 @@ interface PendingFarmer {
   name: string;
   phone: string;
   location: string;
+  status: string;
   // Add other fields as necessary
 }
 
@@ -90,8 +91,10 @@ const POCDashboard = () => {
           const response = await axiosInstance.get(`/milk-sub/poc/${userId}`);
           setApiMilkSubmissions(response.data);
 
-          // Calculate the total amount of milk collected
-          const totalAmount = response.data.reduce((sum: number, submission: MilkSubmission) => sum + submission.amount, 0);
+          // Calculate the total amount of milk collected for accepted submissions
+          const totalAmount = response.data
+            .filter((submission: MilkSubmission) => submission.status.toLowerCase() === 'accepted')
+            .reduce((sum: number, submission: MilkSubmission) => sum + submission.amount, 0);
           setTotalMilkCollection(totalAmount);
 
           // Calculate the total for pending quantity check
@@ -159,19 +162,19 @@ const POCDashboard = () => {
     fetchFarmers();
   }, [userId]);
 
-  const handleConfirmMilk = (submissionId: string) => {
+  const handleConfirmMilk = (submissionId: number) => {
     toast.success('Milk submission confirmed successfully');
   };
 
-  const handleRejectMilk = (submissionId: string) => {
+  const handleRejectMilk = (submissionId: number) => {
     toast.success('Milk submission rejected');
   };
 
-  const handleConfirmFarmer = (farmerId: string) => {
+  const handleConfirmFarmer = (farmerId: number) => {
     toast.success('Farmer registration confirmed');
   };
 
-  const handleAssignTransport = (submissionId: string) => {
+  const handleAssignTransport = (submissionId: number) => {
     toast.success('Transport assigned successfully');
   };
 

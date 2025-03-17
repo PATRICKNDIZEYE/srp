@@ -2,11 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { FiEye, FiEyeOff, FiMapPin, FiLoader } from 'react-icons/fi';
-import { isValidPhone } from '../../utils/validation';
 import axiosInstance from '../../utils/axios';
 import { AxiosError } from 'axios';
 import { jwtDecode } from "jwt-decode";
 
+// Define a type for POC
+type POC = {
+  id: number;
+  firstName: string;
+  lastName: string;
+};
 
 const FarmerRegistration = () => {
   const navigate = useNavigate();
@@ -14,7 +19,7 @@ const FarmerRegistration = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);  
   const [locationError, setLocationError] = useState('');
-  const [pocs, setPocs] = useState([]);
+  const [pocs, setPocs] = useState<POC[]>([]);
  
   const [formData, setFormData] = useState({
     fullName: '',
@@ -118,14 +123,6 @@ const FarmerRegistration = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!isValidPhone(formData.phone)) {
-      setErrors({
-        ...errors,
-        phone: 'Please enter a valid Rwandan phone number'
-      });
-      return;
-    }
 
     if (isLogin) {
       try {
