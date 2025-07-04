@@ -1,5 +1,5 @@
-import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcryptjs';
+import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
@@ -26,103 +26,102 @@ async function main() {
   // Create Super Admin User
   const superAdmin = await prisma.user.create({
     data: {
-      username: 'superadmin',
-      email: 'lionson@gmail.com',
-      phone: '0787524803',
-      password: await bcrypt.hash('lionson', 10),
-      role: 'super_admin',
-      name: 'Super Admin'
-    }
+      username: "superadmin",
+      email: "test@gmail.com",
+      phone: "0787524803",
+      password: await bcrypt.hash("test", 10),
+      role: "super_admin",
+      name: "Super Admin",
+    },
   });
 
   // Create Manager
   const manager = await prisma.manager.create({
     data: {
-      firstName: 'John',
-      lastName: 'Doe',
-      birthday: new Date('1980-01-01'),
-      nationalId: '1198080123456789',
-      phoneNumber: '0787524803',
+      firstName: "John",
+      lastName: "Doe",
+      birthday: new Date("1980-01-01"),
+      nationalId: "1198080123456789",
+      phoneNumber: "0787524803",
       longitude: 30.0588,
       latitude: -1.9441,
-      username: 'johndoe',
-      password: await bcrypt.hash('lionson', 10),
-      role: 'admin',
-      status: 'active'
-    }
+      username: "johndoe",
+      password: await bcrypt.hash("test", 10),
+      role: "admin",
+      status: "active",
+    },
   });
 
   // Create Production
   const production = await prisma.production.create({
     data: {
-      status: 'active',
-      approveStatus: 'approved',
-      phoneNumber: '0787524803',
-      password: await bcrypt.hash('lionson', 10),
+      status: "active",
+      approveStatus: "approved",
+      phoneNumber: "0787524803",
+      password: await bcrypt.hash("test", 10),
       longitude: 30.0588,
       latitude: -1.9441,
-      username: 'production1'
-    }
+      username: "production1",
+    },
   });
 
   // Create Diary
   const diary1 = await prisma.diary.create({
     data: {
-      firstName: 'Alice',
-      lastName: 'Johnson',
-      status: 'active',
-      approveStatus: 'approved',
-      phoneNumber: '0787524803',
-      password: await bcrypt.hash('lionson', 10),
+      firstName: "Alice",
+      lastName: "Johnson",
+      status: "active",
+      approveStatus: "approved",
+      phoneNumber: "0787524803",
+      password: await bcrypt.hash("test", 10),
       longitude: 30.0588,
       latitude: -1.9441,
-      nationalId: '1199080123456783'
-    }
+      nationalId: "1199080123456783",
+    },
   });
 
   // Create POC
   const poc1 = await prisma.pOC.create({
     data: {
-      firstName: 'Jean',
-      lastName: 'Mugabo',
-      birthday: new Date('1985-01-01'),
-      nationalId: '1198580123456781',
-      phoneNumber: '0787524803',
-      password: await bcrypt.hash('lionson', 10),
-      status: 'active',
+      firstName: "Jean",
+      lastName: "Mugabo",
+      birthday: new Date("1985-01-01"),
+      nationalId: "1198580123456781",
+      phoneNumber: "0787524803",
+      password: await bcrypt.hash("test", 10),
+      status: "active",
       longitude: 30.0588,
       latitude: -1.9441,
-      username: 'jeanmugabo',
+      username: "jeanmugabo",
       address: {
-        district: 'Nyarugenge',
-        sector: 'Muhima',
-        cell: 'Kabeza'
-      }
-    }
+        district: "Nyarugenge",
+        sector: "Muhima",
+        cell: "Kabeza",
+      },
+    },
   });
 
   // Create Farmer
- 
 
   // Create Transport
   const transport1 = await prisma.transport.create({
     data: {
-      firstName: 'James',
-      lastName: 'Kamanzi',
-      birthday: new Date('1988-01-01'),
-      nationalId: '1198880123456782',
-      phoneNumber: '0787524803',
-      password: await bcrypt.hash('lionson', 10),
-      status: 'active',
+      firstName: "James",
+      lastName: "Kamanzi",
+      birthday: new Date("1988-01-01"),
+      nationalId: "1198880123456782",
+      phoneNumber: "0787524803",
+      password: await bcrypt.hash("test", 10),
+      status: "active",
       longitude: 30.0588,
       latitude: -1.9441,
-      username: 'jameskamanzi',
+      username: "jameskamanzi",
       delivered: {
-        vehicleType: 'truck',
-        vehiclePlate: 'RAB 123 A'
+        vehicleType: "truck",
+        vehiclePlate: "RAB 123 A",
       },
-      pocId: poc1.id
-    }
+      pocId: poc1.id,
+    },
   });
 
   // Create Transportations
@@ -131,9 +130,9 @@ async function main() {
       transportId: transport1.id,
       pocId: poc1.id,
       amount: 100,
-      transportStatus: 'in_transit',
-      date: new Date()
-    }
+      transportStatus: "in_transit",
+      date: new Date(),
+    },
   });
 
   // Create TranspDerived
@@ -141,10 +140,10 @@ async function main() {
     data: {
       transportId: transport1.id,
       amount: 100,
-      status: 'pending',
+      status: "pending",
       productionId: production.id,
-      transportationId: transportation1.id
-    }
+      transportationId: transportation1.id,
+    },
   });
 
   // Create Delivery
@@ -153,8 +152,8 @@ async function main() {
       transportId: transport1.id,
       productionId: production.id,
       amount: 100,
-      transportStatus: 'pending'
-    }
+      transportStatus: "pending",
+    },
   });
 
   // Create Derived
@@ -164,22 +163,22 @@ async function main() {
       transportId: transport1.id,
       deriveryId: delivery1.id,
       amount: 100,
-      status: 'pending'
-    }
+      status: "pending",
+    },
   });
 
   // Create DailySale
   const dailySale1 = await prisma.dailySale.create({
     data: {
-      productType: 'milk',
+      productType: "milk",
       quantity: 50,
       pricePerUnit: 500,
       totalAmount: 25000,
-      status: 'pending',
+      status: "pending",
       diaryId: diary1.id,
       depance: 0,
-      description: 'Morning sale'
-    }
+      description: "Morning sale",
+    },
   });
 
   // Create RequestMilk
@@ -188,27 +187,31 @@ async function main() {
       diaryIdFrom: diary1.id,
       diaryIdAccept: diary1.id,
       amount: 100,
-      description: 'Emergency request',
-      status: 'pending'
-    }
+      description: "Emergency request",
+      status: "pending",
+    },
   });
 
-  console.log('Seed data created successfully!');
-  console.log('\nTest Accounts:');
-  console.log('Super Admin:', { email: 'lionson@gmail.com', phone: '0787524803', password: 'lionson' });
-  console.log('Manager:', { phone: '0787524803', password: 'lionson' });
-  console.log('Production:', { phone: '0787524803', password: 'lionson' });
-  console.log('POC:', { phone: '0787524803', password: 'lionson' });
-  console.log('Farmer:', { phone: '0787524803', password: 'lionson' });
-  console.log('Transport:', { phone: '0787524803', password: 'lionson' });
-  console.log('Diary:', { phone: '0787524803', password: 'lionson' });
+  console.log("Seed data created successfully!");
+  console.log("\nTest Accounts:");
+  console.log("Super Admin:", {
+    email: "test@gmail.com",
+    phone: "0787524803",
+    password: "test",
+  });
+  console.log("Manager:", { phone: "0787524803", password: "test" });
+  console.log("Production:", { phone: "0787524803", password: "test" });
+  console.log("POC:", { phone: "0787524803", password: "test" });
+  console.log("Farmer:", { phone: "0787524803", password: "test" });
+  console.log("Transport:", { phone: "0787524803", password: "test" });
+  console.log("Diary:", { phone: "0787524803", password: "test" });
 }
 
 main()
   .catch((e) => {
-    console.error('Error seeding database:', e);
+    console.error("Error seeding database:", e);
     process.exit(1);
   })
   .finally(async () => {
     await prisma.$disconnect();
-  }); 
+  });
